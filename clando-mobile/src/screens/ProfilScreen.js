@@ -432,6 +432,16 @@ export default function ProfilScreen({ navigation }) {
                     </View>
                 </View>
 
+                <View style={styles.section}>
+    <TouchableOpacity
+        style={styles.boutonAide}
+        onPress={() => navigation.navigate('Aide')}>
+        <Ionicons name="help-circle-outline" size={20} color="#00b5e2" />
+        <Text style={styles.boutonAideText}>Aide & Support</Text>
+        <Ionicons name="chevron-forward" size={16} color="#666" />
+    </TouchableOpacity>
+</View>
+
                 {/* Déconnexion */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.boutonLogout} onPress={handleLogout}>
@@ -534,4 +544,10 @@ const styles = StyleSheet.create({
         gap: 8, borderWidth: 1, borderColor: '#2a2a2a',
     },
     boutonLogoutText: { color: '#e74c3c', fontSize: 16, fontWeight: '600' },
+    boutonAide: {
+    backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1, borderColor: '#2a2a2a',
+},
+boutonAideText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
 });

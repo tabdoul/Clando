@@ -14,7 +14,7 @@ import ChatScreen from './src/screens/ChatScreen';
 import SOSScreen from './src/screens/SOSScreen';
 import AvisScreen from './src/screens/AvisScreen';
 import DocumentsScreen from './src/screens/DocumentsScreen';
-
+import AideScreen from './src/screens/AideScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -62,6 +62,7 @@ export default function App() {
                 <Stack.Screen name="SOS" component={SOSScreen} />
                 <Stack.Screen name="Avis" component={AvisScreen} />
                 <Stack.Screen name="Documents" component={DocumentsScreen} />
+                <Stack.Screen name="Aide" component={AideScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
