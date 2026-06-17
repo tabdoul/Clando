@@ -1,0 +1,30 @@
+<mat-toolbar color="primary">
+    <span>🚗 Clando</span>
+    <span style="flex: 1;"></span>
+    <ng-container *ngIf="authService.isLoggedIn()">
+        <a mat-button routerLink="/trajets">
+            <mat-icon>search</mat-icon> Rechercher
+        </a>
+        <a mat-button routerLink="/publier">
+            <mat-icon>add_circle</mat-icon> Publier
+        </a>
+        <a mat-button routerLink="/reservations">
+            <mat-icon>event_seat</mat-icon> Réservations
+        </a>
+        <a mat-button routerLink="/notifications">
+            <mat-icon [matBadge]="nbNotifications > 0 ? nbNotifications : null"
+                      matBadgeColor="warn"
+                      [matBadgeHidden]="nbNotifications === 0">
+                notifications
+            </mat-icon>
+            Notifications
+        </a>
+        <a mat-button routerLink="/profil">
+            <mat-icon>account_circle</mat-icon> Profil
+        </a>
+    </ng-container>
+</mat-toolbar>
+
+<div style="padding: 20px;">
+    <router-outlet></router-outlet>
+</div>

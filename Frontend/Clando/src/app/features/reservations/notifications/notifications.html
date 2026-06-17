@@ -1,0 +1,74 @@
+<div style="max-width: 800px; margin: 30px auto; padding: 0 16px;">
+
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+        <mat-icon style="font-size: 32px; color: #00b5e2;">notifications</mat-icon>
+        <h2 style="margin: 0;">Notifications de réservation</h2>
+        <span *ngIf="reservations.length > 0"
+              style="background: #f44336; color: white; border-radius: 50%;
+                     width: 24px; height: 24px; display: flex; align-items: center;
+                     justify-content: center; font-size: 12px; font-weight: bold;">
+            {{ reservations.length }}
+        </span>
+    </div>
+
+    <p *ngIf="loading">Chargement...</p>
+
+    <!-- Aucune notification -->
+    <mat-card *ngIf="!loading && reservations.length === 0"
+              style="text-align: center; padding: 40px; border-radius: 12px;">
+        <mat-icon style="font-size: 64px; color: #ccc;">notifications_none</mat-icon>
+        <h3 style="color: #999;">Aucune notification</h3>
+        <p style="color: #bbb;">Les demandes de réservation apparaîtront ici</p>
+    </mat-card>
+
+    <!-- Liste des notifications -->
+    <mat-card *ngFor="let r of reservations"
+              style="margin-bottom: 16px; padding: 20px; border-radius: 12px; border-left: 4px solid #00b5e2;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <mat-icon style="color: #00b5e2;">person</mat-icon>
+                    <span style="font-weight: 600; font-size: 1.1rem;">
+                        {{ r.passagerNom }} {{ r.passagerPrenom }}
+                    </span>
+                    <span style="color: gray; font-size: 0.85rem;">
+                        veut réserver votre trajet
+                    </span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <mat-icon style="font-size: 18px; color: gray;">directions_car</mat-icon>
+                    <span style="font-weight: 500;">
+                        {{ r.villeDepart }} → {{ r.villeArrivee }}
+                    </span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <mat-icon style="font-size: 18px; color: gray;">event_seat</mat-icon>
+                    <span style="color: gray; font-size: 0.9rem;">
+                        {{ r.nbPlaces }} place(s) demandée(s)
+                    </span>
+                    <span style="color: gray; font-size: 0.9rem; margin-left: 8px;">
+                        • {{ r.dateReservation | date:'dd/MM/yyyy' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Boutons accepter/refuser -->
+            <div style="display: flex; gap: 8px; margin-left: 16px;">
+                <button mat-raised-button color="primary"
+                        (click)="accepter(r.id!)"
+                        style="border-radius: 20px;">
+                    <mat-icon>check</mat-icon> Accepter
+                </button>
+                <button mat-raised-button color="warn"
+                        (click)="refuser(r.id!)"
+                        style="border-radius: 20px;">
+                    <mat-icon>close</mat-icon> Refuser
+                </button>
+            </div>
+        </div>
+    </mat-card>
+</div>

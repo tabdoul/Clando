@@ -1,0 +1,65 @@
+<div>
+    <h2>📋 Mes Réservations</h2>
+
+    <p *ngIf="loading">Chargement...</p>
+
+    <mat-card *ngIf="!loading && reservations.length === 0" style="text-align: center; padding: 40px;">
+        <mat-icon style="font-size: 48px;">event_busy</mat-icon>
+        <p>Aucune réservation trouvée</p>
+    </mat-card>
+
+    <table mat-table [dataSource]="reservations" *ngIf="!loading && reservations.length > 0"
+           style="width: 100%;">
+
+        <ng-container matColumnDef="trajet">
+            <th mat-header-cell *matHeaderCellDef>Trajet</th>
+            <td mat-cell *matCellDef="let r">
+                {{ r.villeDepart }} → {{ r.villeArrivee }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date réservation</th>
+            <td mat-cell *matCellDef="let r">
+                {{ r.dateReservation | date:'dd/MM/yyyy' }}
+            </td>
+        </ng-container>
+
+        <ng-container matColumnDef="places">
+            <th mat-header-cell *matHeaderCellDef>Places</th>
+            <td mat-cell *matCellDef="let r">{{ r.nbPlaces }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="statut">
+    <th mat-header-cell *matHeaderCellDef>Statut</th>
+    <td mat-cell *matCellDef="let r">
+        <span *ngIf="r.statut === 'CONFIRMEE'"
+              style="background: #4caf50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
+            ✅ Confirmée
+        </span>
+        <span *ngIf="r.statut === 'EN_ATTENTE'"
+              style="background: #ff9800; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
+            ⏳ En attente
+        </span>
+        <span *ngIf="r.statut === 'ANNULEE'"
+              style="background: #f44336; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
+            ❌ Annulée par le conducteur
+        </span>
+    </td>
+</ng-container>
+
+        <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let r">
+                <button mat-icon-button color="warn"
+                        [disabled]="r.statut === 'ANNULEE'"
+                        (click)="annuler(r.id)">
+                    <mat-icon>cancel</mat-icon>
+                </button>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+</div>
