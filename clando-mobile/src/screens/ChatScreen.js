@@ -25,7 +25,6 @@ export default function ChatScreen({ route, navigation }) {
             try {
                 await api.patch(`/messages/marquer-lus/${reservationId}/${id}`);
             } catch (error) {
-                console.log('Erreur marquage');
             }
         }
     };
@@ -45,7 +44,6 @@ export default function ChatScreen({ route, navigation }) {
         const response = await api.get(`/messages/reservation/${reservationId}`);
         setMessages(response.data);
     } catch (error) {
-        console.log('Erreur chargement messages');
     } finally {
         if (loading) setLoading(false); // Ne met à jour que si premier chargement
     }

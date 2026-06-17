@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,23 +35,34 @@ public class TrajetService {
     private final ReservationRepository reservationRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final AvisRepository avisRepository;
+    private final ItineraireService itineraireService;
 
     public TrajetService(TrajetRepository trajetRepository,
                          UtilisateurService utilisateurService,
                          VehiculeService vehiculeService,
                          ReservationRepository reservationRepository,
                          UtilisateurRepository utilisateurRepository,
-                         AvisRepository avisRepository) {
+                         AvisRepository avisRepository,
+                         ItineraireService itineraireService) {
         this.trajetRepository = trajetRepository;
         this.utilisateurService = utilisateurService;
         this.vehiculeService = vehiculeService;
         this.reservationRepository = reservationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.avisRepository = avisRepository;
+        this.itineraireService = itineraireService;
     }
 
     private LocalDateTime maintenant() {
         return ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime();
+    }
+
+    private String normaliser(String str) {
+        if (str == null) return "";
+        return str.toLowerCase()
+            .replace("é", "e").replace("è", "e").replace("ê", "e")
+            .replace("à", "a").replace("â", "a").replace("ô", "o")
+            .replace("î", "i").replace("ù", "u").trim();
     }
 
     @Transactional
@@ -95,14 +107,44 @@ public class TrajetService {
     }
 
     public Page<TrajetResponse> rechercher(String villeDepart, String villeArrivee, Pageable pageable) {
-        return trajetRepository
-                .findByVilleDepartAndVilleArriveeIgnoreCase(
-                    villeDepart,
-                    villeArrivee,
-                    maintenant(),
-                    pageable
-                )
-                .map(this::toResponse);
+        List<Trajet> tousLesTrajets = trajetRepository.findAll();
+        List<TrajetResponse> resultats = tousLesTrajets.stream()
+            .filter(t -> t.getStatut() == Trajet.StatutTrajet.OUVERT)
+            .filter(t -> t.getDateHeureDepart().isAfter(maintenant()))
+            .filter(t -> {
+                String dep = normaliser(t.getVilleDepart());
+                String arr = normaliser(t.getVilleArrivee());
+                String depRecherche = normaliser(villeDepart);
+                String arrRecherche = normaliser(villeArrivee);
+                boolean departCorrespond = dep.equals(depRecherche) ||
+                                           (dep.contains(depRecherche) && depRecherche.length() >= 4);
+                boolean arriveeCorrespond = arr.equals(arrRecherche) ||
+                                            (arr.contains(arrRecherche) && arrRecherche.length() >= 4);
+
+
+                if (departCorrespond && arriveeCorrespond) return true;
+
+                if (t.getItineraire() != null && depRecherche.length() >= 4 && arrRecherche.length() >= 4) {
+                    boolean itineraireCorrespond = itineraireService.trajetCorrespond(
+                        t.getItineraire(),
+                        t.getVilleDepart(),
+                        t.getVilleArrivee(),
+                        villeDepart,
+                        villeArrivee
+                    );
+                    return itineraireCorrespond;
+                }
+
+                return false;
+            })
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), resultats.size());
+        List<TrajetResponse> page = start > resultats.size() ? List.of() : resultats.subList(start, end);
+
+        return new PageImpl<>(page, pageable, resultats.size());
     }
 
     public List<TrajetResponse> getByConducteur(Long conducteurId) {

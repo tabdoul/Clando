@@ -55,7 +55,6 @@ export default function DocumentsScreen({ navigation }) {
             const response = await api.get(`/documents/utilisateur/${userId}`);
             setDocuments(response.data);
         } catch (error) {
-            console.log('Erreur chargement documents');
         } finally {
             setLoading(false);
         }
@@ -108,7 +107,6 @@ export default function DocumentsScreen({ navigation }) {
             Alert.alert('Document envoyé !', 'Votre document est en cours de vérification.');
             chargerDocuments();
         } catch (error) {
-            console.log('Erreur upload:', error.response?.data);
             Alert.alert('Erreur', "Impossible d'envoyer le document");
         } finally {
             setUploading(null);

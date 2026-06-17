@@ -12,9 +12,6 @@ export default function LoginScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
-        console.log('handleLogin appelé');
-        console.log('email:', email);
-        console.log('motDePasse:', motDePasse);
 
         if (!email || !motDePasse) {
             Alert.alert('Erreur', 'Veuillez remplir tous les champs');
@@ -26,9 +23,7 @@ export default function LoginScreen({ navigation }) {
             await fetchUtilisateurByEmail(email);
             navigation.replace('Main');
         } catch (error) {
-            console.log('Erreur login:', error.response?.data);
-            console.log('Status:', error.response?.status);
-            console.log('Message:', error.message);
+            
             Alert.alert('Erreur', 'Email ou mot de passe incorrect');
         } finally {
             setLoading(false);

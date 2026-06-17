@@ -31,7 +31,6 @@ export default function AvisScreen({ route, navigation }) {
             const response = await api.get(`/avis/utilisateur/${conducteurId}`);
             setAvisExistants(response.data);
         } catch (error) {
-            console.log('Erreur chargement avis');
         } finally {
             setLoadingAvis(false);
         }
@@ -42,7 +41,6 @@ export default function AvisScreen({ route, navigation }) {
             const response = await api.get(`/avis/utilisateur/${conducteurId}/moyenne`);
             setStats(response.data);
         } catch (error) {
-            console.log('Erreur stats');
         }
     };
 
@@ -54,7 +52,6 @@ export default function AvisScreen({ route, navigation }) {
             setDejaLaisse(response.data.dejaLaisse);
             setHeureAutorisation(response.data.heureAutorisation);
         } catch (error) {
-            console.log('Erreur vérification droit');
         } finally {
             setCheckingDroit(false);
         }

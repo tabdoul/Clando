@@ -16,6 +16,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/utilisateurs")
@@ -29,7 +32,22 @@ public class UtilisateurController {
         this.utilisateurService = utilisateurService;
         this.utilisateurRepository = utilisateurRepository;
     }
-
+@GetMapping("/photo/{filename}")
+public ResponseEntity<Resource> servirPhoto(@PathVariable String filename) {
+    try {
+        Path filePath = Paths.get("uploads/photos/").resolve(filename);
+        Resource resource = new FileSystemResource(filePath);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+        String contentType = filename.endsWith(".png") ? "image/png" : "image/jpeg";
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
+    } catch (Exception e) {
+        return ResponseEntity.notFound().build();
+    }
+}
     @PostMapping
     public ResponseEntity<UtilisateurResponse> creer(@Valid @RequestBody UtilisateurRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(utilisateurService.creer(request));

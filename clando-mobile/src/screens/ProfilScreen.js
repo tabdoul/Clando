@@ -92,12 +92,10 @@ export default function ProfilScreen({ navigation }) {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            console.log('Réponse photo:', response.data);
             setPhotoKey(Date.now());
             chargerProfil();
             Alert.alert('Photo mise à jour !');
         } catch (error) {
-            console.log('Erreur photo:', error.response?.data || error.message);
             Alert.alert('Erreur', 'Impossible de mettre à jour la photo');
         }
     };
@@ -258,9 +256,9 @@ export default function ProfilScreen({ navigation }) {
                     <TouchableOpacity onPress={changerPhoto} style={styles.avatarContainer}>
                         {utilisateur?.photo ? (
                             <Image
-                                source={{ uri: `http://192.168.1.170:8080/${utilisateur.photo.replace(/\\/g, '/')}?t=${photoKey}` }}
-                                style={styles.avatarImage}
-                            />
+    source={{ uri: `http://192.168.1.170:8080/api/utilisateurs/photo/${utilisateur.photo.split('\\').pop().split('/').pop()}?t=${photoKey}` }}
+    style={styles.avatarImage}
+/>
                         ) : (
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{getInitiales()}</Text>

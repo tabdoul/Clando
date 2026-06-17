@@ -44,7 +44,6 @@ export default function PublierScreen({ navigation }) {
                 setVehiculeSelectionne(response.data[0]);
             }
         } catch (error) {
-            console.log('Erreur chargement véhicules');
         }
     };
 

@@ -54,7 +54,6 @@ export default function AideScreen({ navigation }) {
             const response = await api.get(`/signalements/utilisateur/${userId}`);
             setMesSignalements(response.data);
         } catch (error) {
-            console.log('Erreur signalements');
         } finally {
             setLoadingSignalements(false);
         }

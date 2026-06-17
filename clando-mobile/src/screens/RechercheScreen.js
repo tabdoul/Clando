@@ -34,7 +34,6 @@ export default function RechercheScreen({ navigation }) {
             const response = await api.get(`/reservations/conducteur/${userId}/en-attente`);
             setNbNotifications(response.data.length);
         } catch (error) {
-            console.log('Erreur notifications');
         }
     };
 
@@ -43,7 +42,6 @@ export default function RechercheScreen({ navigation }) {
             const data = await AsyncStorage.getItem('clando_historique');
             if (data) setHistorique(JSON.parse(data));
         } catch (error) {
-            console.log('Erreur historique');
         }
     };
 
@@ -52,7 +50,6 @@ export default function RechercheScreen({ navigation }) {
             const data = await AsyncStorage.getItem('clando_favoris');
             if (data) setFavoris(JSON.parse(data));
         } catch (error) {
-            console.log('Erreur favoris');
         }
     };
 
@@ -71,7 +68,6 @@ export default function RechercheScreen({ navigation }) {
             setHistorique(nouvelleListe);
             await AsyncStorage.setItem('clando_historique', JSON.stringify(nouvelleListe));
         } catch (error) {
-            console.log('Erreur sauvegarde historique');
         }
     };
 
@@ -87,7 +83,6 @@ export default function RechercheScreen({ navigation }) {
             setFavoris(nouvelleListe);
             await AsyncStorage.setItem('clando_favoris', JSON.stringify(nouvelleListe));
         } catch (error) {
-            console.log('Erreur favori');
         }
     };
 
@@ -130,7 +125,6 @@ export default function RechercheScreen({ navigation }) {
             const departNormalise = normaliser(villeDepart.trim());
             const arriveeNormalise = normaliser(villeArrivee.trim());
 
-            console.log('Recherche:', departNormalise, '->', arriveeNormalise);
 
             const response = await api.get('/trajets/rechercher', {
                 params: {
@@ -141,7 +135,6 @@ export default function RechercheScreen({ navigation }) {
                 }
             });
 
-            console.log('Résultats:', response.data.content.length);
 
             await sauvegarderHistorique(villeDepart.trim(), villeArrivee.trim());
 
@@ -158,7 +151,6 @@ export default function RechercheScreen({ navigation }) {
                 });
             }
         } catch (error) {
-            console.log('Erreur recherche:', error.response?.data || error.message);
             Alert.alert('Erreur', 'Erreur lors de la recherche');
         } finally {
             setLoading(false);
