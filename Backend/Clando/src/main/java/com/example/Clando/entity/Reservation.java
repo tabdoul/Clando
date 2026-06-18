@@ -33,6 +33,14 @@ public class Reservation {
 
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
     private Paiement paiement;
+    @Column
+    private String djomyTransactionId;
+
+    @Column
+    private String statutPaiement; // PENDING, SUCCESS, FAILED
+
+    @Column
+    private String numeroTelephone;
 
     @Column
     private Double prixPropose;
@@ -78,6 +86,14 @@ public class Reservation {
     public int getNbTentatives() { return nbTentatives; }
     public void setNbTentatives(int nbTentatives) { this.nbTentatives = nbTentatives; }
 
+    public String getDjomyTransactionId() { return djomyTransactionId; }
+    public void setDjomyTransactionId(String djomyTransactionId) { this.djomyTransactionId = djomyTransactionId; }
+
+    public String getStatutPaiement() { return statutPaiement; }
+    public void setStatutPaiement(String statutPaiement) { this.statutPaiement = statutPaiement; }
+
+    public String getNumeroTelephone() { return numeroTelephone; }
+    public void setNumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {

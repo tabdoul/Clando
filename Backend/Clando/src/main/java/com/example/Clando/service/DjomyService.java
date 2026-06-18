@@ -1,7 +1,11 @@
 package com.example.Clando.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,7 +29,6 @@ public class DjomyService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Génère la signature HMAC-SHA256
     public String generateHmac(String data, String secret) throws Exception {
         Mac sha256Hmac = Mac.getInstance("HmacSHA256");
         SecretKeySpec secretKey = new SecretKeySpec(
@@ -39,35 +42,43 @@ public class DjomyService {
         return sb.toString();
     }
 
-    // Génère le header X-API-KEY
     public String generateApiKey() throws Exception {
         String signature = generateHmac(clientId, clientSecret);
         return clientId + ":" + signature;
     }
 
-    // Obtenir le Bearer token
-    public String getAccessToken() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-API-KEY", generateApiKey());
+   public String getAccessToken() throws Exception {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("X-API-KEY", generateApiKey());
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(new HashMap<>(), headers);
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(new HashMap<>(), headers);
 
+    System.out.println("=== X-API-KEY: " + generateApiKey());
+    System.out.println("=== URL: " + baseUrl + "/v1/auth");
+
+    try {
         ResponseEntity<Map> response = restTemplate.exchange(
             baseUrl + "/v1/auth",
             HttpMethod.POST,
             request,
             Map.class
         );
-
+        System.out.println("=== Réponse auth: " + response.getBody());
         Map<String, Object> body = response.getBody();
-        if (body != null && body.containsKey("accessToken")) {
-            return (String) body.get("accessToken");
+        if (body != null && body.containsKey("data")) {
+            Map<String, Object> data = (Map<String, Object>) body.get("data");
+            if (data != null && data.containsKey("accessToken")) {
+                return (String) data.get("accessToken");
+            }
         }
         throw new RuntimeException("Impossible d'obtenir le token Djomy");
+    } catch (Exception e) {
+        System.out.println("=== Erreur auth: " + e.getMessage());
+        throw e;
     }
+}
 
-    // Initier un paiement Orange Money
     public Map<String, Object> initierPaiement(
             String numeroTelephone,
             double montant,
@@ -91,6 +102,8 @@ public class DjomyService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
+        System.out.println("=== Initier paiement: " + body);
+
         ResponseEntity<Map> response = restTemplate.exchange(
             baseUrl + "/v1/payments",
             HttpMethod.POST,
@@ -98,10 +111,10 @@ public class DjomyService {
             Map.class
         );
 
+        System.out.println("=== Réponse paiement: " + response.getBody());
         return response.getBody();
     }
 
-    // Vérifier le statut d'un paiement
     public Map<String, Object> verifierStatutPaiement(String transactionId) throws Exception {
         String token = getAccessToken();
 
