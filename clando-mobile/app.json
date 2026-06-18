@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.th_abdoul.clandomobile"
     },
     "web": {
       "output": "single",
@@ -39,6 +40,11 @@
         }
       ],
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c25bf41c-f8d2-437e-85c5-a1b3d3d84375"
+      }
+    }
   }
 }
