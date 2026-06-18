@@ -115,11 +115,24 @@ export default function PublierScreen({ navigation }) {
                 }
             ]);
         } catch (error) {
-            Alert.alert('Erreur', error.response?.data?.erreur || error.response?.data?.message || 'Impossible de publier le trajet');
-        } finally {
+    const message = error.response?.data?.erreur || 'Erreur lors de la publication';
+    if (message.includes('permis') || message.includes("d'identit")) {
+        Alert.alert(
+            'Documents requis',
+            "Vous devez avoir un permis de conduire et une pièce d'identité validés pour publier un trajet.",
+            [
+                { text: 'Annuler', style: 'cancel' },
+                { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }
+            ]
+        );
+    } else {
+        Alert.alert('Erreur', message);
+    }
+} finally {
+    setLoading(false);
+}
             setLoading(false);
-        }
-    };
+        };
 
     const formatDate = (date) => {
         if (!date) return 'Choisir une date';

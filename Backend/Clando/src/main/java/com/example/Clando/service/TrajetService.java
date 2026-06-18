@@ -15,11 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.Clando.dtos.request.TrajetRequest;
 import com.example.Clando.dtos.response.TrajetResponse;
+import com.example.Clando.entity.Document;
 import com.example.Clando.entity.Reservation;
 import com.example.Clando.entity.Trajet;
 import com.example.Clando.entity.Utilisateur;
 import com.example.Clando.entity.Vehicule;
 import com.example.Clando.repository.AvisRepository;
+import com.example.Clando.repository.DocumentRepository;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
@@ -36,6 +38,7 @@ public class TrajetService {
     private final UtilisateurRepository utilisateurRepository;
     private final AvisRepository avisRepository;
     private final ItineraireService itineraireService;
+    private final DocumentRepository documentRepository;
 
     public TrajetService(TrajetRepository trajetRepository,
                          UtilisateurService utilisateurService,
@@ -43,7 +46,8 @@ public class TrajetService {
                          ReservationRepository reservationRepository,
                          UtilisateurRepository utilisateurRepository,
                          AvisRepository avisRepository,
-                         ItineraireService itineraireService) {
+                         ItineraireService itineraireService,
+                         DocumentRepository documentRepository) {
         this.trajetRepository = trajetRepository;
         this.utilisateurService = utilisateurService;
         this.vehiculeService = vehiculeService;
@@ -51,6 +55,7 @@ public class TrajetService {
         this.utilisateurRepository = utilisateurRepository;
         this.avisRepository = avisRepository;
         this.itineraireService = itineraireService;
+        this.documentRepository = documentRepository;
     }
 
     private LocalDateTime maintenant() {
@@ -69,6 +74,24 @@ public class TrajetService {
     public TrajetResponse creer(TrajetRequest request) {
         Utilisateur conducteur = utilisateurRepository.findById(request.getConducteurId())
                 .orElseThrow(() -> new EntityNotFoundException("Conducteur non trouvé"));
+
+        // Vérification des documents requis
+        List<Document> documents = documentRepository.findByUtilisateurId(request.getConducteurId());
+
+        boolean aPermis = documents.stream()
+            .anyMatch(d -> d.getType() == Document.TypeDocument.PERMIS_CONDUIRE
+                       && d.getStatut() == Document.StatutDocument.VALIDE);
+
+        boolean aIdentite = documents.stream()
+            .anyMatch(d -> (d.getType() == Document.TypeDocument.CNI
+                       || d.getType() == Document.TypeDocument.PASSEPORT)
+                       && d.getStatut() == Document.StatutDocument.VALIDE);
+
+        if (!aPermis || !aIdentite) {
+            throw new IllegalStateException(
+                "Vous devez avoir un permis de conduire et une pièce d'identité validés pour publier un trajet"
+            );
+        }
 
         LocalDateTime debutJour = LocalDate.now(ZoneId.of("Africa/Conakry")).atStartOfDay();
         LocalDateTime finJour = debutJour.plusDays(1);
@@ -116,23 +139,22 @@ public class TrajetService {
                 String arr = normaliser(t.getVilleArrivee());
                 String depRecherche = normaliser(villeDepart);
                 String arrRecherche = normaliser(villeArrivee);
+
                 boolean departCorrespond = dep.equals(depRecherche) ||
                                            (dep.contains(depRecherche) && depRecherche.length() >= 4);
                 boolean arriveeCorrespond = arr.equals(arrRecherche) ||
                                             (arr.contains(arrRecherche) && arrRecherche.length() >= 4);
 
-
                 if (departCorrespond && arriveeCorrespond) return true;
 
                 if (t.getItineraire() != null && depRecherche.length() >= 4 && arrRecherche.length() >= 4) {
-                    boolean itineraireCorrespond = itineraireService.trajetCorrespond(
+                    return itineraireService.trajetCorrespond(
                         t.getItineraire(),
                         t.getVilleDepart(),
                         t.getVilleArrivee(),
                         villeDepart,
                         villeArrivee
                     );
-                    return itineraireCorrespond;
                 }
 
                 return false;
