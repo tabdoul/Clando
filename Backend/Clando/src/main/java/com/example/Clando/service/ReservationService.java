@@ -176,10 +176,20 @@ public class ReservationService {
     }
 
     public ReservationResponse changerStatut(Long id, Reservation.StatutReservation statut) {
-        Reservation reservation = findById(id);
-        reservation.setStatut(statut);
-        return toResponse(reservationRepository.save(reservation));
+    Reservation reservation = findById(id);
+    reservation.setStatut(statut);
+
+    // Restituer les places si annulation passager
+    if (statut == Reservation.StatutReservation.ANNULEE) {
+        Trajet trajet = reservation.getTrajet();
+        trajet.setPlacesDisponibles(
+            trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+        );
+        trajetRepository.save(trajet);
     }
+
+    return toResponse(reservationRepository.save(reservation));
+}
 
     public void supprimer(Long id) {
         reservationRepository.deleteById(id);
