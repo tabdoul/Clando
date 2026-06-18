@@ -76,4 +76,8 @@ public class ReservationController {
         reservationService.supprimer(id);
         return ResponseEntity.noContent().build();
     }
+    @PatchMapping("/{id}/annuler")
+public ResponseEntity<?> annuler(@PathVariable Long id) {
+    return ResponseEntity.ok(reservationService.annuler(id));
+}
 }

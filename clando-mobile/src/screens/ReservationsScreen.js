@@ -56,22 +56,34 @@ export default function ReservationsScreen({ navigation }) {
         setRefreshing(false);
     };
 
-    const annuler = async (id) => {
-        Alert.alert('Annuler', 'Êtes-vous sûr ?', [
-            { text: 'Non', style: 'cancel' },
-            {
-                text: 'Oui',
-                style: 'destructive',
-                onPress: async () => {
-                    try {
-                        await api.patch(`/reservations/${id}/statut?statut=ANNULEE`);
-                        chargerReservations();
-                    } catch (error) {
-                        Alert.alert('Erreur', "Impossible d'annuler");
+    const annuler = async (reservation) => {
+        const estConfirmee = reservation.statut === 'CONFIRMEE';
+
+        Alert.alert(
+            'Annuler la réservation',
+            estConfirmee
+                ? 'Votre réservation est confirmée. Des frais d\'annulation de 10% peuvent s\'appliquer si le départ est dans moins de 2h.'
+                : 'Êtes-vous sûr de vouloir annuler cette réservation ?',
+            [
+                { text: 'Non', style: 'cancel' },
+                {
+                    text: 'Annuler la réservation',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const response = await api.patch(`/reservations/${reservation.id}/annuler`);
+                            chargerReservations();
+                            Alert.alert(
+                                'Réservation annulée',
+                                response.data.message || 'Votre réservation a été annulée.'
+                            );
+                        } catch (error) {
+                            Alert.alert('Erreur', error.response?.data?.erreur || "Impossible d'annuler");
+                        }
                     }
                 }
-            }
-        ]);
+            ]
+        );
     };
 
     const nouvelleProposition = async (id) => {
@@ -189,6 +201,22 @@ export default function ReservationsScreen({ navigation }) {
                                                 </Text>
                                             </View>
                                         )}
+                                        {item.statutPaiement === 'SUCCESS' && (
+                                            <View style={styles.detailRow}>
+                                                <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
+                                                <Text style={[styles.detailText, { color: '#2ecc71' }]}>
+                                                    Paiement confirmé
+                                                </Text>
+                                            </View>
+                                        )}
+                                        {item.statutPaiement === 'PENDING' && (
+                                            <View style={styles.detailRow}>
+                                                <Ionicons name="time-outline" size={14} color="#f39c12" />
+                                                <Text style={[styles.detailText, { color: '#f39c12' }]}>
+                                                    Paiement en attente
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
 
                                     <View style={styles.boutonsContainer}>
@@ -226,8 +254,20 @@ export default function ReservationsScreen({ navigation }) {
                                         {(item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE') && (
                                             <TouchableOpacity
                                                 style={styles.boutonAnnuler}
-                                                onPress={() => annuler(item.id)}>
+                                                onPress={() => annuler(item)}>
                                                 <Text style={styles.boutonAnnulerText}>Annuler</Text>
+                                            </TouchableOpacity>
+                                        )}
+
+                                        {item.urlPaiement && item.statutPaiement === 'PENDING' && (
+                                            <TouchableOpacity
+                                                style={styles.boutonPayer}
+                                                onPress={() => {
+                                                    const { Linking } = require('react-native');
+                                                    Linking.openURL(item.urlPaiement);
+                                                }}>
+                                                <Ionicons name="card-outline" size={14} color="white" />
+                                                <Text style={styles.boutonPayerText}>Payer</Text>
                                             </TouchableOpacity>
                                         )}
                                     </View>
@@ -308,9 +348,7 @@ const styles = StyleSheet.create({
     details: { gap: 6, flex: 1 },
     detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     detailText: { fontSize: 13, color: '#888' },
-    boutonsContainer: {
-        flexDirection: 'column', gap: 8, alignItems: 'flex-end'
-    },
+    boutonsContainer: { flexDirection: 'column', gap: 8, alignItems: 'flex-end' },
     boutonContacter: {
         borderWidth: 1, borderColor: '#00b5e2', borderRadius: 20,
         paddingVertical: 6, paddingHorizontal: 14,
@@ -328,6 +366,12 @@ const styles = StyleSheet.create({
         paddingVertical: 6, paddingHorizontal: 16,
     },
     boutonAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
+    boutonPayer: {
+        backgroundColor: '#00b5e2', borderRadius: 20,
+        paddingVertical: 6, paddingHorizontal: 14,
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+    },
+    boutonPayerText: { color: 'white', fontSize: 13, fontWeight: '600' },
     prixRefuseContainer: {
         backgroundColor: '#2a1a1a', borderRadius: 10, padding: 12,
         marginTop: 12, borderWidth: 1, borderColor: '#e74c3c',

@@ -39,50 +39,43 @@ export default function ResultatsScreen({ route, navigation }) {
     };
 
     const reserver = async () => {
-        Keyboard.dismiss();
+    Keyboard.dismiss();
 
-        if (!numeroTelephone || numeroTelephone.trim().length < 8) {
-            Alert.alert(
-                'Numéro requis',
-                'Veuillez saisir votre numéro Orange Money pour payer votre réservation.'
-            );
-            return;
+    const userId = await getUserId();
+    if (!userId) {
+        Alert.alert('Erreur', 'Veuillez vous reconnecter');
+        return;
+    }
+
+    const prixFinal = parseFloat(prixPropose);
+    if (isNaN(prixFinal) || prixFinal <= 0) {
+        Alert.alert('Erreur', 'Prix invalide');
+        return;
+    }
+
+    setLoading(true);
+    try {
+        const response = await api.post('/reservations', {
+            nbPlaces: 1,
+            passagerId: userId,
+            trajetId: trajetSelectionne.id,
+            prixPropose: prixFinal !== trajetSelectionne.prix ? prixFinal : null,
+            numeroTelephone: 'GATEWAY'
+        });
+
+        setShowPrixModal(false);
+
+        if (response.data.urlPaiement) {
+            await Linking.openURL(response.data.urlPaiement);
+        } else {
+            Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
         }
-
-        const userId = await getUserId();
-        if (!userId) {
-            Alert.alert('Erreur', 'Veuillez vous reconnecter');
-            return;
-        }
-
-        const prixFinal = parseFloat(prixPropose);
-        if (isNaN(prixFinal) || prixFinal <= 0) {
-            Alert.alert('Erreur', 'Prix invalide');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const response = await api.post('/reservations', {
-                nbPlaces: 1,
-                passagerId: userId,
-                trajetId: trajetSelectionne.id,
-                prixPropose: prixFinal !== trajetSelectionne.prix ? prixFinal : null,
-                numeroTelephone: numeroTelephone.trim()
-            });
-
-            setShowPrixModal(false);
-if (response.data.urlPaiement) {
-    await Linking.openURL(response.data.urlPaiement);
-} else {
-    Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
-} 
-        } catch (error) {
-            Alert.alert('Erreur', error.response?.data?.erreur || 'Erreur lors de la réservation');
-        } finally {
-            setLoading(false);
-        }
-    };
+    } catch (error) {
+        Alert.alert('Erreur', error.response?.data?.erreur || 'Erreur lors de la réservation');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <View style={styles.container}>
@@ -238,22 +231,6 @@ if (response.data.urlPaiement) {
                             onSubmitEditing={() => Keyboard.dismiss()}
                         />
                         <Text style={styles.modalDevise}>GNF</Text>
-                    </View>
-
-                    <Text style={styles.modalLabel}>
-                        Numéro Orange Money <Text style={{ color: '#e74c3c' }}>*</Text>
-                    </Text>
-                    <View style={styles.modalInput}>
-                        <TextInput
-                            style={styles.modalInputText}
-                            value={numeroTelephone}
-                            onChangeText={setNumeroTelephone}
-                            keyboardType="phone-pad"
-                            placeholder="00224620000000"
-                            placeholderTextColor="#666"
-                            returnKeyType="done"
-                            onSubmitEditing={() => Keyboard.dismiss()}
-                        />
                     </View>
 
                     <Text style={styles.modalInfo}>
