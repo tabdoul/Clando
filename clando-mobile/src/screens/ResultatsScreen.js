@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, Modal,
-    TextInput, Keyboard, Image
+    TextInput, Keyboard, Image, Linking,
+    KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
@@ -14,21 +15,19 @@ export default function ResultatsScreen({ route, navigation }) {
     const [showPrixModal, setShowPrixModal] = useState(false);
     const [trajetSelectionne, setTrajetSelectionne] = useState(null);
     const [numeroTelephone, setNumeroTelephone] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
+            hour: '2-digit', minute: '2-digit', hour12: false
         });
     };
 
     const formatDateTrajet = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: 'short'
+            day: '2-digit', month: 'short'
         });
     };
 
@@ -41,6 +40,15 @@ export default function ResultatsScreen({ route, navigation }) {
 
     const reserver = async () => {
         Keyboard.dismiss();
+
+        if (!numeroTelephone || numeroTelephone.trim().length < 8) {
+            Alert.alert(
+                'Numéro requis',
+                'Veuillez saisir votre numéro Orange Money pour payer votre réservation.'
+            );
+            return;
+        }
+
         const userId = await getUserId();
         if (!userId) {
             Alert.alert('Erreur', 'Veuillez vous reconnecter');
@@ -53,25 +61,26 @@ export default function ResultatsScreen({ route, navigation }) {
             return;
         }
 
+        setLoading(true);
         try {
-            await api.post('/reservations', {
+            const response = await api.post('/reservations', {
                 nbPlaces: 1,
                 passagerId: userId,
                 trajetId: trajetSelectionne.id,
                 prixPropose: prixFinal !== trajetSelectionne.prix ? prixFinal : null,
-                numeroTelephone: numeroTelephone || null
+                numeroTelephone: numeroTelephone.trim()
             });
+
             setShowPrixModal(false);
-            if (numeroTelephone) {
-                Alert.alert(
-                    'Réservation envoyée !',
-                    'Vérifiez votre téléphone Orange Money pour confirmer le paiement.'
-                );
-            } else {
-                Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
-            }
+if (response.data.urlPaiement) {
+    await Linking.openURL(response.data.urlPaiement);
+} else {
+    Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
+} 
         } catch (error) {
             Alert.alert('Erreur', error.response?.data?.erreur || 'Erreur lors de la réservation');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -92,14 +101,10 @@ export default function ResultatsScreen({ route, navigation }) {
                 </View>
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled">
-
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 {trajets.map((item) => (
                     <View key={item.id.toString()} style={styles.cardWrapper}>
                         <View style={styles.card}>
-
                             <View style={styles.cardTop}>
                                 <View style={styles.heureContainer}>
                                     <Text style={styles.heure}>{formatHeure(item.dateHeureDepart)}</Text>
@@ -195,77 +200,89 @@ export default function ResultatsScreen({ route, navigation }) {
                         </View>
                     </View>
                 ))}
-
                 <View style={{ height: 30 }} />
             </ScrollView>
 
-            <Modal
-                visible={showPrixModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowPrixModal(false)}>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Réserver ce trajet</Text>
-                        <Text style={styles.modalSubtitle}>
-                            {trajetSelectionne?.villeDepart} → {trajetSelectionne?.villeArrivee}
+           <Modal
+    visible={showPrixModal}
+    transparent={true}
+    animationType="slide"
+    onRequestClose={() => setShowPrixModal(false)}>
+    <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ width: '100%' }}>
+            <View style={styles.modalCard}>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                    <Text style={styles.modalTitle}>Réserver ce trajet</Text>
+                    <Text style={styles.modalSubtitle}>
+                        {trajetSelectionne?.villeDepart} → {trajetSelectionne?.villeArrivee}
+                    </Text>
+
+                    <View style={styles.modalPrixOriginal}>
+                        <Text style={styles.modalPrixLabel}>Prix affiché</Text>
+                        <Text style={styles.modalPrixValeur}>
+                            {trajetSelectionne?.prix?.toLocaleString()} GNF
                         </Text>
-
-                        <View style={styles.modalPrixOriginal}>
-                            <Text style={styles.modalPrixLabel}>Prix affiché</Text>
-                            <Text style={styles.modalPrixValeur}>
-                                {trajetSelectionne?.prix?.toLocaleString()} GNF
-                            </Text>
-                        </View>
-
-                        <Text style={styles.modalLabel}>Votre proposition (optionnel)</Text>
-                        <View style={styles.modalInput}>
-                            <TextInput
-                                style={styles.modalInputText}
-                                value={prixPropose}
-                                onChangeText={setPrixPropose}
-                                keyboardType="numeric"
-                                placeholderTextColor="#666"
-                                returnKeyType="done"
-                                onSubmitEditing={() => Keyboard.dismiss()}
-                            />
-                            <Text style={styles.modalDevise}>GNF</Text>
-                        </View>
-
-                        <Text style={styles.modalLabel}>Numéro Orange Money</Text>
-                        <View style={styles.modalInput}>
-                            <TextInput
-                                style={styles.modalInputText}
-                                value={numeroTelephone}
-                                onChangeText={setNumeroTelephone}
-                                keyboardType="phone-pad"
-                                placeholder="00224620000000"
-                                placeholderTextColor="#666"
-                            />
-                        </View>
-
-                        <Text style={styles.modalInfo}>
-                            Vous recevrez une notification Orange Money pour confirmer le paiement
-                        </Text>
-
-                        <View style={styles.modalBoutons}>
-                            <TouchableOpacity
-                                style={styles.modalBoutonAnnuler}
-                                onPress={() => {
-                                    Keyboard.dismiss();
-                                    setShowPrixModal(false);
-                                }}>
-                                <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.modalBoutonConfirmer}
-                                onPress={reserver}>
-                                <Text style={styles.modalBoutonConfirmerText}>Envoyer</Text>
-                            </TouchableOpacity>
-                        </View>
                     </View>
-                </View>
-            </Modal>
+
+                    <Text style={styles.modalLabel}>Votre proposition (optionnel)</Text>
+                    <View style={styles.modalInput}>
+                        <TextInput
+                            style={styles.modalInputText}
+                            value={prixPropose}
+                            onChangeText={setPrixPropose}
+                            keyboardType="numeric"
+                            placeholderTextColor="#666"
+                            returnKeyType="done"
+                            onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                        <Text style={styles.modalDevise}>GNF</Text>
+                    </View>
+
+                    <Text style={styles.modalLabel}>
+                        Numéro Orange Money <Text style={{ color: '#e74c3c' }}>*</Text>
+                    </Text>
+                    <View style={styles.modalInput}>
+                        <TextInput
+                            style={styles.modalInputText}
+                            value={numeroTelephone}
+                            onChangeText={setNumeroTelephone}
+                            keyboardType="phone-pad"
+                            placeholder="00224620000000"
+                            placeholderTextColor="#666"
+                            returnKeyType="done"
+                            onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                    </View>
+
+                    <Text style={styles.modalInfo}>
+                        🔒 Vous serez redirigé vers la page de paiement Orange Money
+                    </Text>
+
+                    <View style={styles.modalBoutons}>
+                        <TouchableOpacity
+                            style={styles.modalBoutonAnnuler}
+                            onPress={() => {
+                                Keyboard.dismiss();
+                                setShowPrixModal(false);
+                            }}>
+                            <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.modalBoutonConfirmer, loading && { opacity: 0.7 }]}
+                            onPress={reserver}
+                            disabled={loading}>
+                            <Text style={styles.modalBoutonConfirmerText}>
+                                {loading ? 'Chargement...' : 'Payer & Réserver'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </View>
+        </KeyboardAvoidingView>
+    </View>
+</Modal>
         </View>
     );
 }
@@ -295,60 +312,33 @@ const styles = StyleSheet.create({
     dateTrajet: { fontSize: 11, color: '#666', marginTop: 2 },
     trajetInfo: { flex: 1, alignItems: 'center' },
     ville: { fontSize: 14, fontWeight: '600', color: '#ddd' },
-    ligne: {
-        flexDirection: 'row', alignItems: 'center',
-        width: '100%', marginVertical: 5,
-    },
+    ligne: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5 },
     ligneBar: { flex: 1, height: 1, backgroundColor: '#333' },
     itineraire: { fontSize: 11, color: '#00b5e2', fontStyle: 'italic', marginTop: 3 },
     prixContainer: { alignItems: 'flex-end', minWidth: 80 },
     prix: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
     prixDevise: { fontSize: 11, color: '#00b5e2', marginTop: -2 },
     places: { fontSize: 11, color: '#666', marginTop: 4 },
-    presqueCompletBadge: {
-        backgroundColor: '#3a2a1a', borderRadius: 8,
-        paddingVertical: 2, paddingHorizontal: 6, marginTop: 4,
-    },
+    presqueCompletBadge: { backgroundColor: '#3a2a1a', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
     presqueCompletText: { color: '#f39c12', fontSize: 9, fontWeight: '600' },
-    comptetBadge: {
-        backgroundColor: '#3a1a1a', borderRadius: 8,
-        paddingVertical: 2, paddingHorizontal: 6, marginTop: 4,
-    },
+    comptetBadge: { backgroundColor: '#3a1a1a', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
     comptetBadgeText: { color: '#e74c3c', fontSize: 9, fontWeight: '600' },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
-    cardBottom: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
-    },
-    conducteurInfo: {
-        flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1
-    },
-    avatar: {
-        width: 40, height: 40, borderRadius: 20,
-        backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
-    },
+    cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    conducteurInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
     avatarImage: { width: 40, height: 40, borderRadius: 20 },
     avatarText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     conducteurNom: { fontSize: 13, fontWeight: '600', color: '#ddd' },
-    conducteurStats: {
-        flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2,
-    },
+    conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
     conducteurNote: { fontSize: 12, color: '#f39c12', fontWeight: '600' },
     conducteurTrajets: { fontSize: 11, color: '#666' },
     vehicule: { fontSize: 11, color: '#666', marginTop: 2 },
-    boutonReserver: {
-        backgroundColor: '#00b5e2', borderRadius: 20,
-        paddingVertical: 8, paddingHorizontal: 18,
-    },
+    boutonReserver: { backgroundColor: '#00b5e2', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
     boutonReserverText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
-    complet: {
-        backgroundColor: '#c0392b', borderRadius: 20,
-        paddingVertical: 8, paddingHorizontal: 18,
-    },
+    complet: { backgroundColor: '#c0392b', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
     comptetText: { color: 'white', fontSize: 13 },
-    modalOverlay: {
-        flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end',
-    },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: {
         backgroundColor: '#1e1e1e',
         borderTopLeftRadius: 20, borderTopRightRadius: 20,
@@ -362,10 +352,7 @@ const styles = StyleSheet.create({
     },
     modalPrixLabel: { fontSize: 14, color: '#888' },
     modalPrixValeur: { fontSize: 16, fontWeight: 'bold', color: '#00b5e2' },
-    modalLabel: {
-        fontSize: 12, fontWeight: '600', color: '#888',
-        marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
-    },
+    modalLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
     modalInput: {
         flexDirection: 'row', alignItems: 'center',
         borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
@@ -373,19 +360,10 @@ const styles = StyleSheet.create({
     },
     modalInputText: { flex: 1, padding: 12, fontSize: 16, color: '#eee' },
     modalDevise: { color: '#888', fontSize: 14 },
-    modalInfo: {
-        fontSize: 12, color: '#666', textAlign: 'center',
-        marginBottom: 20, fontStyle: 'italic',
-    },
+    modalInfo: { fontSize: 12, color: '#888', textAlign: 'center', marginBottom: 20, fontStyle: 'italic' },
     modalBoutons: { flexDirection: 'row', gap: 12 },
-    modalBoutonAnnuler: {
-        flex: 1, borderWidth: 1, borderColor: '#444',
-        borderRadius: 10, padding: 14, alignItems: 'center',
-    },
+    modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#444', borderRadius: 10, padding: 14, alignItems: 'center' },
     modalBoutonAnnulerText: { color: '#888', fontSize: 15, fontWeight: '600' },
-    modalBoutonConfirmer: {
-        flex: 1, backgroundColor: '#00b5e2',
-        borderRadius: 10, padding: 14, alignItems: 'center',
-    },
+    modalBoutonConfirmer: { flex: 1, backgroundColor: '#00b5e2', borderRadius: 10, padding: 14, alignItems: 'center' },
     modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 });

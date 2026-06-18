@@ -18,6 +18,7 @@ import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import com.example.Clando.service.DjomyService;
 
 @Service
 public class ReservationService {
@@ -39,6 +40,9 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse creer(ReservationRequest request) {
+        System.out.println("=== CREER RESERVATION ===");
+        System.out.println("=== Numero telephone: " + request.getNumeroTelephone());
+
         Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
                 .orElseThrow(() -> new EntityNotFoundException("Passager non trouvé"));
 
@@ -62,8 +66,8 @@ public class ReservationService {
             reservation.setPrixPropose(request.getPrixPropose());
         }
 
-        // Initier le paiement Orange Money gateway si numéro fourni
         if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
+            System.out.println("=== Initier paiement gateway...");
             try {
                 double montant = request.getPrixPropose() != null
                     ? request.getPrixPropose()
@@ -81,20 +85,27 @@ public class ReservationService {
                     description
                 );
 
+                System.out.println("=== Réponse Djomy: " + paiement);
+
                 Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+                System.out.println("=== Data: " + data);
+
                 if (data != null) {
                     if (data.containsKey("transactionId")) {
                         reservation.setDjomyTransactionId((String) data.get("transactionId"));
                     }
-                    if (data.containsKey("paymentUrl")) {
-                        reservation.setUrlPaiement((String) data.get("paymentUrl"));
-                    }
+                    if (data.containsKey("redirectUrl")) {
+    System.out.println("=== URL Paiement: " + data.get("redirectUrl"));
+    reservation.setUrlPaiement((String) data.get("redirectUrl"));
+}
                     reservation.setStatutPaiement("PENDING");
                     reservation.setNumeroTelephone(request.getNumeroTelephone());
                 }
             } catch (Exception e) {
-                System.out.println("Erreur paiement Djomy: " + e.getMessage());
+                System.out.println("=== Erreur paiement Djomy: " + e.getMessage());
             }
+        } else {
+            System.out.println("=== Pas de numero telephone fourni");
         }
 
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
