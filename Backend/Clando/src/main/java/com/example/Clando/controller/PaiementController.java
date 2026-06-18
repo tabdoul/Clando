@@ -1,41 +1,52 @@
 package com.example.Clando.controller;
 
-import com.example.Clando.dtos.request.PaiementRequest;
-import com.example.Clando.dtos.response.PaiementResponse;
-import com.example.Clando.service.PaiementService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import com.example.Clando.service.DjomyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/paiements")
 public class PaiementController {
 
-    private final PaiementService paiementService;
+    private final DjomyService djomyService;
 
-    public PaiementController(PaiementService paiementService) {
-        this.paiementService = paiementService;
-    }
-    
-    @PostMapping
-    public ResponseEntity<PaiementResponse> creer(@Valid @RequestBody PaiementRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(paiementService.creer(request));
+    public PaiementController(DjomyService djomyService) {
+        this.djomyService = djomyService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<PaiementResponse>> getAll() {
-        return ResponseEntity.ok(paiementService.getAll());
+    @PostMapping("/initier")
+    public ResponseEntity<?> initierPaiement(@RequestBody Map<String, Object> body) {
+        try {
+            String telephone = (String) body.get("telephone");
+            double montant = Double.parseDouble(body.get("montant").toString());
+            String reference = (String) body.get("reference");
+            String description = (String) body.get("description");
+
+            Map<String, Object> result = djomyService.initierPaiement(
+                telephone, montant, reference, description);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("erreur", e.getMessage()));
+        }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PaiementResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(paiementService.getById(id));
+    @GetMapping("/statut/{transactionId}")
+    public ResponseEntity<?> verifierStatut(@PathVariable String transactionId) {
+        try {
+            return ResponseEntity.ok(djomyService.verifierStatutPaiement(transactionId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("erreur", e.getMessage()));
+        }
     }
 
-    @GetMapping("/reservation/{reservationId}")
-    public ResponseEntity<PaiementResponse> getByReservation(@PathVariable Long reservationId) {
-        return ResponseEntity.ok(paiementService.getByReservation(reservationId));
+    @PostMapping("/webhook")
+    public ResponseEntity<?> webhook(@RequestBody Map<String, Object> body) {
+        System.out.println("Webhook Djomy reçu: " + body);
+        // On traitera la logique ici après
+        return ResponseEntity.ok(Map.of("status", "received"));
     }
 }

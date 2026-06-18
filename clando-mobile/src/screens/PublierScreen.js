@@ -115,24 +115,23 @@ export default function PublierScreen({ navigation }) {
                 }
             ]);
         } catch (error) {
-    const message = error.response?.data?.erreur || 'Erreur lors de la publication';
-    if (message.includes('permis') || message.includes("d'identit")) {
-        Alert.alert(
-            'Documents requis',
-            "Vous devez avoir un permis de conduire et une pièce d'identité validés pour publier un trajet.",
-            [
-                { text: 'Annuler', style: 'cancel' },
-                { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }
-            ]
-        );
-    } else {
-        Alert.alert('Erreur', message);
-    }
-} finally {
-    setLoading(false);
-}
+            const message = error.response?.data?.erreur || 'Erreur lors de la publication';
+            if (message.includes('permis') || message.includes("identit")) {
+                Alert.alert(
+                    'Documents requis',
+                    "Vous devez avoir un permis de conduire et une pièce d'identité validés pour publier un trajet.",
+                    [
+                        { text: 'Annuler', style: 'cancel' },
+                        { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }
+                    ]
+                );
+            } else {
+                Alert.alert('Erreur', message);
+            }
+        } finally {
             setLoading(false);
-        };
+        }
+    };
 
     const formatDate = (date) => {
         if (!date) return 'Choisir une date';
@@ -146,7 +145,6 @@ export default function PublierScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Publier un trajet</Text>
             </View>
@@ -279,7 +277,6 @@ export default function PublierScreen({ navigation }) {
                                 </TouchableOpacity>
                             ))}
                         </View>
-
                     </View>
                 </View>
 
