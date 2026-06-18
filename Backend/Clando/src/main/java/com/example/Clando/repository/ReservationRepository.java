@@ -17,4 +17,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE")
     List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+    List<Reservation> findByDjomyTransactionId(String djomyTransactionId);
 }
