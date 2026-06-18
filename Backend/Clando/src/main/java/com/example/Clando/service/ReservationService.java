@@ -24,13 +24,16 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final TrajetRepository trajetRepository;
+    private final DjomyService djomyService;
 
     public ReservationService(ReservationRepository reservationRepository,
                                UtilisateurRepository utilisateurRepository,
-                               TrajetRepository trajetRepository) {
+                               TrajetRepository trajetRepository,
+                               DjomyService djomyService) {
         this.reservationRepository = reservationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.trajetRepository = trajetRepository;
+        this.djomyService = djomyService;
     }
 
     @Transactional
@@ -56,6 +59,39 @@ public class ReservationService {
         if (request.getPrixPropose() != null &&
             !request.getPrixPropose().equals(trajet.getPrix())) {
             reservation.setPrixPropose(request.getPrixPropose());
+        }
+
+        // Initier le paiement Orange Money si numéro fourni
+        if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
+            try {
+                double montant = request.getPrixPropose() != null
+                    ? request.getPrixPropose()
+                    : trajet.getPrix();
+
+                String description = "Réservation Clando : " +
+                    trajet.getVilleDepart() + " → " + trajet.getVilleArrivee();
+
+                String reference = "CLANDO-" + System.currentTimeMillis();
+
+                java.util.Map<String, Object> paiement = djomyService.initierPaiement(
+                    request.getNumeroTelephone(),
+                    montant,
+                    reference,
+                    description
+                );
+
+                java.util.Map<String, Object> data =
+                    (java.util.Map<String, Object>) paiement.get("data");
+
+                if (data != null && data.containsKey("transactionId")) {
+                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                    reservation.setStatutPaiement("PENDING");
+                    reservation.setNumeroTelephone(request.getNumeroTelephone());
+                }
+            } catch (Exception e) {
+                System.out.println("Erreur paiement Djomy: " + e.getMessage());
+                // On continue sans paiement si erreur
+            }
         }
 
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
@@ -165,6 +201,8 @@ public class ReservationService {
                 .prixPropose(r.getPrixPropose())
                 .nbTentatives(r.getNbTentatives())
                 .passagerPhoto(r.getPassager().getPhoto())
+                .djomyTransactionId(r.getDjomyTransactionId())
+                .statutPaiement(r.getStatutPaiement())
                 .build();
     }
 }

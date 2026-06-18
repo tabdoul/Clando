@@ -1,7 +1,6 @@
 package com.example.Clando.dtos.response;
 
 import java.time.LocalDate;
-
 import com.example.Clando.entity.Reservation;
 
 public class ReservationResponse {
@@ -22,6 +21,8 @@ public class ReservationResponse {
     private Double prixPropose;
     private int nbTentatives;
     private String passagerPhoto;
+    private String djomyTransactionId;
+    private String statutPaiement;
 
     public ReservationResponse() {}
 
@@ -69,8 +70,15 @@ public class ReservationResponse {
 
     public int getNbTentatives() { return nbTentatives; }
     public void setNbTentatives(int nbTentatives) { this.nbTentatives = nbTentatives; }
+
     public String getPassagerPhoto() { return passagerPhoto; }
     public void setPassagerPhoto(String passagerPhoto) { this.passagerPhoto = passagerPhoto; }
+
+    public String getDjomyTransactionId() { return djomyTransactionId; }
+    public void setDjomyTransactionId(String djomyTransactionId) { this.djomyTransactionId = djomyTransactionId; }
+
+    public String getStatutPaiement() { return statutPaiement; }
+    public void setStatutPaiement(String statutPaiement) { this.statutPaiement = statutPaiement; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -92,6 +100,8 @@ public class ReservationResponse {
         public Builder prixPropose(Double val) { r.prixPropose = val; return this; }
         public Builder nbTentatives(int val) { r.nbTentatives = val; return this; }
         public Builder passagerPhoto(String val) { r.passagerPhoto = val; return this; }
+        public Builder djomyTransactionId(String val) { r.djomyTransactionId = val; return this; }
+        public Builder statutPaiement(String val) { r.statutPaiement = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

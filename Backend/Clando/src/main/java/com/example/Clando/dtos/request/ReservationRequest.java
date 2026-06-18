@@ -12,7 +12,9 @@ public class ReservationRequest {
 
     @NotNull(message = "L'id du trajet est obligatoire")
     private Long trajetId;
+
     private Double prixPropose;
+    private String numeroTelephone;
 
     public ReservationRequest() {}
 
@@ -24,6 +26,10 @@ public class ReservationRequest {
 
     public Long getTrajetId() { return trajetId; }
     public void setTrajetId(Long trajetId) { this.trajetId = trajetId; }
+
     public Double getPrixPropose() { return prixPropose; }
     public void setPrixPropose(Double prixPropose) { this.prixPropose = prixPropose; }
+
+    public String getNumeroTelephone() { return numeroTelephone; }
+    public void setNumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
 }

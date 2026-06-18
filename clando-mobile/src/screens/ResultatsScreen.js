@@ -13,6 +13,7 @@ export default function ResultatsScreen({ route, navigation }) {
     const [prixPropose, setPrixPropose] = useState('');
     const [showPrixModal, setShowPrixModal] = useState(false);
     const [trajetSelectionne, setTrajetSelectionne] = useState(null);
+    const [numeroTelephone, setNumeroTelephone] = useState('');
 
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
@@ -35,6 +36,7 @@ export default function ResultatsScreen({ route, navigation }) {
         setTrajetSelectionne(trajet);
         setShowPrixModal(true);
         setPrixPropose(trajet.prix.toString());
+        setNumeroTelephone('');
     };
 
     const reserver = async () => {
@@ -56,10 +58,18 @@ export default function ResultatsScreen({ route, navigation }) {
                 nbPlaces: 1,
                 passagerId: userId,
                 trajetId: trajetSelectionne.id,
-                prixPropose: prixFinal !== trajetSelectionne.prix ? prixFinal : null
+                prixPropose: prixFinal !== trajetSelectionne.prix ? prixFinal : null,
+                numeroTelephone: numeroTelephone || null
             });
             setShowPrixModal(false);
-            Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
+            if (numeroTelephone) {
+                Alert.alert(
+                    'Réservation envoyée !',
+                    'Vérifiez votre téléphone Orange Money pour confirmer le paiement.'
+                );
+            } else {
+                Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
+            }
         } catch (error) {
             Alert.alert('Erreur', error.response?.data?.erreur || 'Erreur lors de la réservation');
         }
@@ -140,7 +150,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                     <View style={styles.avatar}>
                                         {item.conducteurPhoto ? (
                                             <Image
-                                                source={{ uri: `https://clando-production.up.railway.app:8080/${item.conducteurPhoto.replace(/\\/g, '/')}` }}
+                                                source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/${item.conducteurPhoto.split('\\').pop().split('/').pop()}` }}
                                                 style={styles.avatarImage}
                                             />
                                         ) : (
@@ -222,8 +232,20 @@ export default function ResultatsScreen({ route, navigation }) {
                             <Text style={styles.modalDevise}>GNF</Text>
                         </View>
 
+                        <Text style={styles.modalLabel}>Numéro Orange Money</Text>
+                        <View style={styles.modalInput}>
+                            <TextInput
+                                style={styles.modalInputText}
+                                value={numeroTelephone}
+                                onChangeText={setNumeroTelephone}
+                                keyboardType="phone-pad"
+                                placeholder="00224620000000"
+                                placeholderTextColor="#666"
+                            />
+                        </View>
+
                         <Text style={styles.modalInfo}>
-                            Vous avez droit à 2 tentatives de négociation
+                            Vous recevrez une notification Orange Money pour confirmer le paiement
                         </Text>
 
                         <View style={styles.modalBoutons}>
