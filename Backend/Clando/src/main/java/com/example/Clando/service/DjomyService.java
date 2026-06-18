@@ -1,5 +1,4 @@
 package com.example.Clando.service;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +26,9 @@ public class DjomyService {
 
     @Value("${djomy.base.url}")
     private String baseUrl;
+    public String getClientSecret() {
+    return clientSecret;
+}
 
     private final RestTemplate restTemplate = new RestTemplate();
 

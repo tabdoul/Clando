@@ -54,10 +54,27 @@ public class PaiementController {
     }
 
     @PostMapping("/webhook")
-    public ResponseEntity<?> webhook(@RequestBody Map<String, Object> body) {
-        System.out.println("=== Webhook Djomy reçu: " + body);
+    public ResponseEntity<?> webhook(
+            @RequestHeader(value = "X-Webhook-Signature", required = false) String signature,
+            @RequestBody Map<String, Object> body) {
+
+        System.out.println("=== Webhook Djomy reçu ===");
+        System.out.println("=== Signature: " + signature);
+        System.out.println("=== Body: " + body);
 
         try {
+            // Vérifier la signature
+            if (signature != null && signature.startsWith("v1:")) {
+                String signatureValue = signature.substring(3);
+                String expectedSignature = djomyService.generateHmac(
+                    body.toString(), djomyService.getClientSecret());
+                System.out.println("=== Signature attendue: " + expectedSignature);
+                System.out.println("=== Signature reçue: " + signatureValue);
+            }
+
+            String eventType = (String) body.get("eventType");
+            System.out.println("=== EventType: " + eventType);
+
             Map<String, Object> data = (Map<String, Object>) body.get("data");
             if (data == null) {
                 return ResponseEntity.ok(Map.of("status", "ignored"));
@@ -65,39 +82,43 @@ public class PaiementController {
 
             String transactionId = (String) data.get("transactionId");
             String status = (String) data.get("status");
-            String merchantReference = (String) data.get("merchantPaymentReference");
 
             System.out.println("=== TransactionId: " + transactionId);
             System.out.println("=== Status: " + status);
-            System.out.println("=== Reference: " + merchantReference);
 
             if (transactionId == null) {
                 return ResponseEntity.ok(Map.of("status", "ignored"));
             }
 
-            // Trouver la réservation par transactionId
             List<Reservation> reservations = reservationRepository
                 .findByDjomyTransactionId(transactionId);
 
             if (reservations.isEmpty()) {
-                System.out.println("=== Réservation non trouvée pour transactionId: " + transactionId);
+                System.out.println("=== Réservation non trouvée");
                 return ResponseEntity.ok(Map.of("status", "not_found"));
             }
 
             Reservation reservation = reservations.get(0);
 
-            if ("SUCCESS".equals(status) || "COMPLETED".equals(status)) {
+            if ("payment.success".equals(eventType) || "SUCCESS".equals(status)) {
                 reservation.setStatutPaiement("SUCCESS");
-                System.out.println("=== Paiement réussi pour réservation: " + reservation.getId());
-            } else if ("FAILED".equals(status) || "CANCELLED".equals(status)) {
+                System.out.println("=== Paiement réussi !");
+            } else if ("payment.failed".equals(eventType) || "FAILED".equals(status)) {
                 reservation.setStatutPaiement("FAILED");
-                // Restituer les places
                 var trajet = reservation.getTrajet();
                 trajet.setPlacesDisponibles(
                     trajet.getPlacesDisponibles() + reservation.getNbPlaces()
                 );
                 trajetRepository.save(trajet);
-                System.out.println("=== Paiement échoué pour réservation: " + reservation.getId());
+                System.out.println("=== Paiement échoué !");
+            } else if ("payment.cancelled".equals(eventType) || "CANCELLED".equals(status)) {
+                reservation.setStatutPaiement("CANCELLED");
+                var trajet = reservation.getTrajet();
+                trajet.setPlacesDisponibles(
+                    trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+                );
+                trajetRepository.save(trajet);
+                System.out.println("=== Paiement annulé !");
             }
 
             reservationRepository.save(reservation);
