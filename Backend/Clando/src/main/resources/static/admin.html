@@ -7,7 +7,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; }
-        
         .sidebar {
             position: fixed; left: 0; top: 0; bottom: 0;
             width: 240px; background: #1a1a1a;
@@ -25,26 +24,14 @@
             padding: 12px 24px; cursor: pointer; color: #888;
             transition: all 0.2s; border-left: 3px solid transparent;
         }
-        .nav-item:hover, .nav-item.active {
-            color: #00b5e2; background: #0a2a35;
-            border-left-color: #00b5e2;
-        }
+        .nav-item:hover, .nav-item.active { color: #00b5e2; background: #0a2a35; border-left-color: #00b5e2; }
         .nav-item svg { width: 20px; height: 20px; }
-
         .main { margin-left: 240px; padding: 32px; }
         .page { display: none; }
         .page.active { display: block; }
-
         h1 { font-size: 24px; margin-bottom: 24px; color: #eee; }
-
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px; margin-bottom: 32px;
-        }
-        .stat-card {
-            background: #1e1e1e; border-radius: 14px; padding: 20px;
-            border: 1px solid #2a2a2a; border-left: 3px solid #00b5e2;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #1e1e1e; border-radius: 14px; padding: 20px; border: 1px solid #2a2a2a; border-left: 3px solid #00b5e2; }
         .stat-card.rouge { border-left-color: #e74c3c; }
         .stat-card.vert { border-left-color: #2ecc71; }
         .stat-card.orange { border-left-color: #f39c12; }
@@ -53,120 +40,57 @@
         .stat-card.vert .stat-value { color: #2ecc71; }
         .stat-card.orange .stat-value { color: #f39c12; }
         .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
-
-        .card {
-            background: #1e1e1e; border-radius: 14px; padding: 20px;
-            border: 1px solid #2a2a2a; margin-bottom: 16px;
-        }
-        .card-header {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 16px;
-        }
+        .card { background: #1e1e1e; border-radius: 14px; padding: 20px; border: 1px solid #2a2a2a; margin-bottom: 16px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .card-title { font-size: 16px; font-weight: 600; color: #eee; }
-
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 12px; color: #666; font-size: 12px;
-             text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; }
+        th { text-align: left; padding: 10px 12px; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 14px; color: #ddd; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #252525; }
-
-        .badge {
-            display: inline-block; padding: 3px 10px; border-radius: 20px;
-            font-size: 11px; font-weight: 600;
-        }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-attente { background: #3a2a1a; color: #f39c12; }
         .badge-valide { background: #1a3a2a; color: #2ecc71; }
         .badge-rejete { background: #3a1a1a; color: #e74c3c; }
         .badge-ouvert { background: #3a1a1a; color: #e74c3c; }
         .badge-resolu { background: #1a3a2a; color: #2ecc71; }
-
-        .btn {
-            padding: 6px 14px; border-radius: 8px; border: none;
-            cursor: pointer; font-size: 13px; font-weight: 600;
-            transition: opacity 0.2s;
-        }
+        .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity 0.2s; }
         .btn:hover { opacity: 0.8; }
         .btn-primary { background: #00b5e2; color: white; }
         .btn-success { background: #2ecc71; color: white; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
-
-        .avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: #00b5e2; display: inline-flex;
-            align-items: center; justify-content: center;
-            font-weight: bold; font-size: 14px; color: white;
-        }
-        .avatar-img {
-            width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
-        }
-
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7); z-index: 100;
-            align-items: center; justify-content: center;
-        }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #00b5e2; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: white; }
+        .avatar-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
-        .modal {
-            background: #1e1e1e; border-radius: 16px; padding: 24px;
-            border: 1px solid #2a2a2a; width: 500px; max-width: 90%;
-        }
+        .modal { background: #1e1e1e; border-radius: 16px; padding: 24px; border: 1px solid #2a2a2a; width: 500px; max-width: 90%; }
         .modal h2 { font-size: 18px; margin-bottom: 16px; }
-        .modal textarea {
-            width: 100%; background: #252525; border: 1px solid #2a2a2a;
-            border-radius: 8px; padding: 12px; color: #eee; font-size: 14px;
-            resize: vertical; min-height: 100px; margin-bottom: 16px;
-        }
+        .modal textarea { width: 100%; background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; color: #eee; font-size: 14px; resize: vertical; min-height: 100px; margin-bottom: 16px; }
         .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
-
-        .search-input {
-            background: #252525; border: 1px solid #2a2a2a; border-radius: 8px;
-            padding: 8px 14px; color: #eee; font-size: 14px; width: 250px;
-        }
+        .search-input { background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 14px; color: #eee; font-size: 14px; width: 250px; }
         .search-input:focus { outline: none; border-color: #00b5e2; }
-
         .loading { text-align: center; padding: 40px; color: #666; }
         .empty { text-align: center; padding: 40px; color: #666; font-size: 14px; }
-
-        .doc-preview {
-            width: 60px; height: 60px; object-fit: cover;
-            border-radius: 8px; cursor: pointer; border: 1px solid #2a2a2a;
-        }
-
+        .doc-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid #2a2a2a; }
         .verifie { color: #2ecc71; font-size: 12px; }
         .non-verifie { color: #666; font-size: 12px; }
     </style>
 </head>
 <body>
-<!-- Page Login -->
-<div id="login-page" style="
-    position: fixed; inset: 0; background: #0f0f0f;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 999;">
-    <div style="background: #1e1e1e; border-radius: 16px; padding: 40px;
-                border: 1px solid #2a2a2a; width: 360px; text-align: center;">
-        <div style="font-size: 36px; font-weight: bold; color: #00b5e2;
-                    letter-spacing: 3px; margin-bottom: 8px;">CLANDO</div>
+
+<div id="login-page" style="position: fixed; inset: 0; background: #0f0f0f; display: flex; align-items: center; justify-content: center; z-index: 999;">
+    <div style="background: #1e1e1e; border-radius: 16px; padding: 40px; border: 1px solid #2a2a2a; width: 360px; text-align: center;">
+        <div style="font-size: 36px; font-weight: bold; color: #00b5e2; letter-spacing: 3px; margin-bottom: 8px;">CLANDO</div>
         <div style="color: #666; font-size: 13px; margin-bottom: 32px;">Administration</div>
-        <input id="login-password" type="password"
-            placeholder="Mot de passe admin"
-            style="width: 100%; background: #252525; border: 1px solid #2a2a2a;
-                   border-radius: 8px; padding: 12px 16px; color: #eee;
-                   font-size: 15px; margin-bottom: 16px;"
+        <input id="login-password" type="password" placeholder="Mot de passe admin"
+            style="width: 100%; background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px 16px; color: #eee; font-size: 15px; margin-bottom: 16px;"
             onkeydown="if(event.key==='Enter') seConnecter()">
-        <div id="login-error" style="color: #e74c3c; font-size: 13px;
-                                      margin-bottom: 12px; display: none;">
-            Mot de passe incorrect
-        </div>
-        <button onclick="seConnecter()" style="
-            width: 100%; background: #00b5e2; color: white; border: none;
-            border-radius: 8px; padding: 14px; font-size: 15px;
-            font-weight: bold; cursor: pointer;">
-            Se connecter
-        </button>
+        <div id="login-error" style="color: #e74c3c; font-size: 13px; margin-bottom: 12px; display: none;">Mot de passe incorrect</div>
+        <button onclick="seConnecter()" style="width: 100%; background: #00b5e2; color: white; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: bold; cursor: pointer;">Se connecter</button>
     </div>
 </div>
+
 <div class="sidebar">
     <div class="logo">CLANDO <span>Administration</span></div>
     <nav class="nav">
@@ -203,32 +127,18 @@
 </div>
 
 <div class="main">
-
-    <!-- Dashboard -->
     <div id="page-dashboard" class="page active">
         <h1>Tableau de bord</h1>
-        <div class="stats-grid" id="stats-grid">
-            <div class="loading">Chargement...</div>
-        </div>
+        <div class="stats-grid" id="stats-grid"><div class="loading">Chargement...</div></div>
     </div>
-
-    <!-- Documents -->
     <div id="page-documents" class="page">
         <h1>Documents à valider</h1>
-        <div class="card">
-            <div id="documents-table"><div class="loading">Chargement...</div></div>
-        </div>
+        <div class="card"><div id="documents-table"><div class="loading">Chargement...</div></div></div>
     </div>
-
-    <!-- Signalements -->
     <div id="page-signalements" class="page">
         <h1>Signalements</h1>
-        <div class="card">
-            <div id="signalements-table"><div class="loading">Chargement...</div></div>
-        </div>
+        <div class="card"><div id="signalements-table"><div class="loading">Chargement...</div></div></div>
     </div>
-
-    <!-- Utilisateurs -->
     <div id="page-utilisateurs" class="page">
         <h1>Utilisateurs</h1>
         <div class="card">
@@ -239,10 +149,8 @@
             <div id="utilisateurs-table"><div class="loading">Chargement...</div></div>
         </div>
     </div>
-
 </div>
 
-<!-- Modal réponse signalement -->
 <div class="modal-overlay" id="modal-signalement">
     <div class="modal">
         <h2>Répondre au signalement</h2>
@@ -254,7 +162,6 @@
     </div>
 </div>
 
-<!-- Modal image document -->
 <div class="modal-overlay" id="modal-image">
     <div class="modal" style="text-align:center">
         <img id="modal-img" src="" style="max-width:100%; border-radius:8px; margin-bottom:16px">
@@ -263,28 +170,28 @@
 </div>
 
 <script>
+    // IMPORTANT: API doit être déclaré en premier
+    const API = 'https://clando-production.up.railway.app';
     const ADMIN_PASSWORD = 'abdoul';
-
-function seConnecter() {
-    const pwd = document.getElementById('login-password').value;
-    if (pwd === ADMIN_PASSWORD) {
-        document.getElementById('login-page').style.display = 'none';
-        sessionStorage.setItem('admin_auth', 'true');
-        chargerStats();
-    } else {
-        document.getElementById('login-error').style.display = 'block';
-        document.getElementById('login-password').value = '';
-    }
-}
-
-// Vérifier si déjà connecté
-if (sessionStorage.getItem('admin_auth') === 'true') {
-    document.getElementById('login-page').style.display = 'none';
-    chargerStats();
-}
-const API = 'http://192.168.1.170:8080';
     let tousUtilisateurs = [];
     let signalementEnCours = null;
+
+    function seConnecter() {
+        const pwd = document.getElementById('login-password').value;
+        if (pwd === ADMIN_PASSWORD) {
+            document.getElementById('login-page').style.display = 'none';
+            sessionStorage.setItem('admin_auth', 'true');
+            chargerStats();
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+            document.getElementById('login-password').value = '';
+        }
+    }
+
+    if (sessionStorage.getItem('admin_auth') === 'true') {
+        document.getElementById('login-page').style.display = 'none';
+        chargerStats();
+    }
 
     async function get(url) {
         const r = await fetch(API + url);
@@ -301,7 +208,6 @@ const API = 'http://192.168.1.170:8080';
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
         event.currentTarget.classList.add('active');
-
         if (page === 'dashboard') chargerStats();
         if (page === 'documents') chargerDocuments();
         if (page === 'signalements') chargerSignalements();
@@ -356,8 +262,8 @@ const API = 'http://192.168.1.170:8080';
                         <tr>
                             <td>
                                 <img class="doc-preview"
-                                    src="${API}/${d.cheminFichier ? d.cheminFichier.replace(/\\\\/g, '/') : ''}"
-                                    onclick="voirImage('${API}/${d.cheminFichier ? d.cheminFichier.replace(/\\\\/g, '/') : ''}')"
+                                    src="${API}/api/documents/fichier/${d.id}"
+                                    onclick="voirImage('${API}/api/documents/fichier/${d.id}')"
                                     onerror="this.style.display='none'">
                             </td>
                             <td>${d.utilisateurPrenom} ${d.utilisateurNom}</td>
@@ -458,7 +364,7 @@ const API = 'http://192.168.1.170:8080';
                         <tr>
                             <td>
                                 ${u.photo
-                                    ? `<img class="avatar-img" src="${API}/${u.photo.replace(/\\\\/g, '/')}">`
+                                    ? `<img class="avatar-img" src="${API}/api/utilisateurs/photo/${u.photo.split('\\\\').pop().split('/').pop()}">`
                                     : `<div class="avatar">${(u.prenom||'?')[0]}${(u.nom||'?')[0]}</div>`
                                 }
                             </td>
@@ -494,27 +400,19 @@ const API = 'http://192.168.1.170:8080';
 
     function formatType(type) {
         const types = {
-            'CNI': 'CNI',
-            'PASSEPORT': 'Passeport',
-            'PERMIS_CONDUIRE': 'Permis',
-            'CERTIFICAT_IMMATRICULATION': 'Carte grise',
-            'PROBLEME_TECHNIQUE': 'Problème technique',
-            'COMPORTEMENT_INAPPROPRIE': 'Comportement',
-            'ARNAQUE': 'Arnaque',
-            'TRAJET_ANNULE': 'Trajet annulé',
-            'AUTRE': 'Autre'
+            'CNI': 'CNI', 'PASSEPORT': 'Passeport', 'PERMIS_CONDUIRE': 'Permis',
+            'CERTIFICAT_IMMATRICULATION': 'Carte grise', 'PROBLEME_TECHNIQUE': 'Problème technique',
+            'COMPORTEMENT_INAPPROPRIE': 'Comportement', 'ARNAQUE': 'Arnaque',
+            'TRAJET_ANNULE': 'Trajet annulé', 'AUTRE': 'Autre'
         };
         return types[type] || type;
     }
 
     function formatDate(dateStr) {
         if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('fr-FR', {
-            day: '2-digit', month: 'short', year: 'numeric'
-        });
+        return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // Chargement initial
     chargerStats();
 </script>
 </body>
