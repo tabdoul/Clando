@@ -13,6 +13,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -47,37 +48,33 @@ public class DjomyService {
         return clientId + ":" + signature;
     }
 
-   public String getAccessToken() throws Exception {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    headers.set("X-API-KEY", generateApiKey());
+    public String getAccessToken() throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-KEY", generateApiKey());
 
-    HttpEntity<Map<String, Object>> request = new HttpEntity<>(new HashMap<>(), headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(new HashMap<>(), headers);
 
-    System.out.println("=== X-API-KEY: " + generateApiKey());
-    System.out.println("=== URL: " + baseUrl + "/v1/auth");
-
-    try {
-        ResponseEntity<Map> response = restTemplate.exchange(
-            baseUrl + "/v1/auth",
-            HttpMethod.POST,
-            request,
-            Map.class
-        );
-        System.out.println("=== Réponse auth: " + response.getBody());
-        Map<String, Object> body = response.getBody();
-        if (body != null && body.containsKey("data")) {
-            Map<String, Object> data = (Map<String, Object>) body.get("data");
-            if (data != null && data.containsKey("accessToken")) {
-                return (String) data.get("accessToken");
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                baseUrl + "/v1/auth",
+                HttpMethod.POST,
+                request,
+                Map.class
+            );
+            Map<String, Object> body = response.getBody();
+            if (body != null && body.containsKey("data")) {
+                Map<String, Object> data = (Map<String, Object>) body.get("data");
+                if (data != null && data.containsKey("accessToken")) {
+                    return (String) data.get("accessToken");
+                }
             }
+            throw new RuntimeException("Impossible d'obtenir le token Djomy");
+        } catch (Exception e) {
+            System.out.println("=== Erreur auth: " + e.getMessage());
+            throw e;
         }
-        throw new RuntimeException("Impossible d'obtenir le token Djomy");
-    } catch (Exception e) {
-        System.out.println("=== Erreur auth: " + e.getMessage());
-        throw e;
     }
-}
 
     public Map<String, Object> initierPaiement(
             String numeroTelephone,
@@ -102,8 +99,6 @@ public class DjomyService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        System.out.println("=== Initier paiement: " + body);
-
         ResponseEntity<Map> response = restTemplate.exchange(
             baseUrl + "/v1/payments",
             HttpMethod.POST,
@@ -111,7 +106,44 @@ public class DjomyService {
             Map.class
         );
 
-        System.out.println("=== Réponse paiement: " + response.getBody());
+        return response.getBody();
+    }
+
+    public Map<String, Object> initierPaiementGateway(
+            String numeroTelephone,
+            double montant,
+            String reference,
+            String description) throws Exception {
+
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-KEY", generateApiKey());
+        headers.setBearerAuth(token);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("amount", montant);
+        body.put("countryCode", "GN");
+        body.put("payerNumber", numeroTelephone);
+        body.put("allowedPaymentMethods", List.of("OM"));
+        body.put("description", description);
+        body.put("merchantPaymentReference", reference);
+        body.put("returnUrl", "https://clando-production.up.railway.app/paiement-retour.html");
+        body.put("cancelUrl", "https://clando-production.up.railway.app/paiement-annule.html");
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        System.out.println("=== Initier paiement gateway: " + body);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+            baseUrl + "/v1/payments/gateway",
+            HttpMethod.POST,
+            request,
+            Map.class
+        );
+
+        System.out.println("=== Réponse gateway: " + response.getBody());
         return response.getBody();
     }
 

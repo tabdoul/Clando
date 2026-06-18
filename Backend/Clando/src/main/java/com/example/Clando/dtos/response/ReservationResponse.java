@@ -23,6 +23,7 @@ public class ReservationResponse {
     private String passagerPhoto;
     private String djomyTransactionId;
     private String statutPaiement;
+    private String urlPaiement;
 
     public ReservationResponse() {}
 
@@ -80,6 +81,9 @@ public class ReservationResponse {
     public String getStatutPaiement() { return statutPaiement; }
     public void setStatutPaiement(String statutPaiement) { this.statutPaiement = statutPaiement; }
 
+    public String getUrlPaiement() { return urlPaiement; }
+    public void setUrlPaiement(String urlPaiement) { this.urlPaiement = urlPaiement; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -102,6 +106,7 @@ public class ReservationResponse {
         public Builder passagerPhoto(String val) { r.passagerPhoto = val; return this; }
         public Builder djomyTransactionId(String val) { r.djomyTransactionId = val; return this; }
         public Builder statutPaiement(String val) { r.statutPaiement = val; return this; }
+        public Builder urlPaiement(String val) { r.urlPaiement = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

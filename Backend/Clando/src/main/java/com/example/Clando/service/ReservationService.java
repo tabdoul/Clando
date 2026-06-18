@@ -2,6 +2,7 @@ package com.example.Clando.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -61,7 +62,7 @@ public class ReservationService {
             reservation.setPrixPropose(request.getPrixPropose());
         }
 
-        // Initier le paiement Orange Money si numéro fourni
+        // Initier le paiement Orange Money gateway si numéro fourni
         if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
             try {
                 double montant = request.getPrixPropose() != null
@@ -73,24 +74,26 @@ public class ReservationService {
 
                 String reference = "CLANDO-" + System.currentTimeMillis();
 
-                java.util.Map<String, Object> paiement = djomyService.initierPaiement(
+                Map<String, Object> paiement = djomyService.initierPaiementGateway(
                     request.getNumeroTelephone(),
                     montant,
                     reference,
                     description
                 );
 
-                java.util.Map<String, Object> data =
-                    (java.util.Map<String, Object>) paiement.get("data");
-
-                if (data != null && data.containsKey("transactionId")) {
-                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+                if (data != null) {
+                    if (data.containsKey("transactionId")) {
+                        reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                    }
+                    if (data.containsKey("paymentUrl")) {
+                        reservation.setUrlPaiement((String) data.get("paymentUrl"));
+                    }
                     reservation.setStatutPaiement("PENDING");
                     reservation.setNumeroTelephone(request.getNumeroTelephone());
                 }
             } catch (Exception e) {
                 System.out.println("Erreur paiement Djomy: " + e.getMessage());
-                // On continue sans paiement si erreur
             }
         }
 
@@ -203,6 +206,7 @@ public class ReservationService {
                 .passagerPhoto(r.getPassager().getPhoto())
                 .djomyTransactionId(r.getDjomyTransactionId())
                 .statutPaiement(r.getStatutPaiement())
+                .urlPaiement(r.getUrlPaiement())
                 .build();
     }
 }
