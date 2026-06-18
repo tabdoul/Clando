@@ -256,8 +256,7 @@ export default function ProfilScreen({ navigation }) {
                     <TouchableOpacity onPress={changerPhoto} style={styles.avatarContainer}>
                         {utilisateur?.photo ? (
                             <Image
-    source={{ uri: `http://192.168.1.170:8080/api/utilisateurs/photo/${utilisateur.photo.split('\\').pop().split('/').pop()}?t=${photoKey}` }}
-    style={styles.avatarImage}
+source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/${utilisateur.photo.split('\\').pop().split('/').pop()}?t=${photoKey}` }}    style={styles.avatarImage}
 />
                         ) : (
                             <View style={styles.avatar}>

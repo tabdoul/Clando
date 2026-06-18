@@ -156,7 +156,7 @@ export default function NotificationsScreen({ navigation }) {
                                 <View style={styles.avatarContainer}>
                                     {item.passagerPhoto ? (
                                         <Image
-                                            source={{ uri: `http://192.168.1.170:8080/${item.passagerPhoto.replace(/\\/g, '/')}` }}
+                                            source={{ uri: `https://clando-production.up.railway.app:8080/${item.passagerPhoto.replace(/\\/g, '/')}` }}
                                             style={styles.avatarImage}
                                         />
                                     ) : (
