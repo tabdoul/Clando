@@ -1,4 +1,12 @@
 package com.example.Clando.service;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -7,13 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class DjomyService {
@@ -128,7 +129,9 @@ public class DjomyService {
         body.put("amount", montant);
         body.put("countryCode", "GN");
         body.put("payerNumber", numeroTelephone);
-        body.put("allowedPaymentMethods", List.of("OM"));
+        // body.put("allowedPaymentMethods", List.of("OM"));
+        // Accepte toutes les méthodes incluant les cartes
+        body.put("allowedPaymentMethods", List.of("OM", "CARD", "PAYCARD", "SOUTRA_MONEY"));
         body.put("description", description);
         body.put("merchantPaymentReference", reference);
         body.put("returnUrl", "https://clando-production.up.railway.app/paiement-retour.html");
