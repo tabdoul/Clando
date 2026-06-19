@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement confirmé - Clando</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #121212; color: #eee;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 24px;
+        }
+        .card {
+            background: #1e1e1e; border-radius: 20px; padding: 40px;
+            text-align: center; max-width: 400px; width: 100%;
+            border: 1px solid #2a2a2a;
+        }
+        .icon {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #1a3a2a; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 24px;
+            font-size: 40px;
+        }
+        h1 { font-size: 24px; color: #2ecc71; margin-bottom: 12px; }
+        p { font-size: 15px; color: #888; line-height: 1.6; margin-bottom: 8px; }
+        .transaction {
+            background: #252525; border-radius: 10px; padding: 12px;
+            margin: 20px 0; font-size: 13px; color: #666;
+        }
+        .transaction span { color: #00b5e2; font-weight: 600; }
+        .bouton {
+            display: inline-block; background: #00b5e2; color: white;
+            padding: 14px 32px; border-radius: 12px; text-decoration: none;
+            font-weight: bold; font-size: 15px; margin-top: 8px;
+            cursor: pointer; border: none; width: 100%;
+        }
+        .bouton:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Paiement confirmé !</h1>
+        <p>Votre paiement a été effectué avec succès.</p>
+        <p>Votre réservation est en attente de confirmation du conducteur.</p>
+
+        <div class="transaction" id="transaction-info">
+            Transaction ID : <span id="transaction-id">-</span>
+        </div>
+
+        <p style="font-size: 13px; color: #666; margin-top: 8px;">
+            Vous pouvez retourner sur l'application Clando pour suivre votre réservation.
+        </p>
+
+        <button class="bouton" onclick="retournerApp()">
+            Retourner sur Clando
+        </button>
+    </div>
+
+    <script>
+        // Récupérer les paramètres de l'URL
+        const params = new URLSearchParams(window.location.search);
+        const transactionId = params.get('transactionId');
+        const status = params.get('status');
+
+        if (transactionId) {
+            document.getElementById('transaction-id').textContent = transactionId;
+        }
+
+        function retournerApp() {
+            // Essayer d'ouvrir l'app mobile
+            window.location.href = 'clandomobile://';
+            // Fallback après 2 secondes
+            setTimeout(() => {
+                window.close();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
