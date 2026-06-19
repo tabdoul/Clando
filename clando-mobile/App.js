@@ -17,6 +17,7 @@ import AvisScreen from './src/screens/AvisScreen';
 import DocumentsScreen from './src/screens/DocumentsScreen';
 import AideScreen from './src/screens/AideScreen';
 import * as Notifications from 'expo-notifications';
+import TrajetDetailScreen from './src/screens/TrajetDetailScreen';
 
 const Stack = createStackNavigator();
 
@@ -99,6 +100,7 @@ export default function App() {
                 <Stack.Screen name="Avis" component={AvisScreen} />
                 <Stack.Screen name="Documents" component={DocumentsScreen} />
                 <Stack.Screen name="Aide" component={AideScreen} />
+                <Stack.Screen name="TrajetDetail" component={TrajetDetailScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
