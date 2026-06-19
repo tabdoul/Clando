@@ -71,19 +71,21 @@ public class MessageService {
         });
     }
 
-    public MessageResponse toResponse(Message m) {
-        return MessageResponse.builder()
-                .id(m.getId())
-                .contenu(m.getContenu())
-                .expediteurId(m.getExpediteur().getId())
-                .expediteurNom(m.getExpediteur().getNom())
-                .expediteurPrenom(m.getExpediteur().getPrenom())
-                .destinataireId(m.getDestinataire().getId())
-                .reservationId(m.getReservation().getId())
-                .dateEnvoi(m.getDateEnvoi())
-                .lu(m.isLu())
-                .destinataireNom(m.getDestinataire().getNom())
-                .destinatairePrenom(m.getDestinataire().getPrenom())
-                .build();
-    }
+   public MessageResponse toResponse(Message m) {
+    return MessageResponse.builder()
+            .id(m.getId())
+            .contenu(m.getContenu())
+            .expediteurId(m.getExpediteur().getId())
+            .expediteurNom(m.getExpediteur().getNom())
+            .expediteurPrenom(m.getExpediteur().getPrenom())
+            .expediteurPhoto(m.getExpediteur().getPhoto())
+            .destinataireId(m.getDestinataire().getId())
+            .destinataireNom(m.getDestinataire().getNom())
+            .destinatairePrenom(m.getDestinataire().getPrenom())
+            .destinatairePhoto(m.getDestinataire().getPhoto())
+            .reservationId(m.getReservation().getId())
+            .dateEnvoi(m.getDateEnvoi())
+            .lu(m.isLu())
+            .build();
+}
 }

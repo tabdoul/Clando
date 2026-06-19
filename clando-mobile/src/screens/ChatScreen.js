@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, FlatList, ActivityIndicator,
-    KeyboardAvoidingView, Platform, Alert
+    KeyboardAvoidingView, Platform, Alert,Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -117,10 +117,17 @@ export default function ChatScreen({ route, navigation }) {
                     <Ionicons name="arrow-back" size={24} color="#eee" />
                 </TouchableOpacity>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {interlocuteur.prenom?.charAt(0)}{interlocuteur.nom?.charAt(0)}
-                    </Text>
-                </View>
+    {interlocuteur.photo ? (
+        <Image
+            source={{ uri: interlocuteur.photo }}
+            style={styles.avatarImage}
+        />
+    ) : (
+        <Text style={styles.avatarText}>
+            {interlocuteur.prenom?.charAt(0)}{interlocuteur.nom?.charAt(0)}
+        </Text>
+    )}
+</View>
                 <Text style={styles.headerNom}>
                     {interlocuteur.prenom} {interlocuteur.nom}
                 </Text>
@@ -157,6 +164,7 @@ export default function ChatScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+    avatarImage: { width: 40, height: 40, borderRadius: 20 },
     container: { flex: 1, backgroundColor: '#121212' },
     loadingContainer: {
         flex: 1, backgroundColor: '#121212',

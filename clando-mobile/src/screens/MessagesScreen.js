@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, 
+    ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
 
 export default function MessagesScreen({ navigation }) {
     const [conversations, setConversations] = useState([]);
@@ -29,7 +31,7 @@ export default function MessagesScreen({ navigation }) {
 
             const response = await api.get(`/messages/conversations/${id}`);
 
-            const grouped = {};
+   const grouped = {};
 response.data.forEach(msg => {
     const resId = msg.reservationId;
     if (!grouped[resId]) {
@@ -41,12 +43,14 @@ response.data.forEach(msg => {
                 ? { 
                     id: msg.destinataireId,
                     nom: msg.destinataireNom,
-                    prenom: msg.destinatairePrenom
+                    prenom: msg.destinatairePrenom,
+                    photo: msg.destinatairePhoto
                 }
                 : { 
                     id: msg.expediteurId, 
                     nom: msg.expediteurNom, 
-                    prenom: msg.expediteurPrenom 
+                    prenom: msg.expediteurPrenom,
+                    photo: msg.expediteurPhoto
                 }
         };
     }
@@ -132,10 +136,17 @@ response.data.forEach(msg => {
                             })}>
 
                             <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>
-                                    {getInitiales(conv.interlocuteur.nom, conv.interlocuteur.prenom)}
-                                </Text>
-                            </View>
+    {conv.interlocuteur.photo ? (
+        <Image
+            source={{ uri: conv.interlocuteur.photo }}
+            style={styles.avatarImage}
+        />
+    ) : (
+        <Text style={styles.avatarText}>
+            {getInitiales(conv.interlocuteur.nom, conv.interlocuteur.prenom)}
+        </Text>
+    )}
+</View>
 
                             <View style={styles.convInfo}>
                                 <View style={styles.convHeader}>
@@ -172,6 +183,7 @@ response.data.forEach(msg => {
 }
 
 const styles = StyleSheet.create({
+    avatarImage: { width: 48, height: 48, borderRadius: 24 },
     container: { flex: 1, backgroundColor: '#121212' },
     loadingContainer: {
         flex: 1, backgroundColor: '#121212',
