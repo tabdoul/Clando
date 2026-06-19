@@ -50,6 +50,9 @@ public class Utilisateur {
     @Column(nullable = false)
     private boolean verifie = false;
 
+    private String expoPushToken;
+
+
     @OneToMany(mappedBy = "conducteur", cascade = CascadeType.ALL)
     private List<Vehicule> vehicules;
 
@@ -95,18 +98,24 @@ public class Utilisateur {
 
     public String getMiniBio() { return miniBio; }
     public void setMiniBio(String miniBio) { this.miniBio = miniBio; }
+    
+    public String getExpoPushToken() { return expoPushToken; }
+    public void setExpoPushToken(String expoPushToken) { this.expoPushToken = expoPushToken; }
 
     public LocalDate getDateInscription() { return dateInscription; }
     public void setDateInscription(LocalDate dateInscription) { this.dateInscription = dateInscription; }
+    
 
     public boolean isVerifie() { return verifie; }
     public void setVerifie(boolean verifie) { this.verifie = verifie; }
+    
 
     public List<Vehicule> getVehicules() { return vehicules; }
     public List<Trajet> getTrajetsConduits() { return trajetsConduits; }
     public List<Reservation> getReservations() { return reservations; }
     public List<Avis> getAvisRediges() { return avisRediges; }
     public List<Avis> getAvisRecus() { return avisRecus; }
+    
 
     public static Builder builder() { return new Builder(); }
 

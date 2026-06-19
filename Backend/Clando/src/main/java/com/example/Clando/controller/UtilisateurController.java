@@ -49,6 +49,18 @@ public class UtilisateurController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/push-token")
+    public ResponseEntity<?> savePushToken(
+            @PathVariable Long id,
+            @RequestParam String token) {
+        try {
+            utilisateurService.savePushToken(id, token);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/photo")
     public ResponseEntity<?> uploadPhoto(
             @PathVariable Long id,

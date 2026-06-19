@@ -73,6 +73,12 @@ public class UtilisateurService {
         return toResponse(utilisateurRepository.save(utilisateur));
     }
 
+    public void savePushToken(Long id, String token) {
+        Utilisateur utilisateur = findById(id);
+        utilisateur.setExpoPushToken(token);
+        utilisateurRepository.save(utilisateur);
+    }
+
     public void supprimer(Long id) {
         utilisateurRepository.deleteById(id);
     }
