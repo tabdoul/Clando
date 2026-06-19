@@ -1,3 +1,5 @@
+// src/app/features/reservations/notifications/notifications.ts
+
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -44,10 +46,14 @@ export class NotificationsComponent implements OnInit {
     chargerReservations(): void {
         this.loading = true;
         const userId = this.authService.getUserId();
-        if (!userId) return;
+        if (!userId) {
+            this.loading = false;
+            return;
+        }
 
+        // GET /reservations/conducteur/{id}/en-attente
         this.reservationService.getEnAttenteParConducteur(userId).subscribe({
-            next: (data) => {
+            next: (data: Reservation[]) => {
                 this.reservations = data;
                 this.loading = false;
                 this.cdr.detectChanges();
@@ -61,6 +67,7 @@ export class NotificationsComponent implements OnInit {
     }
 
     accepter(id: number): void {
+        // PATCH /reservations/{id}/statut?statut=CONFIRMEE
         this.reservationService.changerStatut(id, 'CONFIRMEE').subscribe({
             next: () => {
                 this.snackBar.open('✅ Réservation confirmée !', 'Fermer', { duration: 3000 });
@@ -72,7 +79,9 @@ export class NotificationsComponent implements OnInit {
     }
 
     refuser(id: number): void {
-        this.reservationService.changerStatut(id, 'REFUSEE').subscribe({
+        // PATCH /reservations/{id}/negociation?accepter=false
+        // Le backend gère la logique REFUSEE / PRIX_REFUSE selon nbTentatives
+        this.reservationService.repondreNegociation(id, false).subscribe({
             next: () => {
                 this.snackBar.open('❌ Réservation refusée', 'Fermer', { duration: 3000 });
                 this.chargerReservations();
@@ -82,12 +91,7 @@ export class NotificationsComponent implements OnInit {
         });
     }
 
-    getStatutColor(statut: string): string {
-        switch (statut) {
-            case 'CONFIRMEE': return 'primary';
-            case 'EN_ATTENTE': return 'accent';
-            case 'REFUSEE': return 'warn';
-            default: return 'primary';
-        }
+    getNomPassager(r: Reservation): string {
+        return `${r.passagerPrenom ?? ''} ${r.passagerNom ?? ''}`.trim() || 'Passager inconnu';
     }
 }

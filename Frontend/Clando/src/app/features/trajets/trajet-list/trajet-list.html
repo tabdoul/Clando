@@ -14,26 +14,26 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
 
           <mat-form-field appearance="outline" style="width: 100%;">
-            <mat-label>📍 Lieu de départ</mat-label>
+            <mat-label> Lieu de départ</mat-label>
             <input matInput formControlName="villeDepart" placeholder="Ex: Conakry">
             <mat-icon matSuffix>my_location</mat-icon>
           </mat-form-field>
 
           <mat-form-field appearance="outline" style="width: 100%;">
-            <mat-label>📍 Lieu d'arrivée</mat-label>
+            <mat-label> Lieu d'arrivée</mat-label>
             <input matInput formControlName="villeArrivee" placeholder="Ex: Kindia">
             <mat-icon matSuffix>location_on</mat-icon>
           </mat-form-field>
 
           <mat-form-field appearance="outline" style="width: 100%;">
-            <mat-label>📅 Date de départ</mat-label>
+            <mat-label> Date de départ</mat-label>
             <input matInput [matDatepicker]="picker" formControlName="dateDepart" placeholder="JJ/MM/AAAA">
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline" style="width: 100%;">
-            <mat-label>👥 Passagers</mat-label>
+            <mat-label> Passagers</mat-label>
             <input matInput formControlName="nbPassagers" type="number" min="1" max="9">
             <mat-icon matSuffix>person</mat-icon>
           </mat-form-field>

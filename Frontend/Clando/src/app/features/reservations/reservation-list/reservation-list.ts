@@ -1,11 +1,13 @@
+// src/app/features/reservations/reservation-list/reservation-list.ts
+
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatDividerModule } from '@angular/material/divider';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { Reservation } from '../../../shared/models/reservation.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -19,17 +21,21 @@ import { AuthService } from '../../../core/services/auth.service';
         MatButtonModule,
         MatIconModule,
         MatSnackBarModule,
-        MatChipsModule,
-        MatTableModule
+        MatTabsModule,
+        MatDividerModule
     ],
     templateUrl: './reservation-list.html',
     styleUrl: './reservation-list.css'
 })
 export class ReservationListComponent implements OnInit {
 
-    reservations: Reservation[] = [];
-    displayedColumns = ['trajet', 'date', 'places', 'statut', 'actions'];
-    loading = false;
+    // Onglet passager : mes réservations effectuées
+    mesReservations: Reservation[] = [];
+    loadingPassager = false;
+
+    // Onglet conducteur : toutes les demandes sur mes trajets
+    reservationsRecues: Reservation[] = [];
+    loadingConducteur = false;
 
     constructor(
         private reservationService: ReservationService,
@@ -39,59 +45,154 @@ export class ReservationListComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.chargerReservations();
+        this.chargerMesReservations();
+        this.chargerReservationsRecues();
     }
-chargerReservations(): void {
-    this.loading = true;
-    const userId = this.authService.getUserId() || 1;
-    this.reservationService.getByPassager(userId).subscribe({
-        next: (data) => {
-            const maintenant = new Date();
-            const uneSemaine = 7 * 24 * 60 * 60 * 1000; // 7 jours en millisecondes
 
-            this.reservations = data.filter(r => {
-                // Toujours afficher EN_ATTENTE
-                if (r.statut === 'EN_ATTENTE') return true;
+    // ─── ONGLET PASSAGER ────────────────────────────────────────
 
-                // Pour CONFIRMEE — afficher seulement si moins de 7 jours
-                if (r.statut === 'CONFIRMEE') {
-                       if (!r.dateReservation) return true; // si pas de date, on affiche quand même
-                          const dateReservation = new Date(r.dateReservation);
-                          const diff = maintenant.getTime() - dateReservation.getTime();
-                          return diff < uneSemaine;
-}
+    chargerMesReservations(): void {
+        this.loadingPassager = true;
+        const userId = this.authService.getUserId();
+        if (!userId) { this.loadingPassager = false; return; }
 
-                return false;
-            });
-
-            this.loading = false;
-            this.cdr.detectChanges();
-        },
-        error: () => {
-            this.loading = false;
-            this.cdr.detectChanges();
-            this.snackBar.open('Erreur lors du chargement', 'Fermer', { duration: 3000 });
-        }
-    });
-}
-
-    annuler(id: number): void {
-        this.reservationService.changerStatut(id, 'ANNULEE').subscribe({
-            next: () => {
-                this.snackBar.open('Réservation annulée', 'Fermer', { duration: 3000 });
-                this.chargerReservations();
+        this.reservationService.getByPassager(userId).subscribe({
+            next: (data) => {
+                // Trier : actives en premier, terminées/annulées en bas
+                this.mesReservations = data.sort((a, b) => {
+                    const ordre: Record<string, number> = {
+                        'EN_ATTENTE': 0,
+                        'CONFIRMEE': 1,
+                        'PRIX_REFUSE': 2,
+                        'REFUSEE': 3,
+                        'ANNULEE': 4,
+                        'TERMINEE': 5
+                    };
+                    return (ordre[a.statut] ?? 9) - (ordre[b.statut] ?? 9);
+                });
+                this.loadingPassager = false;
                 this.cdr.detectChanges();
             },
-            error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
+            error: () => {
+                this.loadingPassager = false;
+                this.cdr.detectChanges();
+                this.snackBar.open('Erreur lors du chargement', 'Fermer', { duration: 3000 });
+            }
         });
     }
 
-    getStatutColor(statut: string): string {
+    // Un passager peut annuler uniquement si EN_ATTENTE, CONFIRMEE ou PRIX_REFUSE
+    peutAnnuler(r: Reservation): boolean {
+        return r.statut === 'EN_ATTENTE'
+            || r.statut === 'CONFIRMEE'
+            || r.statut === 'PRIX_REFUSE';
+    }
+
+    annulerReservation(r: Reservation): void {
+        if (!r.id) return;
+        if (!confirm('Confirmer l\'annulation de cette réservation ?')) return;
+
+        // On utilise l'endpoint /annuler qui gère le remboursement Djomy
+        this.reservationService.annuler(r.id).subscribe({
+            next: (res) => {
+                this.snackBar.open(res.message, 'Fermer', { duration: 5000 });
+                this.chargerMesReservations();
+            },
+            error: (err) => {
+                const message = err.error?.erreur || 'Erreur lors de l\'annulation';
+                this.snackBar.open(message, 'Fermer', { duration: 3000 });
+            }
+        });
+    }
+
+    // ─── ONGLET CONDUCTEUR ──────────────────────────────────────
+
+    chargerReservationsRecues(): void {
+        this.loadingConducteur = true;
+        const userId = this.authService.getUserId();
+        if (!userId) { this.loadingConducteur = false; return; }
+
+        // On charge toutes les réservations du conducteur (pas seulement EN_ATTENTE)
+        // pour afficher l'historique complet
+        this.reservationService.getEnAttenteParConducteur(userId).subscribe({
+            next: (data) => {
+                this.reservationsRecues = data;
+                this.loadingConducteur = false;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.loadingConducteur = false;
+                this.cdr.detectChanges();
+                this.snackBar.open('Erreur lors du chargement', 'Fermer', { duration: 3000 });
+            }
+        });
+    }
+
+    confirmerReservation(r: Reservation): void {
+        if (!r.id) return;
+        this.reservationService.changerStatut(r.id, 'CONFIRMEE').subscribe({
+            next: () => {
+                this.snackBar.open('✅ Réservation confirmée !', 'Fermer', { duration: 3000 });
+                this.chargerReservationsRecues();
+            },
+            error: (err) => {
+                const message = err.error?.erreur || 'Erreur';
+                this.snackBar.open(message, 'Fermer', { duration: 3000 });
+            }
+        });
+    }
+
+    refuserReservation(r: Reservation): void {
+        if (!r.id) return;
+        if (!confirm('Refuser cette demande de réservation ?')) return;
+
+        // Le backend gère REFUSEE si nbTentatives >= 1, sinon PRIX_REFUSE
+        // Ici le conducteur refuse directement → on passe REFUSEE via repondreNegociation
+        this.reservationService.repondreNegociation(r.id, false).subscribe({
+            next: () => {
+                this.snackBar.open('Réservation refusée', 'Fermer', { duration: 3000 });
+                this.chargerReservationsRecues();
+            },
+            error: (err) => {
+                const message = err.error?.erreur || 'Erreur';
+                this.snackBar.open(message, 'Fermer', { duration: 3000 });
+            }
+        });
+    }
+
+    // ─── UTILITAIRES ────────────────────────────────────────────
+
+    getStatutLabel(statut: string): string {
         switch (statut) {
-            case 'CONFIRMEE': return 'primary';
-            case 'EN_ATTENTE': return 'accent';
-            case 'ANNULEE': return 'warn';
-            default: return 'primary';
+            case 'EN_ATTENTE':  return '⏳ En attente';
+            case 'CONFIRMEE':   return '✅ Confirmée';
+            case 'ANNULEE':     return '❌ Annulée';
+            case 'REFUSEE':     return ' Refusée';
+            case 'PRIX_REFUSE': return ' Prix refusé';
+            case 'TERMINEE':    return ' Terminée';
+            default:            return statut;
         }
+    }
+
+    getStatutStyle(statut: string): string {
+        const base = 'padding:4px 12px;border-radius:20px;font-size:0.8rem;white-space:nowrap;font-weight:500;';
+        switch (statut) {
+            case 'EN_ATTENTE':  return base + 'background:#ff9800;color:white;';
+            case 'CONFIRMEE':   return base + 'background:#4caf50;color:white;';
+            case 'ANNULEE':     return base + 'background:#f44336;color:white;';
+            case 'REFUSEE':     return base + 'background:#9c27b0;color:white;';
+            case 'PRIX_REFUSE': return base + 'background:#2196f3;color:white;';
+            case 'TERMINEE':    return base + 'background:#9e9e9e;color:white;';
+            default:            return base;
+        }
+    }
+
+    getNomPassager(r: Reservation): string {
+        return `${r.passagerPrenom ?? ''} ${r.passagerNom ?? ''}`.trim() || 'Passager inconnu';
+    }
+
+    getTrajetLabel(r: Reservation): string {
+        if (!r.villeDepart && !r.villeArrivee) return '—';
+        return `${r.villeDepart ?? '?'} → ${r.villeArrivee ?? '?'}`;
     }
 }

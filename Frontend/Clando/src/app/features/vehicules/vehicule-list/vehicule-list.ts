@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -53,7 +53,8 @@ export class VehiculeListComponent implements OnInit {
         private trajetService: TrajetService,
         private authService: AuthService,
         private snackBar: MatSnackBar,
-        private router: Router
+        private router: Router,
+        private cdr: ChangeDetectorRef
     ) {
         this.trajetForm = this.fb.group({
             villeDepart: ['', Validators.required],
@@ -78,20 +79,24 @@ export class VehiculeListComponent implements OnInit {
         this.chargerVehicules();
     }
 
-    chargerVehicules(): void {
-        const userId = this.authService.getUserId();
-        if (!userId) return;
+   chargerVehicules(): void {
+    const userId = this.authService.getUserId();
+    if (!userId) return;
 
-        this.vehiculeService.getByConducteur(userId).subscribe({
-            next: (data) => {
-                this.vehicules = data;
-                if (data.length > 0) {
-                    this.vehiculeSelectionne = data[0];
-                }
-            },
-            error: () => this.snackBar.open('Erreur lors du chargement des véhicules', 'Fermer', { duration: 3000 })
-        });
-    }
+    this.vehiculeService.getByConducteur(userId).subscribe({
+        next: (data) => {
+            this.vehicules = data;
+            if (data.length > 0) {
+                this.vehiculeSelectionne = data[0];
+            }
+            this.cdr.detectChanges(); // ← ajout
+        },
+        error: () => {
+            this.snackBar.open('Erreur lors du chargement des véhicules', 'Fermer', { duration: 3000 });
+            this.cdr.detectChanges(); // ← ajout
+        }
+    });
+}
 
     selectionnerVehicule(vehicule: any): void {
         this.vehiculeSelectionne = vehicule;
@@ -110,12 +115,13 @@ export class VehiculeListComponent implements OnInit {
 
         this.vehiculeService.creer(vehiculeData).subscribe({
             next: (vehicule) => {
-                this.snackBar.open('✅ Véhicule ajouté !', 'Fermer', { duration: 3000 });
-                this.showNouveauVehicule = false;
-                this.vehiculeForm.reset({ nbPlaces: 4 });
-                this.chargerVehicules();
-                this.vehiculeSelectionne = vehicule;
-            },
+    this.snackBar.open('✅ Véhicule ajouté !', 'Fermer', { duration: 3000 });
+    this.showNouveauVehicule = false;
+    this.vehiculeForm.reset({ nbPlaces: 4 });
+    this.chargerVehicules();
+    this.vehiculeSelectionne = vehicule;
+    this.cdr.detectChanges(); // ← ajout
+},
             error: () => this.snackBar.open('Erreur lors de l\'ajout du véhicule', 'Fermer', { duration: 3000 })
         });
     }

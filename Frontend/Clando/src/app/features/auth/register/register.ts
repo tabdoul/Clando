@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -35,7 +35,8 @@ export class RegisterComponent {
         private fb: FormBuilder,
         private http: HttpClient,
         private router: Router,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private cdr: ChangeDetectorRef
     ) {
         this.registerForm = this.fb.group({
             nom: ['', Validators.required],
@@ -50,13 +51,18 @@ export class RegisterComponent {
         if (this.registerForm.invalid) return;
 
         this.loading = true;
+        this.cdr.detectChanges(); // ← informe Angular immédiatement
+
         this.http.post(`${environment.apiUrl}/utilisateurs`, this.registerForm.value).subscribe({
             next: () => {
+                this.loading = false;
+                this.cdr.detectChanges();
                 this.snackBar.open('Compte créé avec succès !', 'Fermer', { duration: 3000 });
                 this.router.navigate(['/login']);
             },
             error: () => {
                 this.loading = false;
+                this.cdr.detectChanges();
                 this.snackBar.open('Erreur lors de la création du compte', 'Fermer', { duration: 3000 });
             }
         });

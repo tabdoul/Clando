@@ -1,65 +1,237 @@
-<div>
-    <h2>📋 Mes Réservations</h2>
+<!-- src/app/features/reservations/reservation-list/reservation-list.html -->
 
-    <p *ngIf="loading">Chargement...</p>
+<div style="max-width: 800px; margin: 30px auto; padding: 0 16px;">
 
-    <mat-card *ngIf="!loading && reservations.length === 0" style="text-align: center; padding: 40px;">
-        <mat-icon style="font-size: 48px;">event_busy</mat-icon>
-        <p>Aucune réservation trouvée</p>
-    </mat-card>
+    <h2 style="text-align: center; margin-bottom: 24px;">📋 Mes Réservations</h2>
 
-    <table mat-table [dataSource]="reservations" *ngIf="!loading && reservations.length > 0"
-           style="width: 100%;">
+    <mat-tab-group animationDuration="200ms">
 
-        <ng-container matColumnDef="trajet">
-            <th mat-header-cell *matHeaderCellDef>Trajet</th>
-            <td mat-cell *matCellDef="let r">
-                {{ r.villeDepart }} → {{ r.villeArrivee }}
-            </td>
-        </ng-container>
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ONGLET PASSAGER                                    -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <mat-tab label="Mes trajets réservés">
+            <div style="padding-top: 20px;">
 
-        <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Date réservation</th>
-            <td mat-cell *matCellDef="let r">
-                {{ r.dateReservation | date:'dd/MM/yyyy' }}
-            </td>
-        </ng-container>
+                <p *ngIf="loadingPassager" style="text-align:center;color:gray;">
+                    <mat-icon>hourglass_empty</mat-icon> Chargement...
+                </p>
 
-        <ng-container matColumnDef="places">
-            <th mat-header-cell *matHeaderCellDef>Places</th>
-            <td mat-cell *matCellDef="let r">{{ r.nbPlaces }}</td>
-        </ng-container>
+                <!-- Vide -->
+                <mat-card *ngIf="!loadingPassager && mesReservations.length === 0"
+                          style="text-align:center;padding:48px;border-radius:12px;">
+                    <mat-icon style="font-size:56px;color:#ccc;display:block;margin:0 auto 12px;">
+                        event_busy
+                    </mat-icon>
+                    <p style="color:#999;margin:0;">Aucune réservation pour le moment</p>
+                </mat-card>
 
-        <ng-container matColumnDef="statut">
-    <th mat-header-cell *matHeaderCellDef>Statut</th>
-    <td mat-cell *matCellDef="let r">
-        <span *ngIf="r.statut === 'CONFIRMEE'"
-              style="background: #4caf50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
-            ✅ Confirmée
-        </span>
-        <span *ngIf="r.statut === 'EN_ATTENTE'"
-              style="background: #ff9800; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
-            ⏳ En attente
-        </span>
-        <span *ngIf="r.statut === 'ANNULEE'"
-              style="background: #f44336; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">
-            ❌ Annulée par le conducteur
-        </span>
-    </td>
-</ng-container>
+                <!-- Cartes -->
+                <mat-card *ngFor="let r of mesReservations"
+                          style="margin-bottom:14px;padding:20px;border-radius:12px;
+                                 border:1px solid #e0e0e0;border-left:4px solid #00b5e2;">
 
-        <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let r">
-                <button mat-icon-button color="warn"
-                        [disabled]="r.statut === 'ANNULEE'"
-                        (click)="annuler(r.id)">
-                    <mat-icon>cancel</mat-icon>
-                </button>
-            </td>
-        </ng-container>
+                    <div style="display:flex;justify-content:space-between;
+                                align-items:flex-start;flex-wrap:wrap;gap:12px;">
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+                        <!-- Infos trajet -->
+                        <div style="flex:1;min-width:200px;">
+
+                            <!-- Villes -->
+                            <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px;">
+                                {{ getTrajetLabel(r) }}
+                            </div>
+
+                            <!-- Date réservation -->
+                            <div style="display:flex;align-items:center;gap:6px;
+                                        color:gray;font-size:0.85rem;margin-bottom:6px;">
+                                <mat-icon style="font-size:16px;width:16px;height:16px;">calendar_today</mat-icon>
+                                Réservé le {{ r.dateReservation | date:'dd/MM/yyyy' }}
+                            </div>
+
+                            <!-- Places -->
+                            <div style="display:flex;align-items:center;gap:6px;
+                                        color:gray;font-size:0.85rem;margin-bottom:6px;">
+                                <mat-icon style="font-size:16px;width:16px;height:16px;">event_seat</mat-icon>
+                                {{ r.nbPlaces }} place(s)
+                            </div>
+
+                            <!-- Prix proposé si négociation -->
+                            <div *ngIf="r.prixPropose"
+                                 style="display:flex;align-items:center;gap:6px;font-size:0.85rem;">
+                                <mat-icon style="font-size:16px;width:16px;height:16px;color:#00b5e2;">payments</mat-icon>
+                                <span style="color:#00b5e2;font-weight:600;">
+                                    Prix proposé : {{ r.prixPropose | number }} GNF
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <!-- Statut + action -->
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+                            <span [attr.style]="getStatutStyle(r.statut)">
+                                {{ getStatutLabel(r.statut) }}
+                            </span>
+
+                            <button *ngIf="peutAnnuler(r)"
+                                    mat-stroked-button color="warn"
+                                    style="border-radius:20px;font-size:0.82rem;"
+                                    (click)="annulerReservation(r)">
+                                <mat-icon style="font-size:16px;">cancel</mat-icon>
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Message contextuel selon statut -->
+                    <div *ngIf="r.statut === 'REFUSEE'"
+                         style="margin-top:12px;background:#f3e5f5;border-radius:8px;
+                                padding:10px 14px;font-size:0.85rem;color:#7b1fa2;
+                                display:flex;align-items:center;gap:8px;">
+                        <mat-icon style="font-size:18px;">block</mat-icon>
+                        Le conducteur a refusé votre demande.
+                    </div>
+
+                    <div *ngIf="r.statut === 'PRIX_REFUSE'"
+                         style="margin-top:12px;background:#e3f2fd;border-radius:8px;
+                                padding:10px 14px;font-size:0.85rem;color:#1565c0;
+                                display:flex;align-items:center;gap:8px;">
+                        <mat-icon style="font-size:18px;">chat</mat-icon>
+                        Le conducteur a refusé votre prix. Vous pouvez faire une nouvelle proposition.
+                    </div>
+
+                    <div *ngIf="r.statut === 'ANNULEE'"
+                         style="margin-top:12px;background:#fff3e0;border-radius:8px;
+                                padding:10px 14px;font-size:0.85rem;color:#e65100;
+                                display:flex;align-items:center;gap:8px;">
+                        <mat-icon style="font-size:18px;">info</mat-icon>
+                        Réservation annulée. Le remboursement sera effectué sous 24-48h.
+                    </div>
+
+                    <div *ngIf="r.statut === 'TERMINEE'"
+                         style="margin-top:12px;background:#f5f5f5;border-radius:8px;
+                                padding:10px 14px;font-size:0.85rem;color:#555;
+                                display:flex;align-items:center;gap:8px;">
+                        <mat-icon style="font-size:18px;">check_circle</mat-icon>
+                        Trajet terminé. Merci d'avoir voyagé avec Clando !
+                    </div>
+
+                </mat-card>
+
+            </div>
+        </mat-tab>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ONGLET CONDUCTEUR                                  -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <mat-tab label="Demandes reçues">
+            <div style="padding-top: 20px;">
+
+                <p *ngIf="loadingConducteur" style="text-align:center;color:gray;">
+                    <mat-icon>hourglass_empty</mat-icon> Chargement...
+                </p>
+
+                <!-- Vide -->
+                <mat-card *ngIf="!loadingConducteur && reservationsRecues.length === 0"
+                          style="text-align:center;padding:48px;border-radius:12px;">
+                    <mat-icon style="font-size:56px;color:#ccc;display:block;margin:0 auto 12px;">
+                        inbox
+                    </mat-icon>
+                    <p style="color:#999;margin:0;">Aucune demande en attente</p>
+                </mat-card>
+
+                <!-- Cartes demandes -->
+                <mat-card *ngFor="let r of reservationsRecues"
+                          style="margin-bottom:14px;padding:20px;border-radius:12px;
+                                 border:1px solid #e0e0e0;border-left:4px solid #ff9800;">
+
+                    <div style="display:flex;justify-content:space-between;
+                                align-items:flex-start;flex-wrap:wrap;gap:12px;">
+
+                        <!-- Infos passager + trajet -->
+                        <div style="flex:1;min-width:200px;">
+
+                            <!-- Passager -->
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                                <div style="width:36px;height:36px;border-radius:50%;
+                                            background:#00b5e2;display:flex;align-items:center;
+                                            justify-content:center;color:white;flex-shrink:0;">
+                                    <mat-icon style="font-size:20px;">person</mat-icon>
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;font-size:1rem;">
+                                        {{ getNomPassager(r) }}
+                                    </div>
+                                    <div style="font-size:0.8rem;color:gray;">
+                                        veut réserver votre trajet
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Trajet -->
+                            <div style="display:flex;align-items:center;gap:6px;
+                                        font-size:0.95rem;font-weight:600;margin-bottom:6px;">
+                                <mat-icon style="font-size:16px;width:16px;height:16px;color:#00b5e2;">
+                                    directions_car
+                                </mat-icon>
+                                {{ getTrajetLabel(r) }}
+                            </div>
+
+                            <!-- Places + date -->
+                            <div style="display:flex;align-items:center;gap:16px;
+                                        color:gray;font-size:0.85rem;">
+                                <span style="display:flex;align-items:center;gap:4px;">
+                                    <mat-icon style="font-size:16px;width:16px;height:16px;">event_seat</mat-icon>
+                                    {{ r.nbPlaces }} place(s)
+                                </span>
+                                <span style="display:flex;align-items:center;gap:4px;">
+                                    <mat-icon style="font-size:16px;width:16px;height:16px;">calendar_today</mat-icon>
+                                    {{ r.dateReservation | date:'dd/MM/yyyy' }}
+                                </span>
+                            </div>
+
+                            <!-- Prix proposé -->
+                            <div *ngIf="r.prixPropose"
+                                 style="margin-top:6px;display:flex;align-items:center;
+                                        gap:6px;font-size:0.85rem;">
+                                <mat-icon style="font-size:16px;width:16px;height:16px;color:#ff9800;">
+                                    payments
+                                </mat-icon>
+                                <span style="color:#e65100;font-weight:600;">
+                                    Prix proposé : {{ r.prixPropose | number }} GNF
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <!-- Statut + boutons -->
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+                            <span [attr.style]="getStatutStyle(r.statut)">
+                                {{ getStatutLabel(r.statut) }}
+                            </span>
+
+                            <!-- Actions uniquement si EN_ATTENTE -->
+                            <div *ngIf="r.statut === 'EN_ATTENTE'"
+                                 style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                                <button mat-raised-button color="primary"
+                                        style="border-radius:20px;font-size:0.82rem;"
+                                        (click)="confirmerReservation(r)">
+                                    <mat-icon style="font-size:16px;">check</mat-icon>
+                                    Confirmer
+                                </button>
+                                <button mat-stroked-button color="warn"
+                                        style="border-radius:20px;font-size:0.82rem;"
+                                        (click)="refuserReservation(r)">
+                                    <mat-icon style="font-size:16px;">close</mat-icon>
+                                    Refuser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </mat-card>
+
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
 </div>

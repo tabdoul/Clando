@@ -1,16 +1,14 @@
 export interface Trajet {
-    id?: number;
+    id: number;
     villeDepart: string;
     villeArrivee: string;
     dateHeureDepart: string;
-    placesDisponibles: number;
     prix: number;
+    placesDisponibles: number;
+    statut: string;
     itineraire?: string;
-    statut?: string;
-    conducteurId?: number;
     conducteurNom?: string;
     conducteurPrenom?: string;
-    vehiculeId?: number;
     vehiculeMarque?: string;
     vehiculeModele?: string;
 }

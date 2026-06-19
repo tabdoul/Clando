@@ -14,19 +14,19 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
 
                 <mat-form-field appearance="outline" style="width: 100%;">
-                    <mat-label>📍 Ville de départ</mat-label>
+                    <mat-label> Départ</mat-label>
                     <input matInput formControlName="villeDepart" placeholder="Ex: Conakry">
                     <mat-icon matSuffix>my_location</mat-icon>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" style="width: 100%;">
-                    <mat-label>📍 Ville d'arrivée</mat-label>
+                    <mat-label> Arriver</mat-label>
                     <input matInput formControlName="villeArrivee" placeholder="Ex: Kindia">
                     <mat-icon matSuffix>location_on</mat-icon>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" style="width: 100%;">
-                    <mat-label>📅 Date de départ</mat-label>
+                    <mat-label> Date de départ</mat-label>
                     <input matInput [matDatepicker]="picker" formControlName="dateDepart">
                     <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker #picker></mat-datepicker>
@@ -34,14 +34,14 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <mat-form-field appearance="outline" style="width: 100%;">
-                        <mat-label>🕐 Heure</mat-label>
+                        <mat-label> Heure</mat-label>
                         <mat-select formControlName="heure">
                             <mat-option *ngFor="let h of heures" [value]="h">{{ h }}h</mat-option>
                         </mat-select>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" style="width: 100%;">
-                        <mat-label>⏱ Minutes</mat-label>
+                        <mat-label> Minutes</mat-label>
                         <mat-select formControlName="minute">
                             <mat-option *ngFor="let m of minutes" [value]="m">{{ m }}</mat-option>
                         </mat-select>
@@ -49,21 +49,21 @@
                 </div>
 
                 <mat-form-field appearance="outline" style="width: 100%;">
-                    <mat-label>💰 Prix par place (GNF)</mat-label>
+                    <mat-label> Prix par place (GNF)</mat-label>
                     <input matInput formControlName="prix" type="number" min="0">
                     <mat-icon matSuffix>payments</mat-icon>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" style="width: 100%;">
-                    <mat-label>👥 Places disponibles</mat-label>
+                    <mat-label> Places disponibles</mat-label>
                     <input matInput formControlName="placesDisponibles" type="number" min="1" max="9">
                     <mat-icon matSuffix>event_seat</mat-icon>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" style="grid-column: span 2; width: 100%;">
-                    <mat-label>🛣️ Itinéraire (optionnel)</mat-label>
+                    <mat-label> Itinéraire (optionnel)</mat-label>
                     <mat-select formControlName="itineraire">
-                        <mat-option value="">-- Aucun --</mat-option>
+                        <mat-option value="">-- aucun --</mat-option>
                         <mat-option *ngFor="let it of itineraires" [value]="it">{{ it }}</mat-option>
                     </mat-select>
                 </mat-form-field>

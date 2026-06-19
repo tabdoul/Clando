@@ -106,30 +106,41 @@ export class TrajetListComponent implements OnInit {
         });
     }
 
-    reserver(trajet: Trajet): void {
-        const userId = this.authService.getUserId();
+    // src/app/features/trajets/trajet-list/trajet-list.ts
+// Seule la méthode reserver() est modifiée — le reste de ton fichier reste identique
 
-        if (!userId) {
-            this.snackBar.open('Veuillez vous connecter', 'Fermer', { duration: 3000 });
-            return;
-        }
+// REMPLACE uniquement la méthode reserver() par celle-ci :
 
-        const reservation = {
-            nbPlaces: 1,
-            passagerId: userId,
-            trajetId: trajet.id
-        };
+reserver(trajet: Trajet): void {
+    const userId = this.authService.getUserId();
 
-        this.reservationService.creer(reservation).subscribe({
-            next: () => {
-                this.snackBar.open('✅ Réservation effectuée avec succès !', 'Fermer', { duration: 3000 });
-                this.rechercher();
-                this.cdr.detectChanges();
-            },
-            error: (err) => {
-                const message = err.error?.erreur || '❌ Erreur lors de la réservation';
-                this.snackBar.open(message, 'Fermer', { duration: 3000 });
-            }
-        });
+    if (!userId) {
+        this.snackBar.open('Veuillez vous connecter', 'Fermer', { duration: 3000 });
+        return;
     }
+
+    // Garde TypeScript : trajet.id peut être undefined selon le modèle
+    if (trajet.id == null) {
+        this.snackBar.open('Trajet invalide', 'Fermer', { duration: 3000 });
+        return;
+    }
+
+    const reservation = {
+        nbPlaces: 1,
+        passagerId: userId,
+        trajetId: trajet.id  // TypeScript sait que c'est un number grâce à la garde ci-dessus
+    };
+
+    this.reservationService.creer(reservation).subscribe({
+        next: () => {
+            this.snackBar.open('✅ Réservation effectuée avec succès !', 'Fermer', { duration: 3000 });
+            this.rechercher();
+            this.cdr.detectChanges();
+        },
+        error: (err) => {
+            const message = err.error?.erreur || '❌ Erreur lors de la réservation';
+            this.snackBar.open(message, 'Fermer', { duration: 3000 });
+        }
+    });
+}
 }
