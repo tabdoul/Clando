@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, ActivityIndicator,
-    Alert, RefreshControl
+    Alert, RefreshControl,Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, 
-    ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
+
 
 export default function MessagesScreen({ navigation }) {
     const [conversations, setConversations] = useState([]);

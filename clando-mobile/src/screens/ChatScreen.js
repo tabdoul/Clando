@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, FlatList, ActivityIndicator,
-    KeyboardAvoidingView, Platform, Alert,Image
+    KeyboardAvoidingView, Platform, Alert, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,41 +17,39 @@ export default function ChatScreen({ route, navigation }) {
     const [currentUserId, setCurrentUserId] = useState(null);
     const flatListRef = useRef(null);
 
-   useEffect(() => {
-    const init = async () => {
-        const id = await getUserId();
-        setCurrentUserId(id);
-        if (id) {
-            try {
-                await api.patch(`/messages/marquer-lus/${reservationId}/${id}`);
-            } catch (error) {
+    useEffect(() => {
+        const init = async () => {
+            const id = await getUserId();
+            setCurrentUserId(id);
+            if (id) {
+                try {
+                    await api.patch(`/messages/marquer-lus/${reservationId}/${id}`);
+                } catch (error) {}
             }
-        }
-    };
-    init();
-}, []);
+        };
+        init();
+    }, []);
 
     useFocusEffect(
-    React.useCallback(() => {
-        chargerMessages();
-        const interval = setInterval(chargerMessages, 10000);
-        return () => clearInterval(interval);
-    }, [])
-);
+        React.useCallback(() => {
+            chargerMessages();
+            const interval = setInterval(chargerMessages, 10000);
+            return () => clearInterval(interval);
+        }, [])
+    );
 
     const chargerMessages = async () => {
-    try {
-        const response = await api.get(`/messages/reservation/${reservationId}`);
-        setMessages(response.data);
-    } catch (error) {
-    } finally {
-        if (loading) setLoading(false); // Ne met à jour que si premier chargement
-    }
-};
+        try {
+            const response = await api.get(`/messages/reservation/${reservationId}`);
+            setMessages(response.data);
+        } catch (error) {
+        } finally {
+            if (loading) setLoading(false);
+        }
+    };
 
     const envoyer = async () => {
         if (!contenu.trim()) return;
-
         if (!currentUserId) {
             Alert.alert('Erreur', 'Veuillez vous reconnecter');
             return;
@@ -77,9 +75,7 @@ export default function ChatScreen({ route, navigation }) {
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
+            hour: '2-digit', minute: '2-digit', hour12: false
         });
     };
 
@@ -117,17 +113,17 @@ export default function ChatScreen({ route, navigation }) {
                     <Ionicons name="arrow-back" size={24} color="#eee" />
                 </TouchableOpacity>
                 <View style={styles.avatar}>
-    {interlocuteur.photo ? (
-        <Image
-            source={{ uri: interlocuteur.photo }}
-            style={styles.avatarImage}
-        />
-    ) : (
-        <Text style={styles.avatarText}>
-            {interlocuteur.prenom?.charAt(0)}{interlocuteur.nom?.charAt(0)}
-        </Text>
-    )}
-</View>
+                    {interlocuteur.photo ? (
+                        <Image
+                            source={{ uri: interlocuteur.photo }}
+                            style={styles.avatarImage}
+                        />
+                    ) : (
+                        <Text style={styles.avatarText}>
+                            {interlocuteur.prenom?.charAt(0)}{interlocuteur.nom?.charAt(0)}
+                        </Text>
+                    )}
+                </View>
                 <Text style={styles.headerNom}>
                     {interlocuteur.prenom} {interlocuteur.nom}
                 </Text>
@@ -164,7 +160,6 @@ export default function ChatScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    avatarImage: { width: 40, height: 40, borderRadius: 20 },
     container: { flex: 1, backgroundColor: '#121212' },
     loadingContainer: {
         flex: 1, backgroundColor: '#121212',
@@ -180,7 +175,9 @@ const styles = StyleSheet.create({
     avatar: {
         width: 40, height: 40, borderRadius: 20,
         backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
     },
+    avatarImage: { width: 40, height: 40, borderRadius: 20 },
     avatarText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     headerNom: { fontSize: 16, fontWeight: '600', color: '#eee' },
     messagesList: { padding: 16, gap: 8 },
