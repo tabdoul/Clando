@@ -6,16 +6,11 @@ import com.example.Clando.entity.Utilisateur;
 import com.example.Clando.repository.DocumentRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,14 +18,14 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final UtilisateurRepository utilisateurRepository;
-
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
+    private final CloudinaryService cloudinaryService;
 
     public DocumentService(DocumentRepository documentRepository,
-                           UtilisateurRepository utilisateurRepository) {
+                           UtilisateurRepository utilisateurRepository,
+                           CloudinaryService cloudinaryService) {
         this.documentRepository = documentRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public DocumentResponse uploader(Long utilisateurId,
@@ -39,34 +34,17 @@ public class DocumentService {
         Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        // Créer le dossier si nécessaire
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        // Générer un nom unique
-        String extension = fichier.getOriginalFilename()
-                .substring(fichier.getOriginalFilename().lastIndexOf('.'));
-        String nomFichier = UUID.randomUUID().toString() + extension;
-        Path cheminFichier = uploadPath.resolve(nomFichier);
-        Files.copy(fichier.getInputStream(), cheminFichier);
-
         // Supprimer l'ancien document du même type si existe
         documentRepository.findByUtilisateurId(utilisateurId).stream()
                 .filter(d -> d.getType() == type)
-                .forEach(d -> {
-                    try {
-                        Files.deleteIfExists(Paths.get(d.getCheminFichier()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    documentRepository.delete(d);
-                });
+                .forEach(d -> documentRepository.delete(d));
+
+        // Upload vers Cloudinary
+        String url = cloudinaryService.uploadImage(fichier, "documents");
 
         Document document = Document.builder()
                 .type(type)
-                .cheminFichier(cheminFichier.toString())
+                .cheminFichier(url)
                 .utilisateur(utilisateur)
                 .build();
 
@@ -96,7 +74,6 @@ public class DocumentService {
                 : Document.StatutDocument.REJETE);
         document.setCommentaireAdmin(commentaire);
 
-        // Si tous les documents requis sont validés → marquer utilisateur comme vérifié
         if (accepte) {
             Long utilisateurId = document.getUtilisateur().getId();
             List<Document> docs = documentRepository.findByUtilisateurId(utilisateurId);
@@ -120,6 +97,9 @@ public class DocumentService {
                 .dateUpload(d.getDateUpload())
                 .commentaireAdmin(d.getCommentaireAdmin())
                 .utilisateurId(d.getUtilisateur().getId())
+                .cheminFichier(d.getCheminFichier())
+                .utilisateurNom(d.getUtilisateur().getNom())
+                .utilisateurPrenom(d.getUtilisateur().getPrenom())
                 .build();
     }
 }

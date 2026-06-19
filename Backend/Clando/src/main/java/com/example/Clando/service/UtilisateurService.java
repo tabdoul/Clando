@@ -7,6 +7,9 @@ import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,11 +18,14 @@ public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository,
-                               PasswordEncoder passwordEncoder) {
+                               PasswordEncoder passwordEncoder,
+                               CloudinaryService cloudinaryService) {
         this.utilisateurRepository = utilisateurRepository;
         this.passwordEncoder = passwordEncoder;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public UtilisateurResponse creer(UtilisateurRequest request) {
@@ -57,6 +63,13 @@ public class UtilisateurService {
         if (request.getMotDePasse() != null && !request.getMotDePasse().isBlank()) {
             utilisateur.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
         }
+        return toResponse(utilisateurRepository.save(utilisateur));
+    }
+
+    public UtilisateurResponse uploadPhoto(Long id, MultipartFile fichier) throws IOException {
+        Utilisateur utilisateur = findById(id);
+        String url = cloudinaryService.uploadImage(fichier, "photos");
+        utilisateur.setPhoto(url);
         return toResponse(utilisateurRepository.save(utilisateur));
     }
 

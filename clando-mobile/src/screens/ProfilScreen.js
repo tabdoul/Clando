@@ -88,7 +88,7 @@ export default function ProfilScreen({ navigation }) {
                 name: `photo_${userId}.jpg`
             });
 
-            const response = await api.post(`/utilisateurs/${userId}/photo`, formData, {
+            await api.post(`/utilisateurs/${userId}/photo`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -251,13 +251,13 @@ export default function ProfilScreen({ navigation }) {
                     />
                 }>
 
-                {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={changerPhoto} style={styles.avatarContainer}>
                         {utilisateur?.photo ? (
                             <Image
-source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/${utilisateur.photo.split('\\').pop().split('/').pop()}?t=${photoKey}` }}    style={styles.avatarImage}
-/>
+                                source={{ uri: `${utilisateur.photo}?t=${photoKey}` }}
+                                style={styles.avatarImage}
+                            />
                         ) : (
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{getInitiales()}</Text>
@@ -281,7 +281,6 @@ source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/
                     </View>
                 </View>
 
-                {/* Informations personnelles */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Informations personnelles</Text>
@@ -355,7 +354,6 @@ source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/
                     </View>
                 </View>
 
-                {/* Mes documents */}
                 <View style={styles.section}>
                     <TouchableOpacity
                         style={styles.boutonDocuments}
@@ -366,7 +364,6 @@ source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/
                     </TouchableOpacity>
                 </View>
 
-                {/* Mes trajets */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Mes trajets publiés</Text>
                     <View style={styles.card}>
@@ -403,7 +400,6 @@ source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/
                     </View>
                 </View>
 
-                {/* Mes véhicules */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Mes véhicules</Text>
                     <View style={styles.card}>
@@ -430,16 +426,15 @@ source={{ uri: `https://clando-production.up.railway.app/api/utilisateurs/photo/
                 </View>
 
                 <View style={styles.section}>
-    <TouchableOpacity
-        style={styles.boutonAide}
-        onPress={() => navigation.navigate('Aide')}>
-        <Ionicons name="help-circle-outline" size={20} color="#00b5e2" />
-        <Text style={styles.boutonAideText}>Aide & Support</Text>
-        <Ionicons name="chevron-forward" size={16} color="#666" />
-    </TouchableOpacity>
-</View>
+                    <TouchableOpacity
+                        style={styles.boutonAide}
+                        onPress={() => navigation.navigate('Aide')}>
+                        <Ionicons name="help-circle-outline" size={20} color="#00b5e2" />
+                        <Text style={styles.boutonAideText}>Aide & Support</Text>
+                        <Ionicons name="chevron-forward" size={16} color="#666" />
+                    </TouchableOpacity>
+                </View>
 
-                {/* Déconnexion */}
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.boutonLogout} onPress={handleLogout}>
                         <Ionicons name="log-out-outline" size={20} color="#e74c3c" />
@@ -542,9 +537,9 @@ const styles = StyleSheet.create({
     },
     boutonLogoutText: { color: '#e74c3c', fontSize: 16, fontWeight: '600' },
     boutonAide: {
-    backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderWidth: 1, borderColor: '#2a2a2a',
-},
-boutonAideText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
+        backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        borderWidth: 1, borderColor: '#2a2a2a',
+    },
+    boutonAideText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
 });
