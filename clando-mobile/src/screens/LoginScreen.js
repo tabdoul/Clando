@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
                 <View style={styles.header}>
-                    <Text style={styles.title}>Clando</Text>
+                    <Text style={styles.title}>ecoNavette</Text>
                     <Text style={styles.subtitle}>Covoiturage en Guinée</Text>
                 </View>
 
