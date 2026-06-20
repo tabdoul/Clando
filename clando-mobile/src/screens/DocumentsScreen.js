@@ -136,7 +136,6 @@ export default function DocumentsScreen({ navigation }) {
                     <Ionicons name="information-circle-outline" size={24} color="#00b5e2" />
                     <Text style={styles.infoText}>
                         Vos documents seront vérifiés sous 24-48h.
-                        Un badge "Vérifié ✓" apparaîtra sur votre profil une fois validé.
                     </Text>
                 </View>
 
