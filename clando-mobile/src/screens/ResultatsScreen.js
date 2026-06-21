@@ -118,16 +118,23 @@ export default function ResultatsScreen({ route, navigation }) {
                                     </View>
                                 </View>
 
-                                {item.statut === 'OUVERT' && item.placesDisponibles > 0 ? (
-                                    <View style={styles.boutonReserver}>
-                                        <Text style={styles.boutonReserverText}>Voir</Text>
-                                        <Ionicons name="chevron-forward" size={16} color="white" />
-                                    </View>
-                                ) : (
-                                    <View style={styles.complet}>
-                                        <Text style={styles.comptetText}>Complet</Text>
-                                    </View>
-                                )}
+                                <View style={styles.rightSection}>
+                                    {item.femmesUniquement && (
+                                        <View style={styles.femmesUniquementBadge}>
+                                            <Text style={styles.femmesUniquementBadgeText}>👩 Femmes</Text>
+                                        </View>
+                                    )}
+                                    {item.statut === 'OUVERT' && item.placesDisponibles > 0 ? (
+                                        <View style={styles.boutonReserver}>
+                                            <Text style={styles.boutonReserverText}>Voir</Text>
+                                            <Ionicons name="chevron-forward" size={16} color="white" />
+                                        </View>
+                                    ) : (
+                                        <View style={styles.complet}>
+                                            <Text style={styles.comptetText}>Complet</Text>
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -185,6 +192,13 @@ const styles = StyleSheet.create({
     conducteurNote: { fontSize: 12, color: '#f39c12', fontWeight: '600' },
     conducteurTrajets: { fontSize: 11, color: '#666' },
     vehicule: { fontSize: 11, color: '#666', marginTop: 2 },
+    rightSection: { alignItems: 'flex-end', gap: 6 },
+    femmesUniquementBadge: {
+        backgroundColor: '#1a0a2a', borderRadius: 8,
+        paddingVertical: 3, paddingHorizontal: 8,
+        borderWidth: 1, borderColor: '#9b59b6',
+    },
+    femmesUniquementBadgeText: { color: '#9b59b6', fontSize: 10, fontWeight: '600' },
     boutonReserver: {
         backgroundColor: '#00b5e2', borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 14,

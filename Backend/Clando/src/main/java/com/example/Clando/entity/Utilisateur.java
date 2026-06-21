@@ -51,7 +51,8 @@ public class Utilisateur {
     private boolean verifie = false;
 
     private String expoPushToken;
-
+    @Column
+    private String genre; // HOMME, FEMME, AUTRE
 
     @OneToMany(mappedBy = "conducteur", cascade = CascadeType.ALL)
     private List<Vehicule> vehicules;
@@ -98,6 +99,9 @@ public class Utilisateur {
 
     public String getMiniBio() { return miniBio; }
     public void setMiniBio(String miniBio) { this.miniBio = miniBio; }
+
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
     
     public String getExpoPushToken() { return expoPushToken; }
     public void setExpoPushToken(String expoPushToken) { this.expoPushToken = expoPushToken; }

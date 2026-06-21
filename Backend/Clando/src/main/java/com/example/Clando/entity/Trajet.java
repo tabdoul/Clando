@@ -68,7 +68,10 @@ public class Trajet {
     @OneToMany(mappedBy = "trajet", cascade = CascadeType.ALL)
     private List<Avis> avis;
     @Column(nullable = false, updatable = false)
-private LocalDateTime dateCreation;
+    private LocalDateTime dateCreation;
+    @Column(nullable = false)
+    private boolean femmesUniquement = false;
+
 @PrePersist
 protected void onCreate() {
     this.dateCreation = LocalDateTime.now();
@@ -114,6 +117,10 @@ protected void onCreate() {
     public List<Avis> getAvis() { return avis; }
     public LocalDateTime getDateCreation() { return dateCreation; }
 
+
+    public boolean isFemmesUniquement() { return femmesUniquement; }
+    public void setFemmesUniquement(boolean femmesUniquement) { this.femmesUniquement = femmesUniquement; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -127,6 +134,7 @@ protected void onCreate() {
         public Builder statut(StatutTrajet val) { t.statut = val; return this; }
         public Builder conducteur(Utilisateur val) { t.conducteur = val; return this; }
         public Builder vehicule(Vehicule val) { t.vehicule = val; return this; }
+        public Builder femmesUniquement(boolean val) { t.femmesUniquement = val; return this; }
         public Trajet build() { return t; }
     }
 }

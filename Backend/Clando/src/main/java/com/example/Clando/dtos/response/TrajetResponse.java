@@ -75,6 +75,15 @@ public class TrajetResponse {
 
     public Long getNbTrajetsTerminesConducteur() { return nbTrajetsTerminesConducteur; }
     public void setNbTrajetsTerminesConducteur(Long v) { this.nbTrajetsTerminesConducteur = v; }
+    private String conducteurGenre;
+private boolean femmesUniquement;
+
+public String getConducteurGenre() { return conducteurGenre; }
+public void setConducteurGenre(String v) { this.conducteurGenre = v; }
+
+public boolean isFemmesUniquement() { return femmesUniquement; }
+public void setFemmesUniquement(boolean v) { this.femmesUniquement = v; }
+
 
     public static Builder builder() { return new Builder(); }
 
@@ -97,6 +106,9 @@ public class TrajetResponse {
         public Builder vehiculeModele(String val) { r.vehiculeModele = val; return this; }
         public Builder noteMoyenneConducteur(Double val) { r.noteMoyenneConducteur = val; return this; }
         public Builder nbTrajetsTerminesConducteur(Long val) { r.nbTrajetsTerminesConducteur = val; return this; }
+        
+        public Builder conducteurGenre(String val) { r.conducteurGenre = val; return this; }
+        public Builder femmesUniquement(boolean val) { r.femmesUniquement = val; return this; }
         public TrajetResponse build() { return r; }
     }
 }

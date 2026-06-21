@@ -32,6 +32,7 @@ public class UtilisateurService {
         if (utilisateurRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email déjà utilisé");
         }
+
         Utilisateur utilisateur = Utilisateur.builder()
                 .nom(request.getNom())
                 .prenom(request.getPrenom())
@@ -39,6 +40,9 @@ public class UtilisateurService {
                 .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
                 .telephone(request.getTelephone())
                 .build();
+
+        utilisateur.setGenre(request.getGenre());
+
         return toResponse(utilisateurRepository.save(utilisateur));
     }
 
@@ -60,6 +64,7 @@ public class UtilisateurService {
         utilisateur.setEmail(request.getEmail());
         utilisateur.setTelephone(request.getTelephone());
         utilisateur.setMiniBio(request.getMiniBio());
+        utilisateur.setGenre(request.getGenre());
         if (request.getMotDePasse() != null && !request.getMotDePasse().isBlank()) {
             utilisateur.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
         }
@@ -99,6 +104,7 @@ public class UtilisateurService {
                 .miniBio(u.getMiniBio())
                 .photo(u.getPhoto())
                 .verifie(u.isVerifie())
+                .genre(u.getGenre())
                 .build();
     }
 }

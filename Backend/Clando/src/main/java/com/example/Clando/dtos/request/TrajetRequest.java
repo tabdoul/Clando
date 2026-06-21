@@ -32,6 +32,7 @@ public class TrajetRequest {
 
     @NotNull(message = "L'id du véhicule est obligatoire")
     private Long vehiculeId;
+    private boolean femmesUniquement = false;
 
     public TrajetRequest() {}
 
@@ -58,4 +59,6 @@ public class TrajetRequest {
 
     public Long getVehiculeId() { return vehiculeId; }
     public void setVehiculeId(Long vehiculeId) { this.vehiculeId = vehiculeId; }
+    public boolean isFemmesUniquement() { return femmesUniquement; }
+    public void setFemmesUniquement(boolean v) { this.femmesUniquement = v; }
 }

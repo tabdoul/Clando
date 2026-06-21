@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UtilisateurRequest {
+    private String genre;
 
     @NotBlank(message = "Le nom est obligatoire")
     private String nom;
@@ -20,6 +21,7 @@ public class UtilisateurRequest {
 private String motDePasse;
 
     private String telephone;
+
 
     public UtilisateurRequest() {}
 
@@ -41,4 +43,6 @@ private String motDePasse;
 
     public String getMiniBio() { return miniBio; }
     public void setMiniBio(String miniBio) { this.miniBio = miniBio; }
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
 }

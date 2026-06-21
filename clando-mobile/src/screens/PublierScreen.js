@@ -27,24 +27,29 @@ export default function PublierScreen({ navigation }) {
     const [immatriculation, setImmatriculation] = useState('');
     const [nbPlaces, setNbPlaces] = useState('');
     const [loading, setLoading] = useState(false);
+    const [femmesUniquement, setFemmesUniquement] = useState(false);
+    const [utilisateur, setUtilisateur] = useState(null);
 
     const itineraires = ['Autoroute', 'Route du Prince', 'Corniche'];
 
     useEffect(() => {
-        chargerVehicules();
+        chargerDonnees();
     }, []);
 
-    const chargerVehicules = async () => {
+    const chargerDonnees = async () => {
         try {
             const userId = await getUserId();
             if (!userId) return;
-            const response = await api.get(`/vehicules/conducteur/${userId}`);
-            setVehicules(response.data);
-            if (response.data.length > 0) {
-                setVehiculeSelectionne(response.data[0]);
+            const [vehiculesRes, userRes] = await Promise.all([
+                api.get(`/vehicules/conducteur/${userId}`),
+                api.get(`/utilisateurs/${userId}`)
+            ]);
+            setVehicules(vehiculesRes.data);
+            setUtilisateur(userRes.data);
+            if (vehiculesRes.data.length > 0) {
+                setVehiculeSelectionne(vehiculesRes.data[0]);
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     };
 
     const ajouterVehicule = async () => {
@@ -62,7 +67,7 @@ export default function PublierScreen({ navigation }) {
             setVehiculeSelectionne(response.data);
             setShowNouveauVehicule(false);
             setMarque(''); setModele(''); setImmatriculation(''); setNbPlaces('');
-            chargerVehicules();
+            chargerDonnees();
             Alert.alert('Véhicule ajouté !');
         } catch (error) {
             Alert.alert('Erreur', "Impossible d'ajouter le véhicule");
@@ -96,7 +101,8 @@ export default function PublierScreen({ navigation }) {
                 placesDisponibles: parseInt(places),
                 itineraire,
                 conducteurId: userId,
-                vehiculeId: vehiculeSelectionne.id
+                vehiculeId: vehiculeSelectionne.id,
+                femmesUniquement
             });
 
             Alert.alert('Trajet publié !', 'Votre trajet est maintenant disponible.', [
@@ -110,6 +116,7 @@ export default function PublierScreen({ navigation }) {
                         setPrix('');
                         setPlaces('');
                         setItineraire('');
+                        setFemmesUniquement(false);
                         setVehiculeSelectionne(vehicules.length > 0 ? vehicules[0] : null);
                     }
                 }
@@ -150,7 +157,6 @@ export default function PublierScreen({ navigation }) {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Informations du trajet</Text>
                     <View style={styles.card}>
@@ -277,6 +283,18 @@ export default function PublierScreen({ navigation }) {
                                 </TouchableOpacity>
                             ))}
                         </View>
+
+                        {/* Option femmes uniquement — visible seulement pour les femmes */}
+                        {utilisateur?.genre === 'FEMME' && (
+                            <TouchableOpacity
+                                style={styles.femmesUniquementContainer}
+                                onPress={() => setFemmesUniquement(!femmesUniquement)}>
+                                <View style={[styles.checkbox, femmesUniquement && styles.checkboxActif]}>
+                                    {femmesUniquement && <Ionicons name="checkmark" size={14} color="white" />}
+                                </View>
+                                <Text style={styles.femmesUniquementText}>👩 Trajet femmes uniquement</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
@@ -388,9 +406,7 @@ const styles = StyleSheet.create({
     placeholder: { color: '#666' },
     row: { flexDirection: 'row', gap: 12 },
     halfField: { flex: 1 },
-    itineraireContainer: {
-        flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4,
-    },
+    itineraireContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
     itineraireBadge: {
         borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#252525',
@@ -398,9 +414,19 @@ const styles = StyleSheet.create({
     itineraireBadgeSelected: { borderColor: '#00b5e2', backgroundColor: '#0a2a35' },
     itineraireBadgeText: { color: '#888', fontSize: 13 },
     itineraireBadgeTextSelected: { color: '#00b5e2', fontWeight: '600' },
-    vehiculesGrid: {
-        flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12,
+    femmesUniquementContainer: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        marginTop: 16, padding: 12, backgroundColor: '#1a1a2a',
+        borderRadius: 10, borderWidth: 1, borderColor: '#9b59b6',
     },
+    checkbox: {
+        width: 22, height: 22, borderRadius: 6,
+        borderWidth: 2, borderColor: '#888',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxActif: { backgroundColor: '#9b59b6', borderColor: '#9b59b6' },
+    femmesUniquementText: { fontSize: 14, color: '#eee', fontWeight: '600', flex: 1 },
+    vehiculesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
     vehiculeCard: {
         backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
         alignItems: 'center', borderWidth: 1, borderColor: '#2a2a2a',

@@ -13,6 +13,7 @@ public class UtilisateurResponse {
     private String miniBio;
     private String photo;
     private boolean verifie;
+    private String genre;
 
     public UtilisateurResponse() {}
 
@@ -42,6 +43,8 @@ public class UtilisateurResponse {
 
     public boolean isVerifie() { return verifie; }
     public void setVerifie(boolean verifie) { this.verifie = verifie; }
+    public String getGenre() { return genre; }
+    public void setGenre(String genre) { this.genre = genre; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -56,6 +59,8 @@ public class UtilisateurResponse {
         public Builder miniBio(String v) { r.miniBio = v; return this; }
         public Builder photo(String v) { r.photo = v; return this; }
         public Builder verifie(boolean v) { r.verifie = v; return this; }
+        public Builder genre(String val) { r.genre = val; return this; }
         public UtilisateurResponse build() { return r; }
+        
     }
 }

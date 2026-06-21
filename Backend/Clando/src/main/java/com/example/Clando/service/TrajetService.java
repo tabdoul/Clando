@@ -113,6 +113,7 @@ public class TrajetService {
         trajet.setPlacesDisponibles(request.getPlacesDisponibles());
         trajet.setPrix(request.getPrix());
         trajet.setItineraire(request.getItineraire());
+        trajet.setFemmesUniquement(request.isFemmesUniquement());
         trajet.setStatut(Trajet.StatutTrajet.OUVERT);
 
         return toResponse(trajetRepository.save(trajet));
@@ -247,6 +248,8 @@ public class TrajetService {
                 .vehiculeModele(t.getVehicule().getModele())
                 .noteMoyenneConducteur(noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : null)
                 .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
+                .conducteurGenre(t.getConducteur().getGenre())
+                .femmesUniquement(t.isFemmesUniquement())
                 .build();
     }
 }

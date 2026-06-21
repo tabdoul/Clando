@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl
+    TextInput, RefreshControl, Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,6 +14,7 @@ export default function ReservationsScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [prixNouveau, setPrixNouveau] = useState({});
+    const [ongletActif, setOngletActif] = useState('encours');
 
     useFocusEffect(
         React.useCallback(() => {
@@ -26,23 +27,7 @@ export default function ReservationsScreen({ navigation }) {
             const userId = await getUserId();
             if (!userId) return;
             const response = await api.get(`/reservations/passager/${userId}`);
-            const maintenant = new Date();
-            const septJours = 7 * 24 * 60 * 60 * 1000;
-
-            const filtrees = response.data.filter(r => {
-                if (r.statut === 'EN_ATTENTE') return true;
-                if (r.statut === 'PRIX_REFUSE') return true;
-                if (r.statut === 'CONFIRMEE') return true;
-                if (r.statut === 'ANNULEE') return true;
-                if (r.statut === 'TERMINEE') {
-                    if (!r.dateReservation) return true;
-                    const dateRes = new Date(r.dateReservation);
-                    return maintenant - dateRes < septJours;
-                }
-                return false;
-            });
-
-            setReservations(filtrees);
+            setReservations(response.data);
         } catch (error) {
             Alert.alert('Erreur', 'Impossible de charger les réservations');
         } finally {
@@ -56,13 +41,20 @@ export default function ReservationsScreen({ navigation }) {
         setRefreshing(false);
     };
 
+    const reservationsEnCours = reservations.filter(r =>
+        ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut)
+    );
+
+    const reservationsHistorique = reservations.filter(r =>
+        ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut)
+    );
+
     const annuler = async (reservation) => {
         const estConfirmee = reservation.statut === 'CONFIRMEE';
-
         Alert.alert(
             'Annuler la réservation',
             estConfirmee
-                ? 'Votre réservation est confirmée. Des frais d\'annulation de 10% peuvent s\'appliquer si le départ est dans moins de 2h.'
+                ? "Votre réservation est confirmée. Des frais d'annulation de 10% peuvent s'appliquer si le départ est dans moins de 2h."
                 : 'Êtes-vous sûr de vouloir annuler cette réservation ?',
             [
                 { text: 'Non', style: 'cancel' },
@@ -73,10 +65,7 @@ export default function ReservationsScreen({ navigation }) {
                         try {
                             const response = await api.patch(`/reservations/${reservation.id}/annuler`);
                             chargerReservations();
-                            Alert.alert(
-                                'Réservation annulée',
-                                response.data.message || 'Votre réservation a été annulée.'
-                            );
+                            Alert.alert('Réservation annulée', response.data.message || 'Votre réservation a été annulée.');
                         } catch (error) {
                             Alert.alert('Erreur', error.response?.data?.erreur || "Impossible d'annuler");
                         }
@@ -106,6 +95,7 @@ export default function ReservationsScreen({ navigation }) {
             case 'CONFIRMEE': return { bg: '#1a3a2a', text: '#2ecc71', label: 'Confirmée' };
             case 'EN_ATTENTE': return { bg: '#3a2a1a', text: '#f39c12', label: 'En attente' };
             case 'ANNULEE': return { bg: '#3a1a1a', text: '#e74c3c', label: 'Annulée' };
+            case 'REFUSEE': return { bg: '#3a1a1a', text: '#e74c3c', label: 'Refusée' };
             case 'PRIX_REFUSE': return { bg: '#2a1a2a', text: '#9b59b6', label: 'Prix refusé' };
             case 'TERMINEE': return { bg: '#1a2a3a', text: '#00b5e2', label: 'Terminée' };
             default: return { bg: '#2a2a2a', text: '#888', label: statut };
@@ -120,6 +110,151 @@ export default function ReservationsScreen({ navigation }) {
         });
     };
 
+    const renderReservation = (item) => {
+        const statut = getStatutStyle(item.statut);
+        return (
+            <View key={item.id.toString()} style={styles.cardWrapper}>
+                <View style={styles.card}>
+                    <View style={styles.cardTop}>
+                        <View style={styles.trajetInfo}>
+                            <Text style={styles.ville}>{item.villeDepart}</Text>
+                            <View style={styles.ligne}>
+                                <View style={styles.ligneBar} />
+                                <Ionicons name="car-outline" size={16} color="#00b5e2" />
+                                <View style={styles.ligneBar} />
+                            </View>
+                            <Text style={styles.ville}>{item.villeArrivee}</Text>
+                        </View>
+                        <View style={[styles.statutBadge, { backgroundColor: statut.bg }]}>
+                            <Text style={[styles.statutText, { color: statut.text }]}>
+                                {statut.label}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.separator} />
+
+                    <View style={styles.cardBottom}>
+                        <View style={styles.details}>
+                            <View style={styles.detailRow}>
+                                <Ionicons name="calendar-outline" size={14} color="#666" />
+                                <Text style={styles.detailText}>
+                                    Réservé le {formatDate(item.dateReservation)}
+                                </Text>
+                            </View>
+                            <View style={styles.detailRow}>
+                                <Ionicons name="person-outline" size={14} color="#666" />
+                                <Text style={styles.detailText}>
+                                    {item.nbPlaces} place(s)
+                                </Text>
+                            </View>
+                            {item.prixPropose && (
+                                <View style={styles.detailRow}>
+                                    <Ionicons name="cash-outline" size={14} color="#00b5e2" />
+                                    <Text style={[styles.detailText, { color: '#00b5e2' }]}>
+                                        Prix proposé : {item.prixPropose?.toLocaleString()} GNF
+                                    </Text>
+                                </View>
+                            )}
+                            {item.statutPaiement === 'SUCCESS' && (
+                                <View style={styles.detailRow}>
+                                    <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
+                                    <Text style={[styles.detailText, { color: '#2ecc71' }]}>
+                                        Paiement confirmé
+                                    </Text>
+                                </View>
+                            )}
+                            {item.statutPaiement === 'PENDING' && (
+                                <View style={styles.detailRow}>
+                                    <Ionicons name="time-outline" size={14} color="#f39c12" />
+                                    <Text style={[styles.detailText, { color: '#f39c12' }]}>
+                                        Paiement en attente
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={styles.boutonsContainer}>
+                            {item.statut === 'CONFIRMEE' && (
+                                <TouchableOpacity
+                                    style={styles.boutonContacter}
+                                    onPress={() => navigation.navigate('Chat', {
+                                        reservationId: item.id,
+                                        interlocuteur: {
+                                            id: item.conducteurId,
+                                            nom: item.conducteurNom,
+                                            prenom: item.conducteurPrenom
+                                        },
+                                        userId: null
+                                    })}>
+                                    <Ionicons name="chatbubble-outline" size={14} color="#00b5e2" />
+                                    <Text style={styles.boutonContacterText}>Contacter</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {item.statut === 'TERMINEE' && (
+                                <TouchableOpacity
+                                    style={styles.boutonAvis}
+                                    onPress={() => navigation.navigate('Avis', {
+                                        conducteurId: item.conducteurId,
+                                        conducteurNom: item.conducteurNom,
+                                        conducteurPrenom: item.conducteurPrenom,
+                                        trajetId: item.trajetId
+                                    })}>
+                                    <Ionicons name="star-outline" size={14} color="#f39c12" />
+                                    <Text style={styles.boutonAvisText}>Laisser un avis</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {(item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE') && (
+                                <TouchableOpacity
+                                    style={styles.boutonAnnuler}
+                                    onPress={() => annuler(item)}>
+                                    <Text style={styles.boutonAnnulerText}>Annuler</Text>
+                                </TouchableOpacity>
+                            )}
+
+                            {item.urlPaiement && item.statutPaiement === 'PENDING' && (
+                                <TouchableOpacity
+                                    style={styles.boutonPayer}
+                                    onPress={() => Linking.openURL(item.urlPaiement)}>
+                                    <Ionicons name="card-outline" size={14} color="white" />
+                                    <Text style={styles.boutonPayerText}>Payer</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+
+                    {item.statut === 'PRIX_REFUSE' && (
+                        <View style={styles.prixRefuseContainer}>
+                            <Text style={styles.prixRefuseTexte}>
+                                Prix refusé — Faites une nouvelle proposition
+                            </Text>
+                            <Text style={styles.tentativesRestantes}>
+                                {2 - item.nbTentatives} tentative(s) restante(s)
+                            </Text>
+                            <View style={styles.nouvellePropositionRow}>
+                                <TextInput
+                                    style={styles.propositionInput}
+                                    placeholder="Nouveau prix..."
+                                    placeholderTextColor="#666"
+                                    keyboardType="numeric"
+                                    onChangeText={(v) => setPrixNouveau({ ...prixNouveau, [item.id]: v })}
+                                    value={prixNouveau[item.id] || ''}
+                                />
+                                <TouchableOpacity
+                                    style={styles.boutonProposer}
+                                    onPress={() => nouvelleProposition(item.id)}>
+                                    <Text style={styles.boutonProposerText}>Proposer</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -128,11 +263,41 @@ export default function ReservationsScreen({ navigation }) {
         );
     }
 
+    const listeActive = ongletActif === 'encours' ? reservationsEnCours : reservationsHistorique;
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Mes réservations</Text>
-                <Text style={styles.headerSubtitle}>{reservations.length} réservation(s)</Text>
+            </View>
+
+            {/* Onglets */}
+            <View style={styles.onglets}>
+                <TouchableOpacity
+                    style={[styles.onglet, ongletActif === 'encours' && styles.ongletActif]}
+                    onPress={() => setOngletActif('encours')}>
+                    <Text style={[styles.ongletText, ongletActif === 'encours' && styles.ongletTextActif]}>
+                        En cours
+                    </Text>
+                    {reservationsEnCours.length > 0 && (
+                        <View style={styles.ongletBadge}>
+                            <Text style={styles.ongletBadgeText}>{reservationsEnCours.length}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.onglet, ongletActif === 'historique' && styles.ongletActif]}
+                    onPress={() => setOngletActif('historique')}>
+                    <Text style={[styles.ongletText, ongletActif === 'historique' && styles.ongletTextActif]}>
+                        Historique
+                    </Text>
+                    {reservationsHistorique.length > 0 && (
+                        <View style={[styles.ongletBadge, { backgroundColor: '#444' }]}>
+                            <Text style={styles.ongletBadgeText}>{reservationsHistorique.length}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -146,162 +311,23 @@ export default function ReservationsScreen({ navigation }) {
                     />
                 }>
 
-                {reservations.length === 0 && (
+                {listeActive.length === 0 && (
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="ticket-outline" size={64} color="#444" />
-                        <Text style={styles.emptyText}>Aucune réservation</Text>
-                        <Text style={styles.emptySubtext}>Vos réservations apparaîtront ici</Text>
+                        <Ionicons
+                            name={ongletActif === 'encours' ? 'ticket-outline' : 'archive-outline'}
+                            size={64} color="#444" />
+                        <Text style={styles.emptyText}>
+                            {ongletActif === 'encours' ? 'Aucune réservation en cours' : 'Aucun historique'}
+                        </Text>
+                        <Text style={styles.emptySubtext}>
+                            {ongletActif === 'encours'
+                                ? 'Vos réservations actives apparaîtront ici'
+                                : 'Vos trajets terminés et annulés apparaîtront ici'}
+                        </Text>
                     </View>
                 )}
 
-                {reservations.map((item) => {
-                    const statut = getStatutStyle(item.statut);
-                    return (
-                        <View key={item.id.toString()} style={styles.cardWrapper}>
-                            <View style={styles.card}>
-
-                                <View style={styles.cardTop}>
-                                    <View style={styles.trajetInfo}>
-                                        <Text style={styles.ville}>{item.villeDepart}</Text>
-                                        <View style={styles.ligne}>
-                                            <View style={styles.ligneBar} />
-                                            <Ionicons name="car-outline" size={16} color="#00b5e2" />
-                                            <View style={styles.ligneBar} />
-                                        </View>
-                                        <Text style={styles.ville}>{item.villeArrivee}</Text>
-                                    </View>
-                                    <View style={[styles.statutBadge, { backgroundColor: statut.bg }]}>
-                                        <Text style={[styles.statutText, { color: statut.text }]}>
-                                            {statut.label}
-                                        </Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.separator} />
-
-                                <View style={styles.cardBottom}>
-                                    <View style={styles.details}>
-                                        <View style={styles.detailRow}>
-                                            <Ionicons name="calendar-outline" size={14} color="#666" />
-                                            <Text style={styles.detailText}>
-                                                Réservé le {formatDate(item.dateReservation)}
-                                            </Text>
-                                        </View>
-                                        <View style={styles.detailRow}>
-                                            <Ionicons name="person-outline" size={14} color="#666" />
-                                            <Text style={styles.detailText}>
-                                                {item.nbPlaces} place(s)
-                                            </Text>
-                                        </View>
-                                        {item.prixPropose && (
-                                            <View style={styles.detailRow}>
-                                                <Ionicons name="cash-outline" size={14} color="#00b5e2" />
-                                                <Text style={[styles.detailText, { color: '#00b5e2' }]}>
-                                                    Prix proposé : {item.prixPropose?.toLocaleString()} GNF
-                                                </Text>
-                                            </View>
-                                        )}
-                                        {item.statutPaiement === 'SUCCESS' && (
-                                            <View style={styles.detailRow}>
-                                                <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
-                                                <Text style={[styles.detailText, { color: '#2ecc71' }]}>
-                                                    Paiement confirmé
-                                                </Text>
-                                            </View>
-                                        )}
-                                        {item.statutPaiement === 'PENDING' && (
-                                            <View style={styles.detailRow}>
-                                                <Ionicons name="time-outline" size={14} color="#f39c12" />
-                                                <Text style={[styles.detailText, { color: '#f39c12' }]}>
-                                                    Paiement en attente
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-
-                                    <View style={styles.boutonsContainer}>
-                                        {item.statut === 'CONFIRMEE' && (
-                                            <TouchableOpacity
-                                                style={styles.boutonContacter}
-                                                onPress={() => navigation.navigate('Chat', {
-                                                    reservationId: item.id,
-                                                    interlocuteur: {
-                                                        id: item.conducteurId,
-                                                        nom: item.conducteurNom,
-                                                        prenom: item.conducteurPrenom
-                                                    },
-                                                    userId: null
-                                                })}>
-                                                <Ionicons name="chatbubble-outline" size={14} color="#00b5e2" />
-                                                <Text style={styles.boutonContacterText}>Contacter</Text>
-                                            </TouchableOpacity>
-                                        )}
-
-                                        {item.statut === 'TERMINEE' && (
-                                            <TouchableOpacity
-                                                style={styles.boutonAvis}
-                                                onPress={() => navigation.navigate('Avis', {
-                                                    conducteurId: item.conducteurId,
-                                                    conducteurNom: item.conducteurNom,
-                                                    conducteurPrenom: item.conducteurPrenom,
-                                                    trajetId: item.trajetId
-                                                })}>
-                                                <Ionicons name="star-outline" size={14} color="#f39c12" />
-                                                <Text style={styles.boutonAvisText}>Laisser un avis</Text>
-                                            </TouchableOpacity>
-                                        )}
-
-                                        {(item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE') && (
-                                            <TouchableOpacity
-                                                style={styles.boutonAnnuler}
-                                                onPress={() => annuler(item)}>
-                                                <Text style={styles.boutonAnnulerText}>Annuler</Text>
-                                            </TouchableOpacity>
-                                        )}
-
-                                        {item.urlPaiement && item.statutPaiement === 'PENDING' && (
-                                            <TouchableOpacity
-                                                style={styles.boutonPayer}
-                                                onPress={() => {
-                                                    const { Linking } = require('react-native');
-                                                    Linking.openURL(item.urlPaiement);
-                                                }}>
-                                                <Ionicons name="card-outline" size={14} color="white" />
-                                                <Text style={styles.boutonPayerText}>Payer</Text>
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                </View>
-
-                                {item.statut === 'PRIX_REFUSE' && (
-                                    <View style={styles.prixRefuseContainer}>
-                                        <Text style={styles.prixRefuseTexte}>
-                                            Prix refusé — Faites une nouvelle proposition
-                                        </Text>
-                                        <Text style={styles.tentativesRestantes}>
-                                            {2 - item.nbTentatives} tentative(s) restante(s)
-                                        </Text>
-                                        <View style={styles.nouvellePropositionRow}>
-                                            <TextInput
-                                                style={styles.propositionInput}
-                                                placeholder="Nouveau prix..."
-                                                placeholderTextColor="#666"
-                                                keyboardType="numeric"
-                                                onChangeText={(v) => setPrixNouveau({ ...prixNouveau, [item.id]: v })}
-                                                value={prixNouveau[item.id] || ''}
-                                            />
-                                            <TouchableOpacity
-                                                style={styles.boutonProposer}
-                                                onPress={() => nouvelleProposition(item.id)}>
-                                                <Text style={styles.boutonProposerText}>Proposer</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                )}
-                            </View>
-                        </View>
-                    );
-                })}
+                {listeActive.map((item) => renderReservation(item))}
 
                 <View style={{ height: 30 }} />
             </ScrollView>
@@ -317,34 +343,48 @@ const styles = StyleSheet.create({
     },
     header: {
         backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        paddingTop: 60, paddingBottom: 16, paddingHorizontal: 20,
         borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#eee' },
-    headerSubtitle: { fontSize: 13, color: '#888', marginTop: 4 },
+    onglets: {
+        flexDirection: 'row',
+        backgroundColor: '#1a1a1a',
+        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+    },
+    onglet: {
+        flex: 1, paddingVertical: 14,
+        alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'row', gap: 6,
+    },
+    ongletActif: {
+        borderBottomWidth: 2, borderBottomColor: '#00b5e2',
+    },
+    ongletText: { fontSize: 14, fontWeight: '600', color: '#666' },
+    ongletTextActif: { color: '#00b5e2' },
+    ongletBadge: {
+        backgroundColor: '#00b5e2', borderRadius: 10,
+        minWidth: 18, height: 18, alignItems: 'center',
+        justifyContent: 'center', paddingHorizontal: 4,
+    },
+    ongletBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
     emptyContainer: { alignItems: 'center', marginTop: 80 },
     emptyText: { fontSize: 18, color: '#666', marginTop: 16 },
-    emptySubtext: { fontSize: 14, color: '#444', marginTop: 4 },
+    emptySubtext: { fontSize: 14, color: '#444', marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
     cardWrapper: { paddingHorizontal: 16, marginTop: 12 },
     card: {
         backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
         borderWidth: 1, borderColor: '#2a2a2a',
     },
-    cardTop: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
-    },
+    cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     trajetInfo: { flex: 1, alignItems: 'center', marginRight: 12 },
     ville: { fontSize: 15, fontWeight: '600', color: '#ddd' },
-    ligne: {
-        flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5
-    },
+    ligne: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5 },
     ligneBar: { flex: 1, height: 1, backgroundColor: '#333' },
     statutBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
     statutText: { fontSize: 12, fontWeight: '600' },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
-    cardBottom: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
-    },
+    cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     details: { gap: 6, flex: 1 },
     detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     detailText: { fontSize: 13, color: '#888' },

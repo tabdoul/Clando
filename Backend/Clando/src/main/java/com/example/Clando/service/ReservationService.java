@@ -53,6 +53,14 @@ public ReservationResponse creer(ReservationRequest request) {
     if (trajet.getPlacesDisponibles() < request.getNbPlaces()) {
         throw new IllegalStateException("Pas assez de places disponibles");
     }
+    // Vérifier si trajet femmes uniquement
+    
+if (trajet.isFemmesUniquement()) {
+    String genrePassager = passager.getGenre();
+    if (genrePassager == null || !genrePassager.equals("FEMME")) {
+        throw new IllegalStateException("Ce trajet est réservé aux femmes uniquement");
+    }
+}
 
     Reservation reservation = new Reservation();
     reservation.setPassager(passager);
