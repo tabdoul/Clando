@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Alert, Linking } from 'react-native';
 import { isLoggedIn, getUserId } from './src/services/auth.service';
 import { setUnauthorizedCallback } from './src/services/api';
 import api from './src/services/api';
@@ -46,7 +46,48 @@ export default function App() {
                 });
             }
         });
+
+        // ✅ Gère le deep link quand l'app est déjà ouverte
+        const subscription = Linking.addEventListener('url', ({ url }) => {
+            handleDeepLink(url);
+        });
+
+        // ✅ Gère le deep link quand l'app s'ouvre depuis un lien
+        Linking.getInitialURL().then((url) => {
+            if (url) handleDeepLink(url);
+        });
+
+        return () => subscription.remove();
     }, []);
+
+    // ✅ Traite le deep link et navigue vers Réservations
+    const handleDeepLink = (url) => {
+        if (!url) return;
+        console.log('Deep link reçu:', url);
+
+        if (url.includes('paiement-succes')) {
+            // Petite attente pour que la navigation soit prête
+            setTimeout(() => {
+                if (navigationRef.current) {
+                    // Affiche l'alerte de confirmation
+                    Alert.alert(
+                        '✅ Réservation envoyée !',
+                        'Votre paiement a été reçu. Votre réservation est en attente de confirmation du conducteur.',
+                        [
+                            {
+                                text: 'Voir mes réservations',
+                                onPress: () => {
+                                    navigationRef.current.navigate('Main', {
+                                        screen: 'Reservations'
+                                    });
+                                }
+                            }
+                        ]
+                    );
+                }
+            }, 500);
+        }
+    };
 
     const checkAuth = async () => {
         const connected = await isLoggedIn();
@@ -59,40 +100,23 @@ export default function App() {
 
     const enregistrerPushToken = async () => {
         try {
-            if (!Device.isDevice) {
-                console.log('Push token non disponible sur simulateur');
-                return;
-            }
+            if (!Device.isDevice) return;
 
             const { status } = await Notifications.requestPermissionsAsync();
-            if (status !== 'granted') {
-                console.log('Permission notifications refusée');
-                return;
-            }
+            if (status !== 'granted') return;
 
             const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-            if (!projectId) {
-                console.log('Project ID manquant dans app.json');
-                return;
-            }
+            if (!projectId) return;
 
             const token = await Notifications.getExpoPushTokenAsync({ projectId });
-            console.log('✅ Token obtenu:', token.data);
-
             const userId = await getUserId();
-            console.log('✅ UserId:', userId);
 
             if (userId && token.data) {
-                const res = await api.patch(
-                    `/utilisateurs/${userId}/push-token?token=${encodeURIComponent(token.data)}`
-                );
-                console.log('✅ Push token enregistré, status:', res.status);
+                await api.patch(`/utilisateurs/${userId}/push-token?token=${encodeURIComponent(token.data)}`);
+                console.log('Push token enregistré:', token.data);
             }
         } catch (error) {
-            console.log('❌ Erreur message:', error.message);
-            console.log('❌ Erreur data:', JSON.stringify(error.response?.data));
-            console.log('❌ Erreur status:', error.response?.status);
-            console.log('❌ Erreur URL:', error.config?.url);
+            console.log('Push token non disponible:', error.message);
         }
     };
 

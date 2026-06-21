@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement confirmé - Clando</title>
+    <title>Paiement confirmé - WayVo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -37,6 +37,9 @@
             cursor: pointer; border: none; width: 100%;
         }
         .bouton:hover { opacity: 0.9; }
+        .countdown {
+            font-size: 13px; color: #666; margin-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -51,32 +54,42 @@
         </div>
 
         <p style="font-size: 13px; color: #666; margin-top: 8px;">
-            Vous pouvez retourner sur l'application Clando pour suivre votre réservation.
+            Vous allez être redirigé automatiquement vers WayVo...
         </p>
 
         <button class="bouton" onclick="retournerApp()">
-            Retourner sur Clando
+            Retourner sur Wayvo
         </button>
+
+        <p class="countdown" id="countdown"></p>
     </div>
 
     <script>
-        // Récupérer les paramètres de l'URL
         const params = new URLSearchParams(window.location.search);
         const transactionId = params.get('transactionId');
-        const status = params.get('status');
 
         if (transactionId) {
             document.getElementById('transaction-id').textContent = transactionId;
         }
 
+        //  Deep link vers l'écran Réservations avec paramètre succès
         function retournerApp() {
-            // Essayer d'ouvrir l'app mobile
-            window.location.href = 'clandomobile://';
-            // Fallback après 2 secondes
-            setTimeout(() => {
-                window.close();
-            }, 2000);
+            // Le deep link ouvre l'app et navigue vers ReservationsScreen
+            window.location.href = 'clandomobile://paiement-succes';
         }
+
+        //  Redirection automatique après 3 secondes
+        let secondes = 3;
+        const countdownEl = document.getElementById('countdown');
+
+        const timer = setInterval(() => {
+            countdownEl.textContent = `Redirection automatique dans ${secondes}s...`;
+            secondes--;
+            if (secondes < 0) {
+                clearInterval(timer);
+                retournerApp();
+            }
+        }, 1000);
     </script>
 </body>
 </html>

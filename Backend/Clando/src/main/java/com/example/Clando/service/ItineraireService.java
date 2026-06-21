@@ -69,9 +69,6 @@ private static final Map<String, List<String>> QUARTIERS_PAR_ITINERAIRE = Map.of
         // Position de la recherche sur la route
         int indexDepartRecherche = trouverIndex(quartiers, departRecherche);
         int indexArriveeRecherche = trouverIndex(quartiers, arriveeRecherche);
-System.out.println("=== ITINERAIRE: " + itineraire);
-    System.out.println("=== Trajet: " + departTrajet + "(" + indexDepartTrajet + ") → " + arriveeTrajet + "(" + indexArriveeTrajet + ")");
-    System.out.println("=== Recherche: " + departRecherche + "(" + indexDepartRecherche + ") → " + arriveeRecherche + "(" + indexArriveeRecherche + ")");
 
         if (indexDepartTrajet == -1 || indexArriveeTrajet == -1 ||
             indexDepartRecherche == -1 || indexArriveeRecherche == -1) {
