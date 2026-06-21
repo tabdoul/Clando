@@ -260,6 +260,7 @@ public class TrajetService {
                 .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
                 .conducteurGenre(t.getConducteur().getGenre())
                 .femmesUniquement(t.isFemmesUniquement())
+                .conducteurTelephone(t.getConducteur().getTelephone())
                 .build();
     }
 }

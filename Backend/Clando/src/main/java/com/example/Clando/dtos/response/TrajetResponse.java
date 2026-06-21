@@ -17,6 +17,7 @@ public class TrajetResponse {
     private String conducteurNom;
     private String conducteurPrenom;
     private String conducteurPhoto;
+    private String conducteurTelephone;
     private Long vehiculeId;
     private String vehiculeMarque;
     private String vehiculeModele;
@@ -24,7 +25,6 @@ public class TrajetResponse {
     private Long nbTrajetsTerminesConducteur;
     private String conducteurGenre;
     private boolean femmesUniquement;
-
 
     public TrajetResponse() {}
 
@@ -64,6 +64,9 @@ public class TrajetResponse {
     public String getConducteurPhoto() { return conducteurPhoto; }
     public void setConducteurPhoto(String conducteurPhoto) { this.conducteurPhoto = conducteurPhoto; }
 
+    public String getConducteurTelephone() { return conducteurTelephone; }
+    public void setConducteurTelephone(String v) { this.conducteurTelephone = v; }
+
     public Long getVehiculeId() { return vehiculeId; }
     public void setVehiculeId(Long vehiculeId) { this.vehiculeId = vehiculeId; }
 
@@ -85,7 +88,6 @@ public class TrajetResponse {
     public boolean isFemmesUniquement() { return femmesUniquement; }
     public void setFemmesUniquement(boolean v) { this.femmesUniquement = v; }
 
-
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -102,12 +104,12 @@ public class TrajetResponse {
         public Builder conducteurNom(String val) { r.conducteurNom = val; return this; }
         public Builder conducteurPrenom(String val) { r.conducteurPrenom = val; return this; }
         public Builder conducteurPhoto(String val) { r.conducteurPhoto = val; return this; }
+        public Builder conducteurTelephone(String val) { r.conducteurTelephone = val; return this; }
         public Builder vehiculeId(Long val) { r.vehiculeId = val; return this; }
         public Builder vehiculeMarque(String val) { r.vehiculeMarque = val; return this; }
         public Builder vehiculeModele(String val) { r.vehiculeModele = val; return this; }
         public Builder noteMoyenneConducteur(Double val) { r.noteMoyenneConducteur = val; return this; }
         public Builder nbTrajetsTerminesConducteur(Long val) { r.nbTrajetsTerminesConducteur = val; return this; }
-        
         public Builder conducteurGenre(String val) { r.conducteurGenre = val; return this; }
         public Builder femmesUniquement(boolean val) { r.femmesUniquement = val; return this; }
         public TrajetResponse build() { return r; }

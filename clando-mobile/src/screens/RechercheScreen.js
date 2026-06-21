@@ -164,7 +164,7 @@ export default function RechercheScreen({ navigation }) {
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <View style={{ width: 40 }} />
-                        <Text style={styles.headerTitle}>Clando</Text>
+                        <Text style={styles.headerTitle}>Wayvo</Text>
                         <TouchableOpacity
                             style={styles.cloche}
                             onPress={() => navigation.navigate('Notifications')}>

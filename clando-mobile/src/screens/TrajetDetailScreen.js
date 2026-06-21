@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
     ScrollView, Alert, Image, ActivityIndicator,
@@ -16,26 +16,48 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const [showPrixModal, setShowPrixModal] = useState(false);
     const [prixPropose, setPrixPropose] = useState(trajet.prix.toString());
     const [loading, setLoading] = useState(false);
-
-    // ✅ NOUVEAU — genre de l'utilisateur connecté
     const [genreUtilisateur, setGenreUtilisateur] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [passagers, setPassagers] = useState([]);
+    const [loadingPassagers, setLoadingPassagers] = useState(false);
+    const pollingRef = useRef(null);
 
     useEffect(() => {
         chargerAvis();
         chargerGenreUtilisateur();
+        return () => {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+        };
     }, []);
 
-    // ✅ NOUVEAU — charge le genre au montage
+    useEffect(() => {
+        if (currentUserId !== null) {
+            chargerPassagers();
+        }
+    }, [currentUserId]);
+
     const chargerGenreUtilisateur = async () => {
         try {
             const userId = await getUserId();
             if (!userId) return;
-            setCurrentUserId(userId);
+            // Convertit en Number pour que la comparaison avec conducteurId fonctionne
+            setCurrentUserId(Number(userId));
             const res = await api.get(`/utilisateurs/${userId}`);
-            setGenreUtilisateur(res.data.genre); // "HOMME" ou "FEMME"
+            setGenreUtilisateur(res.data.genre);
         } catch (err) {
             console.log('Erreur chargement genre:', err);
+        }
+    };
+
+    const chargerPassagers = async () => {
+        setLoadingPassagers(true);
+        try {
+            const res = await api.get(`/reservations/trajet/${trajet.id}/passagers`);
+            setPassagers(res.data);
+        } catch (err) {
+            console.log('Erreur passagers:', err.message);
+        } finally {
+            setLoadingPassagers(false);
         }
     };
 
@@ -48,6 +70,46 @@ export default function TrajetDetailScreen({ route, navigation }) {
         } finally {
             setLoadingAvis(false);
         }
+    };
+
+    const demarrerPolling = (reservationId) => {
+        let tentatives = 0;
+        const MAX_TENTATIVES = 20;
+
+        pollingRef.current = setInterval(async () => {
+            tentatives++;
+            try {
+                const res = await api.get(`/reservations/${reservationId}`);
+                const statutPaiement = res.data.statutPaiement;
+
+                if (statutPaiement === 'SUCCESS' || statutPaiement === 'PENDING') {
+                    clearInterval(pollingRef.current);
+                    setShowPrixModal(false);
+                    Alert.alert(
+                        'Reservation envoyee !',
+                        'Votre paiement a ete recu. Votre reservation est en attente de confirmation du conducteur.',
+                        [{
+                            text: 'Voir mes reservations',
+                            onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
+                        }]
+                    );
+                }
+
+                if (tentatives >= MAX_TENTATIVES) {
+                    clearInterval(pollingRef.current);
+                    Alert.alert(
+                        'Reservation en cours',
+                        'Votre paiement est en cours de traitement. Consultez vos reservations dans quelques instants.',
+                        [{
+                            text: 'Voir mes reservations',
+                            onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
+                        }]
+                    );
+                }
+            } catch (err) {
+                console.log('Erreur polling:', err.message);
+            }
+        }, 3000);
     };
 
     const formatHeure = (dateString) => {
@@ -64,15 +126,14 @@ export default function TrajetDetailScreen({ route, navigation }) {
         });
     };
 
-    // ✅ NOUVEAU — vérifie le genre avant d'ouvrir le modal
     const handleReserverPress = () => {
         if (trajet.femmesUniquement && genreUtilisateur === 'HOMME') {
             Alert.alert(
-                '🚫 Accès refusé',
-                'Ce trajet est réservé aux femmes uniquement.\n\nVous ne pouvez pas effectuer cette réservation.',
+                'Acces refuse',
+                'Ce trajet est reserve aux femmes uniquement. Vous ne pouvez pas effectuer cette reservation.',
                 [{ text: 'Compris', style: 'default' }]
             );
-            return; // ← on s'arrête ici, modal jamais ouvert, 0 paiement
+            return;
         }
         setShowPrixModal(true);
     };
@@ -101,17 +162,26 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 numeroTelephone: 'GATEWAY'
             });
 
-            setShowPrixModal(false);
+            const reservationId = response.data.id;
+            const urlPaiement = response.data.urlPaiement;
 
-            if (response.data.urlPaiement) {
-                await Linking.openURL(response.data.urlPaiement);
+            if (urlPaiement) {
+                await Linking.openURL(urlPaiement);
+                demarrerPolling(reservationId);
             } else {
-                Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
+                setShowPrixModal(false);
+                Alert.alert(
+                    'Reservation envoyee !',
+                    'En attente de confirmation du conducteur.',
+                    [{
+                        text: 'Voir mes reservations',
+                        onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
+                    }]
+                );
             }
         } catch (error) {
-            // ✅ Gère aussi le cas où le backend bloque (double sécurité)
-            const msg = error.response?.data?.erreur || 'Erreur lors de la réservation';
-            Alert.alert('Réservation impossible', msg);
+            const msg = error.response?.data?.erreur || 'Erreur lors de la reservation';
+            Alert.alert('Reservation impossible', msg);
         } finally {
             setLoading(false);
         }
@@ -128,34 +198,32 @@ export default function TrajetDetailScreen({ route, navigation }) {
         ));
     };
 
-    // ✅ NOUVEAU — détermine si le bouton réserver doit afficher un avertissement
+    const estConducteur = currentUserId !== null && trajet.conducteurId === currentUserId;
+    const aReservationConfirmee = passagers.some(p => Number(p.passagerId) === currentUserId);
+    const passagersAffiches = (estConducteur || aReservationConfirmee) ? passagers : [];
     const estBloqueParGenre = trajet.femmesUniquement && genreUtilisateur === 'HOMME';
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#eee" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Détails du trajet</Text>
+                <Text style={styles.headerTitle}>Details du trajet</Text>
                 <View style={{ width: 32 }} />
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                {/* Date */}
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateText}>{formatDate(trajet.dateHeureDepart)}</Text>
-                    {/*  NOUVEAU — badge femmes dans le détail */}
                     {trajet.femmesUniquement && (
                         <View style={styles.femmesUniquementBadge}>
-                            <Text style={styles.femmesUniquementText}>Réservé aux femmes uniquement</Text>
+                            <Text style={styles.femmesUniquementText}>Reserve aux femmes uniquement</Text>
                         </View>
                     )}
                 </View>
 
-                {/* Timeline trajet */}
                 <View style={styles.section}>
                     <View style={styles.timeline}>
                         <View style={styles.timelineRow}>
@@ -171,7 +239,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 )}
                             </View>
                         </View>
-
                         <View style={styles.timelineRow}>
                             <Text style={styles.timelineHeure}></Text>
                             <View style={styles.timelineCenter}>
@@ -184,7 +251,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     </View>
                 </View>
 
-                {/* Infos trajet */}
                 <View style={styles.section}>
                     <View style={styles.card}>
                         <View style={styles.infoRow}>
@@ -204,11 +270,61 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <View style={styles.infoRow}>
                             <Ionicons name="checkmark-circle-outline" size={18} color="#888" />
                             <Text style={styles.infoText}>
-                                Réservation confirmée par le conducteur
+                                Reservation confirmee par le conducteur
                             </Text>
                         </View>
                     </View>
                 </View>
+
+                {/* Section passagers confirmés */}
+                {passagersAffiches.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>
+                            {estConducteur
+                                ? `Passagers confirmes (${passagersAffiches.length})`
+                                : `Vous voyagez avec ${passagersAffiches.length} personne${passagersAffiches.length > 1 ? 's' : ''}`}
+                        </Text>
+                        {loadingPassagers ? (
+                            <ActivityIndicator color="#00b5e2" />
+                        ) : (
+                            passagersAffiches.map((item) => {
+                                const initiales = `${(item.passagerPrenom || '?')[0]}${(item.passagerNom || '?')[0]}`.toUpperCase();
+                                return (
+                                    <View key={item.id.toString()} style={styles.passagerCard}>
+                                        {item.passagerPhoto ? (
+                                            <Image source={{ uri: item.passagerPhoto }} style={styles.passagerAvatar} />
+                                        ) : (
+                                            <View style={styles.passagerAvatarPlaceholder}>
+                                                <Text style={styles.passagerInitiales}>{initiales}</Text>
+                                            </View>
+                                        )}
+
+                                        <View style={styles.passagerInfos}>
+                                            <Text style={styles.passagerNom}>
+                                                {item.passagerPrenom} {item.passagerNom}
+                                            </Text>
+                                            {/* Pas de numero, pas de places */}
+                                        </View>
+
+                                        <TouchableOpacity
+                                            style={styles.passagerBtnChat}
+                                            onPress={() => navigation.navigate('Chat', {
+                                                reservationId: item.id,
+                                                interlocuteur: {
+                                                    id: estConducteur ? item.passagerId : trajet.conducteurId,
+                                                    nom: estConducteur ? item.passagerNom : trajet.conducteurNom,
+                                                    prenom: estConducteur ? item.passagerPrenom : trajet.conducteurPrenom,
+                                                },
+                                                userId: currentUserId,
+                                            })}>
+                                            <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            })
+                        )}
+                    </View>
+                )}
 
                 {/* Profil conducteur */}
                 <View style={styles.section}>
@@ -249,7 +365,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
                         <View style={styles.infoRow}>
                             <Ionicons name="shield-checkmark-outline" size={18} color="#2ecc71" />
-                            <Text style={[styles.infoText, { color: '#2ecc71' }]}>Profil vérifié</Text>
+                            <Text style={[styles.infoText, { color: '#2ecc71' }]}>Profil verifie</Text>
                         </View>
 
                         <View style={styles.separator} />
@@ -272,13 +388,19 @@ export default function TrajetDetailScreen({ route, navigation }) {
                             </Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.infoSecurite}>
-                            🔒 Le numéro sera visible après confirmation
-                        </Text>
+                        {/* Numero conducteur visible uniquement par passager confirme */}
+                        {aReservationConfirmee && trajet.conducteurTelephone ? (
+                            <Text style={styles.conducteurTel}>
+                                {trajet.conducteurTelephone}
+                            </Text>
+                        ) : !estConducteur ? (
+                            <Text style={styles.infoSecurite}>
+                                Le numero sera visible apres confirmation
+                            </Text>
+                        ) : null}
                     </View>
                 </View>
 
-                {/* Avis */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Avis des passagers</Text>
                     {loadingAvis ? (
@@ -309,7 +431,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* ✅ Bouton réserver — adapté selon genre */}
             {trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && (
                 <View style={styles.bottomBar}>
                     <View style={styles.bottomPrix}>
@@ -328,13 +449,12 @@ export default function TrajetDetailScreen({ route, navigation }) {
                             color="white"
                         />
                         <Text style={styles.boutonReserverText}>
-                            {estBloqueParGenre ? 'Femmes uniquement' : 'Demande de réservation'}
+                            {estBloqueParGenre ? 'Femmes uniquement' : 'Demande de reservation'}
                         </Text>
                     </TouchableOpacity>
                 </View>
             )}
 
-            {/* Modal prix — inchangé */}
             <Modal
                 visible={showPrixModal}
                 transparent={true}
@@ -346,13 +466,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         style={{ width: '100%' }}>
                         <View style={styles.modalCard}>
                             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                                <Text style={styles.modalTitle}>Confirmer la réservation</Text>
+                                <Text style={styles.modalTitle}>Confirmer la reservation</Text>
                                 <Text style={styles.modalSubtitle}>
                                     {trajet.villeDepart} → {trajet.villeArrivee}
                                 </Text>
 
                                 <View style={styles.modalPrixOriginal}>
-                                    <Text style={styles.modalPrixLabel}>Prix affiché</Text>
+                                    <Text style={styles.modalPrixLabel}>Prix affiche</Text>
                                     <Text style={styles.modalPrixValeur}>
                                         {trajet.prix?.toLocaleString()} GNF
                                     </Text>
@@ -372,8 +492,17 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                     <Text style={styles.modalDevise}>GNF</Text>
                                 </View>
 
+                                {pollingRef.current && (
+                                    <View style={styles.pollingIndicator}>
+                                        <ActivityIndicator size={14} color="#00b5e2" />
+                                        <Text style={styles.pollingText}>
+                                            En attente de confirmation du paiement...
+                                        </Text>
+                                    </View>
+                                )}
+
                                 <Text style={styles.modalInfo}>
-                                    🔒 Vous serez redirigé vers la page de paiement sécurisée
+                                    Vous serez redirige vers la page de paiement securisee
                                 </Text>
 
                                 <View style={styles.modalBoutons}>
@@ -381,6 +510,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                         style={styles.modalBoutonAnnuler}
                                         onPress={() => {
                                             Keyboard.dismiss();
+                                            if (pollingRef.current) clearInterval(pollingRef.current);
                                             setShowPrixModal(false);
                                         }}>
                                         <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
@@ -390,7 +520,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                         onPress={reserver}
                                         disabled={loading}>
                                         <Text style={styles.modalBoutonConfirmerText}>
-                                            {loading ? 'Chargement...' : 'Payer & Réserver'}
+                                            {loading ? 'Chargement...' : 'Payer & Reserver'}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -415,24 +545,12 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
     dateContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
     dateText: { fontSize: 20, fontWeight: 'bold', color: '#eee', textTransform: 'capitalize' },
-
-    // ✅ NOUVEAU badge femmes dans le détail
     femmesUniquementBadge: {
-        marginTop: 10,
-        backgroundColor: '#1a0a2a',
-        borderRadius: 10,
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderWidth: 1,
-        borderColor: '#9b59b6',
-        alignSelf: 'flex-start',
+        marginTop: 10, backgroundColor: '#1a0a2a', borderRadius: 10,
+        paddingVertical: 8, paddingHorizontal: 14,
+        borderWidth: 1, borderColor: '#9b59b6', alignSelf: 'flex-start',
     },
-    femmesUniquementText: {
-        color: '#9b59b6',
-        fontSize: 13,
-        fontWeight: '700',
-    },
-
+    femmesUniquementText: { color: '#9b59b6', fontSize: 13, fontWeight: '700' },
     section: { paddingHorizontal: 16, marginTop: 12 },
     sectionTitle: { fontSize: 16, fontWeight: '600', color: '#eee', marginBottom: 10 },
     card: {
@@ -455,6 +573,26 @@ const styles = StyleSheet.create({
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
     infoText: { fontSize: 14, color: '#aaa', flex: 1 },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 4 },
+    passagerCard: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 12,
+        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a', gap: 12,
+    },
+    passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
+    passagerAvatarPlaceholder: {
+        width: 44, height: 44, borderRadius: 22,
+        backgroundColor: '#00b5e233',
+        alignItems: 'center', justifyContent: 'center',
+    },
+    passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
+    passagerInfos: { flex: 1 },
+    passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
+    passagerBtnChat: {
+        padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20,
+    },
+    conducteurTel: {
+        fontSize: 14, color: '#00b5e2', fontWeight: '600', marginTop: 8,
+    },
     conducteurRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
     conducteurAvatar: {
         width: 52, height: 52, borderRadius: 26,
@@ -469,8 +607,7 @@ const styles = StyleSheet.create({
     conducteurNote: { fontSize: 14, color: '#f39c12', fontWeight: '600' },
     conducteurNbAvis: { fontSize: 12, color: '#666' },
     boutonContacter: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        paddingVertical: 10,
+        flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10,
     },
     boutonContacterText: { color: '#00b5e2', fontSize: 15, fontWeight: '600' },
     infoSecurite: { fontSize: 11, color: '#555', fontStyle: 'italic', marginTop: 4 },
@@ -499,10 +636,7 @@ const styles = StyleSheet.create({
         padding: 14, flexDirection: 'row', alignItems: 'center',
         justifyContent: 'center', gap: 8,
     },
-    // ✅ NOUVEAU — bouton grisé pour les hommes
-    boutonReserverBloque: {
-        backgroundColor: '#5a3a6a',
-    },
+    boutonReserverBloque: { backgroundColor: '#5a3a6a' },
     boutonReserverText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: {
@@ -526,6 +660,11 @@ const styles = StyleSheet.create({
     },
     modalInputText: { flex: 1, padding: 12, fontSize: 16, color: '#eee' },
     modalDevise: { color: '#888', fontSize: 14 },
+    pollingIndicator: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        backgroundColor: '#0a2a35', borderRadius: 8, padding: 10, marginBottom: 12,
+    },
+    pollingText: { fontSize: 13, color: '#00b5e2', flex: 1 },
     modalInfo: { fontSize: 12, color: '#888', textAlign: 'center', marginBottom: 20, fontStyle: 'italic' },
     modalBoutons: { flexDirection: 'row', gap: 12 },
     modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#444', borderRadius: 10, padding: 14, alignItems: 'center' },
