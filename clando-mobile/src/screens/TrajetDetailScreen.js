@@ -147,10 +147,10 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 {/* Date */}
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateText}>{formatDate(trajet.dateHeureDepart)}</Text>
-                    {/* ✅ NOUVEAU — badge femmes dans le détail */}
+                    {/*  NOUVEAU — badge femmes dans le détail */}
                     {trajet.femmesUniquement && (
                         <View style={styles.femmesUniquementBadge}>
-                            <Text style={styles.femmesUniquementText}>👩 Réservé aux femmes uniquement</Text>
+                            <Text style={styles.femmesUniquementText}>Réservé aux femmes uniquement</Text>
                         </View>
                     )}
                 </View>

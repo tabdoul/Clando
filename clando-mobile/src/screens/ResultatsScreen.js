@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     View, Text, TouchableOpacity,
-    StyleSheet, ScrollView, Image, Alert
+    StyleSheet, ScrollView, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -44,10 +44,7 @@ export default function ResultatsScreen({ route, navigation }) {
                         key={item.id.toString()}
                         style={styles.cardWrapper}
                         onPress={() => navigation.navigate('TrajetDetail', { trajet: item })}>
-                        <View style={[
-                            styles.card,
-                            item.femmesUniquement && styles.cardFemmes
-                        ]}>
+                        <View style={styles.card}>
                             <View style={styles.cardTop}>
                                 <View style={styles.heureContainer}>
                                     <Text style={styles.heure}>{formatHeure(item.dateHeureDepart)}</Text>
@@ -122,10 +119,9 @@ export default function ResultatsScreen({ route, navigation }) {
                                 </View>
 
                                 <View style={styles.rightSection}>
-                                    {/* ✅ Badge Femmes uniquement amélioré */}
                                     {item.femmesUniquement && (
                                         <View style={styles.femmesUniquementBadge}>
-                                            <Text style={styles.femmesUniquementBadgeText}>👩 Femmes uniquement</Text>
+                                            <Text style={styles.femmesUniquementBadgeText}> Femmes uniquement</Text>
                                         </View>
                                     )}
                                     {item.statut === 'OUVERT' && item.placesDisponibles > 0 ? (
@@ -168,11 +164,6 @@ const styles = StyleSheet.create({
         borderLeftWidth: 3, borderLeftColor: '#00b5e2',
         borderWidth: 1, borderColor: '#2a2a2a',
     },
-    // ✅ Bordure violette pour les trajets femmes uniquement
-    cardFemmes: {
-        borderLeftColor: '#9b59b6',
-        borderColor: '#2a1a3a',
-    },
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     heureContainer: { alignItems: 'center', minWidth: 52 },
     heure: { fontSize: 20, fontWeight: 'bold', color: '#eee' },
@@ -204,10 +195,10 @@ const styles = StyleSheet.create({
     rightSection: { alignItems: 'flex-end', gap: 6 },
     femmesUniquementBadge: {
         backgroundColor: '#1a0a2a', borderRadius: 8,
-        paddingVertical: 4, paddingHorizontal: 10,
+        paddingVertical: 3, paddingHorizontal: 8,
         borderWidth: 1, borderColor: '#9b59b6',
     },
-    femmesUniquementBadgeText: { color: '#9b59b6', fontSize: 10, fontWeight: '700' },
+    femmesUniquementBadgeText: { color: '#9b59b6', fontSize: 10, fontWeight: '600' },
     boutonReserver: {
         backgroundColor: '#00b5e2', borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 14,
