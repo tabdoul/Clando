@@ -17,6 +17,8 @@ import AvisScreen from './src/screens/AvisScreen';
 import DocumentsScreen from './src/screens/DocumentsScreen';
 import AideScreen from './src/screens/AideScreen';
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import TrajetDetailScreen from './src/screens/TrajetDetailScreen';
 
 const Stack = createStackNavigator();
@@ -57,23 +59,40 @@ export default function App() {
 
     const enregistrerPushToken = async () => {
         try {
+            if (!Device.isDevice) {
+                console.log('Push token non disponible sur simulateur');
+                return;
+            }
+
             const { status } = await Notifications.requestPermissionsAsync();
             if (status !== 'granted') {
                 console.log('Permission notifications refusée');
                 return;
             }
 
-            const token = await Notifications.getExpoPushTokenAsync({
-                projectId: 'c25bf41c-f8d2-437e-85c5-a1b3d3d84375'
-            });
+            const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+            if (!projectId) {
+                console.log('Project ID manquant dans app.json');
+                return;
+            }
+
+            const token = await Notifications.getExpoPushTokenAsync({ projectId });
+            console.log('✅ Token obtenu:', token.data);
 
             const userId = await getUserId();
+            console.log('✅ UserId:', userId);
+
             if (userId && token.data) {
-                await api.patch(`/utilisateurs/${userId}/push-token?token=${encodeURIComponent(token.data)}`);
-                console.log('Push token enregistré:', token.data);
+                const res = await api.patch(
+                    `/utilisateurs/${userId}/push-token?token=${encodeURIComponent(token.data)}`
+                );
+                console.log('✅ Push token enregistré, status:', res.status);
             }
         } catch (error) {
-            console.log('Erreur push token:', error.message);
+            console.log('❌ Erreur message:', error.message);
+            console.log('❌ Erreur data:', JSON.stringify(error.response?.data));
+            console.log('❌ Erreur status:', error.response?.status);
+            console.log('❌ Erreur URL:', error.config?.url);
         }
     };
 
