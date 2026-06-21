@@ -48,7 +48,7 @@ export default function RegisterScreen({ navigation }) {
                     <Text style={styles.label}>Nom *</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Diallo"
+                        placeholder=""
                         placeholderTextColor="#999"
                         value={nom}
                         onChangeText={setNom}
@@ -57,7 +57,7 @@ export default function RegisterScreen({ navigation }) {
                     <Text style={styles.label}>Prénom *</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Mamadou"
+                        placeholder=""
                         placeholderTextColor="#999"
                         value={prenom}
                         onChangeText={setPrenom}
@@ -100,14 +100,14 @@ export default function RegisterScreen({ navigation }) {
                             style={[styles.genreBouton, genre === 'HOMME' && styles.genreBoutonActif]}
                             onPress={() => setGenre('HOMME')}>
                             <Text style={[styles.genreTexte, genre === 'HOMME' && styles.genreTexteActif]}>
-                                👨 Homme
+                                 Homme
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.genreBouton, genre === 'FEMME' && styles.genreBoutonActif]}
                             onPress={() => setGenre('FEMME')}>
                             <Text style={[styles.genreTexte, genre === 'FEMME' && styles.genreTexteActif]}>
-                                👩 Femme
+                                 Femme
                             </Text>
                         </TouchableOpacity>
                     </View>

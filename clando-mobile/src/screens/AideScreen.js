@@ -152,7 +152,7 @@ export default function AideScreen({ navigation }) {
                             <Ionicons name="mail-outline" size={24} color="#00b5e2" />
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactTitre}>Nous contacter</Text>
-                                <Text style={styles.contactDetail}>support@clando.africa</Text>
+                                <Text style={styles.contactDetail}>support@Wayvo.guinee</Text>
                             </View>
                         </View>
                     </View>
@@ -245,7 +245,7 @@ export default function AideScreen({ navigation }) {
                                 {s.reponseAdmin && (
                                     <View style={styles.reponseCard}>
                                         <Text style={styles.reponseLabel}>
-                                            Réponse de l'équipe Clando :
+                                            Réponse de l'équipe Wayvo :
                                         </Text>
                                         <Text style={styles.reponseTexte}>{s.reponseAdmin}</Text>
                                     </View>
