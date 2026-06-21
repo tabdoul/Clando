@@ -133,6 +133,7 @@ public class Utilisateur {
         public Builder miniBio(String v) { u.miniBio = v; return this; }
         public Builder verifie(boolean v) { u.verifie = v; return this; }
         public Builder photo(String v) { u.photo = v; return this; }
+        public Builder genre(String v) { u.genre = v; return this; }
         public Utilisateur build() { return u; }
     }
 } 

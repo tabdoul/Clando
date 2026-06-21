@@ -39,6 +39,7 @@ public class UtilisateurService {
                 .email(request.getEmail())
                 .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
                 .telephone(request.getTelephone())
+                .genre(request.getGenre()) // ✅ point avant genre
                 .build();
 
         return toResponse(utilisateurRepository.save(utilisateur));
@@ -62,7 +63,7 @@ public class UtilisateurService {
         utilisateur.setEmail(request.getEmail());
         utilisateur.setTelephone(request.getTelephone());
         utilisateur.setMiniBio(request.getMiniBio());
-        utilisateur.setGenre(request.getGenre()); // ✅ corrigé
+        utilisateur.setGenre(request.getGenre());
         if (request.getMotDePasse() != null && !request.getMotDePasse().isBlank()) {
             utilisateur.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
         }
@@ -102,7 +103,7 @@ public class UtilisateurService {
                 .miniBio(u.getMiniBio())
                 .photo(u.getPhoto())
                 .verifie(u.isVerifie())
-                .genre(u.getGenre())
+                .genre(u.getGenre()) 
                 .build();
     }
 }

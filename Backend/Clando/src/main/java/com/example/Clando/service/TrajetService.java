@@ -93,7 +93,7 @@ public class TrajetService {
             );
         }
 
-        // ✅ Limite 3 trajets/jour
+        //  Limite 3 trajets/jour
         LocalDateTime debutJour = LocalDate.now(ZoneId.of("Africa/Conakry")).atStartOfDay();
         LocalDateTime finJour = debutJour.plusDays(1);
         long nbTrajetsAujourdhui = trajetRepository.countByConducteurIdAndDateCreationBetween(
@@ -103,7 +103,7 @@ public class TrajetService {
             throw new IllegalStateException("Vous avez atteint la limite de 3 trajets par jour");
         }
 
-        // ✅ "Femmes uniquement" : seule une femme peut publier ce type de trajet
+        //  "Femmes uniquement" : seule une femme peut publier ce type de trajet
         if (request.isFemmesUniquement()) {
             String genreConducteur = conducteur.getGenre();
             if (genreConducteur == null || !genreConducteur.equals("FEMME")) {
