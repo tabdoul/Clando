@@ -11,11 +11,18 @@ import com.example.Clando.entity.Reservation;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
     List<Reservation> findByPassagerId(Long passagerId);
     List<Reservation> findByTrajetId(Long trajetId);
     boolean existsByPassagerIdAndTrajetId(Long passagerId, Long trajetId);
-
-    @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE")
-    List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
     List<Reservation> findByDjomyTransactionId(String djomyTransactionId);
+
+    @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
+           "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE")
+    List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+
+    // ✅ NOUVEAU — passagers confirmés pour affichage dans TrajetDetailScreen
+    @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
+           "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
+    List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
 }

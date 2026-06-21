@@ -41,8 +41,6 @@ public class UtilisateurService {
                 .telephone(request.getTelephone())
                 .build();
 
-        utilisateur.setGenre(request.getGenre());
-
         return toResponse(utilisateurRepository.save(utilisateur));
     }
 
@@ -64,7 +62,7 @@ public class UtilisateurService {
         utilisateur.setEmail(request.getEmail());
         utilisateur.setTelephone(request.getTelephone());
         utilisateur.setMiniBio(request.getMiniBio());
-        utilisateur.setGenre(request.getGenre());
+        utilisateur.setGenre(request.getGenre()); // ✅ corrigé
         if (request.getMotDePasse() != null && !request.getMotDePasse().isBlank()) {
             utilisateur.setMotDePasse(passwordEncoder.encode(request.getMotDePasse()));
         }

@@ -4,12 +4,14 @@ import com.example.Clando.dtos.request.ReservationRequest;
 import com.example.Clando.dtos.response.ReservationResponse;
 import com.example.Clando.entity.Reservation;
 import com.example.Clando.service.ReservationService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -21,9 +23,19 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
+    // ✅ Catch propre : retourne {"erreur": "..."} lisible par le mobile
     @PostMapping
-    public ResponseEntity<ReservationResponse> creer(@Valid @RequestBody ReservationRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.creer(request));
+    public ResponseEntity<?> creer(@Valid @RequestBody ReservationRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(reservationService.creer(request));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("erreur", e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
@@ -41,6 +53,13 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getByTrajet(trajetId));
     }
 
+    // ✅ NOUVEAU — passagers confirmés visibles par conducteur et passagers confirmés
+    @GetMapping("/trajet/{trajetId}/passagers")
+    public ResponseEntity<List<ReservationResponse>> getPassagersConfirmes(
+            @PathVariable Long trajetId) {
+        return ResponseEntity.ok(reservationService.getPassagersConfirmes(trajetId));
+    }
+
     @GetMapping("/conducteur/{conducteurId}/en-attente")
     public ResponseEntity<List<ReservationResponse>> getEnAttenteParConducteur(
             @PathVariable Long conducteurId) {
@@ -49,12 +68,17 @@ public class ReservationController {
     }
 
     @PatchMapping("/{id}/statut")
-    public ResponseEntity<ReservationResponse> changerStatut(
+    public ResponseEntity<?> changerStatut(
             @PathVariable Long id,
             @RequestParam String statut) {
-        return ResponseEntity.ok(
-                reservationService.changerStatut(id,
-                        Reservation.StatutReservation.valueOf(statut)));
+        try {
+            return ResponseEntity.ok(
+                    reservationService.changerStatut(id,
+                            Reservation.StatutReservation.valueOf(statut)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", "Statut invalide : " + statut));
+        }
     }
 
     @PatchMapping("/{id}/negociation")
@@ -71,13 +95,19 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.nouvelleProposition(id, nouveauPrix));
     }
 
+    @PatchMapping("/{id}/annuler")
+    public ResponseEntity<?> annuler(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(reservationService.annuler(id));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         reservationService.supprimer(id);
         return ResponseEntity.noContent().build();
     }
-    @PatchMapping("/{id}/annuler")
-public ResponseEntity<?> annuler(@PathVariable Long id) {
-    return ResponseEntity.ok(reservationService.annuler(id));
-}
 }

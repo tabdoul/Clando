@@ -20,7 +20,6 @@ import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import com.example.Clando.service.DjomyService;
 
 @Service
 public class ReservationService {
@@ -39,154 +38,151 @@ public class ReservationService {
         this.trajetRepository = trajetRepository;
         this.djomyService = djomyService;
     }
+
     @Transactional
-public ReservationResponse creer(ReservationRequest request) {
-    System.out.println("=== CREER RESERVATION ===");
-    System.out.println("=== Numero telephone: " + request.getNumeroTelephone());
+    public ReservationResponse creer(ReservationRequest request) {
+        System.out.println("=== CREER RESERVATION ===");
+        System.out.println("=== Numero telephone: " + request.getNumeroTelephone());
 
-    Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
-            .orElseThrow(() -> new EntityNotFoundException("Passager non trouvé"));
+        Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
+                .orElseThrow(() -> new EntityNotFoundException("Passager non trouvé"));
 
-    Trajet trajet = trajetRepository.findById(request.getTrajetId())
-            .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé"));
+        Trajet trajet = trajetRepository.findById(request.getTrajetId())
+                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé"));
 
-    if (trajet.getPlacesDisponibles() < request.getNbPlaces()) {
-        throw new IllegalStateException("Pas assez de places disponibles");
-    }
-    // Vérifier si trajet femmes uniquement
-    
-if (trajet.isFemmesUniquement()) {
-    String genrePassager = passager.getGenre();
-    if (genrePassager == null || !genrePassager.equals("FEMME")) {
-        throw new IllegalStateException("Ce trajet est réservé aux femmes uniquement");
-    }
-}
-
-    Reservation reservation = new Reservation();
-    reservation.setPassager(passager);
-    reservation.setTrajet(trajet);
-    reservation.setNbPlaces(request.getNbPlaces());
-    reservation.setStatut(Reservation.StatutReservation.EN_ATTENTE);
-    reservation.setDateReservation(LocalDate.now());
-    reservation.setNbTentatives(0);
-
-    if (request.getPrixPropose() != null &&
-        !request.getPrixPropose().equals(trajet.getPrix())) {
-        reservation.setPrixPropose(request.getPrixPropose());
-    }
-
-    if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
-        System.out.println("=== Initier paiement gateway...");
-        try {
-            double montant = request.getPrixPropose() != null
-                ? request.getPrixPropose()
-                : trajet.getPrix();
-
-            String description = "Réservation Clando : " +
-                trajet.getVilleDepart() + " → " + trajet.getVilleArrivee();
-
-            String reference = "CLANDO-" + System.currentTimeMillis();
-
-            Map<String, Object> paiement = djomyService.initierPaiementGateway(
-                request.getNumeroTelephone(),
-                montant,
-                reference,
-                description
-            );
-
-            System.out.println("=== Réponse Djomy: " + paiement);
-
-            Map<String, Object> data = (Map<String, Object>) paiement.get("data");
-            System.out.println("=== Data: " + data);
-
-            if (data != null) {
-                if (data.containsKey("transactionId")) {
-                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
-                }
-                if (data.containsKey("redirectUrl")) {
-                    System.out.println("=== URL Paiement: " + data.get("redirectUrl"));
-                    reservation.setUrlPaiement((String) data.get("redirectUrl"));
-                }
-                reservation.setStatutPaiement("PENDING");
-                reservation.setNumeroTelephone(request.getNumeroTelephone());
-            }
-        } catch (Exception e) {
-            System.out.println("=== Erreur paiement Djomy: " + e.getMessage());
+        // ✅ Vérification places disponibles
+        if (trajet.getPlacesDisponibles() < request.getNbPlaces()) {
+            throw new IllegalStateException("Pas assez de places disponibles");
         }
-    } else {
-        System.out.println("=== Pas de numero telephone fourni");
+
+        // ✅ Vérification "Femmes uniquement" — double sécurité côté backend
+        if (trajet.isFemmesUniquement()) {
+            String genrePassager = passager.getGenre();
+            if (genrePassager == null || !genrePassager.equals("FEMME")) {
+                throw new IllegalStateException("Ce trajet est réservé aux femmes uniquement");
+            }
+        }
+
+        Reservation reservation = new Reservation();
+        reservation.setPassager(passager);
+        reservation.setTrajet(trajet);
+        reservation.setNbPlaces(request.getNbPlaces());
+        reservation.setStatut(Reservation.StatutReservation.EN_ATTENTE);
+        reservation.setDateReservation(LocalDate.now());
+        reservation.setNbTentatives(0);
+
+        if (request.getPrixPropose() != null &&
+            !request.getPrixPropose().equals(trajet.getPrix())) {
+            reservation.setPrixPropose(request.getPrixPropose());
+        }
+
+        if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
+            System.out.println("=== Initier paiement gateway...");
+            try {
+                double montant = request.getPrixPropose() != null
+                    ? request.getPrixPropose()
+                    : trajet.getPrix();
+
+                String description = "Réservation WayVo : " +
+                    trajet.getVilleDepart() + " → " + trajet.getVilleArrivee();
+
+                String reference = "WAYVO-" + System.currentTimeMillis();
+
+                Map<String, Object> paiement = djomyService.initierPaiementGateway(
+                    request.getNumeroTelephone(),
+                    montant,
+                    reference,
+                    description
+                );
+
+                System.out.println("=== Réponse Djomy: " + paiement);
+
+                Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+                System.out.println("=== Data: " + data);
+
+                if (data != null) {
+                    if (data.containsKey("transactionId")) {
+                        reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                    }
+                    if (data.containsKey("redirectUrl")) {
+                        System.out.println("=== URL Paiement: " + data.get("redirectUrl"));
+                        reservation.setUrlPaiement((String) data.get("redirectUrl"));
+                    }
+                    reservation.setStatutPaiement("PENDING");
+                    reservation.setNumeroTelephone(request.getNumeroTelephone());
+                }
+            } catch (Exception e) {
+                System.out.println("=== Erreur paiement Djomy: " + e.getMessage());
+            }
+        } else {
+            System.out.println("=== Pas de numero telephone fourni");
+        }
+
+        trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
+        trajetRepository.save(trajet);
+
+        return toResponse(reservationRepository.save(reservation));
     }
 
-    trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
-    trajetRepository.save(trajet);
+    @Transactional
+    public Map<String, Object> annuler(Long id) {
+        Reservation reservation = findById(id);
 
-    return toResponse(reservationRepository.save(reservation));
-}
-@Transactional
-public Map<String, Object> annuler(Long id) {
-    Reservation reservation = findById(id);
+        if (reservation.getStatut() == Reservation.StatutReservation.ANNULEE) {
+            throw new IllegalStateException("Cette réservation est déjà annulée");
+        }
 
-    if (reservation.getStatut() == Reservation.StatutReservation.ANNULEE) {
-        throw new IllegalStateException("Cette réservation est déjà annulée");
+        if (reservation.getStatut() == Reservation.StatutReservation.TERMINEE) {
+            throw new IllegalStateException("Impossible d'annuler un trajet terminé");
+        }
+
+        Trajet trajet = reservation.getTrajet();
+        LocalDateTime maintenant = ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime();
+        LocalDateTime heureDepart = trajet.getDateHeureDepart();
+
+        boolean apresConfirmation = reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE;
+        boolean moinsDe2h = heureDepart.minusHours(2).isBefore(maintenant);
+
+        String typeRemboursement;
+        double montantPaye = reservation.getPrixPropose() != null
+            ? reservation.getPrixPropose()
+            : trajet.getPrix();
+
+        double montantRembourse;
+        double fraisAnnulation = 0;
+
+        if (!apresConfirmation) {
+            typeRemboursement = "TOTAL";
+            montantRembourse = montantPaye;
+        } else if (!moinsDe2h) {
+            typeRemboursement = "TOTAL";
+            montantRembourse = montantPaye;
+        } else {
+            typeRemboursement = "PARTIEL";
+            fraisAnnulation = montantPaye * 0.10;
+            montantRembourse = montantPaye - fraisAnnulation;
+        }
+
+        trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() + reservation.getNbPlaces());
+        trajetRepository.save(trajet);
+
+        reservation.setStatut(Reservation.StatutReservation.ANNULEE);
+        reservationRepository.save(reservation);
+
+        System.out.println("=== Annulation réservation " + id);
+        System.out.println("=== Type remboursement: " + typeRemboursement);
+        System.out.println("=== Montant remboursé: " + montantRembourse);
+
+        return Map.of(
+            "typeRemboursement", typeRemboursement,
+            "montantPaye", montantPaye,
+            "montantRembourse", montantRembourse,
+            "fraisAnnulation", fraisAnnulation,
+            "message", typeRemboursement.equals("TOTAL")
+                ? "Remboursement intégral de " + (long) montantRembourse + " GNF sous 24-48h"
+                : "Remboursement de " + (long) montantRembourse + " GNF sous 24-48h (frais d'annulation : " + (long) fraisAnnulation + " GNF)"
+        );
     }
-
-    if (reservation.getStatut() == Reservation.StatutReservation.TERMINEE) {
-        throw new IllegalStateException("Impossible d'annuler un trajet terminé");
-    }
-
-    Trajet trajet = reservation.getTrajet();
-    LocalDateTime maintenant = ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime();
-    LocalDateTime heureDepart = trajet.getDateHeureDepart();
-
-    boolean apresConfirmation = reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE;
-    boolean moinsDe2h = heureDepart.minusHours(2).isBefore(maintenant);
-
-    String typeRemboursement;
-    double montantPaye = reservation.getPrixPropose() != null
-        ? reservation.getPrixPropose()
-        : trajet.getPrix();
-
-    double montantRembourse;
-    double fraisAnnulation = 0;
-
-    if (!apresConfirmation) {
-        // Avant confirmation → remboursement 100%
-        typeRemboursement = "TOTAL";
-        montantRembourse = montantPaye;
-    } else if (!moinsDe2h) {
-        // Après confirmation mais +2h avant départ → remboursement 100%
-        typeRemboursement = "TOTAL";
-        montantRembourse = montantPaye;
-    } else {
-        // Après confirmation et -2h avant départ → remboursement 90%
-        typeRemboursement = "PARTIEL";
-        fraisAnnulation = montantPaye * 0.10;
-        montantRembourse = montantPaye - fraisAnnulation;
-    }
-
-    // Restituer les places
-    trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() + reservation.getNbPlaces());
-    trajetRepository.save(trajet);
-
-    // Annuler la réservation
-    reservation.setStatut(Reservation.StatutReservation.ANNULEE);
-    reservationRepository.save(reservation);
-
-    System.out.println("=== Annulation réservation " + id);
-    System.out.println("=== Type remboursement: " + typeRemboursement);
-    System.out.println("=== Montant remboursé: " + montantRembourse);
-    System.out.println("=== Frais annulation: " + fraisAnnulation);
-
-    return Map.of(
-        "typeRemboursement", typeRemboursement,
-        "montantPaye", montantPaye,
-        "montantRembourse", montantRembourse,
-        "fraisAnnulation", fraisAnnulation,
-        "message", typeRemboursement.equals("TOTAL")
-            ? "Remboursement intégral de " + (long) montantRembourse + " GNF sous 24-48h"
-            : "Remboursement de " + (long) montantRembourse + " GNF sous 24-48h (frais d'annulation : " + (long) fraisAnnulation + " GNF)"
-    );
-}
 
     @Transactional
     public ReservationResponse repondreNegociation(Long reservationId, boolean accepter) {
@@ -250,20 +246,19 @@ public Map<String, Object> annuler(Long id) {
     }
 
     public ReservationResponse changerStatut(Long id, Reservation.StatutReservation statut) {
-    Reservation reservation = findById(id);
-    reservation.setStatut(statut);
+        Reservation reservation = findById(id);
+        reservation.setStatut(statut);
 
-    // Restituer les places si annulation passager
-    if (statut == Reservation.StatutReservation.ANNULEE) {
-        Trajet trajet = reservation.getTrajet();
-        trajet.setPlacesDisponibles(
-            trajet.getPlacesDisponibles() + reservation.getNbPlaces()
-        );
-        trajetRepository.save(trajet);
+        if (statut == Reservation.StatutReservation.ANNULEE) {
+            Trajet trajet = reservation.getTrajet();
+            trajet.setPlacesDisponibles(
+                trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+            );
+            trajetRepository.save(trajet);
+        }
+
+        return toResponse(reservationRepository.save(reservation));
     }
-
-    return toResponse(reservationRepository.save(reservation));
-}
 
     public void supprimer(Long id) {
         reservationRepository.deleteById(id);
@@ -281,6 +276,14 @@ public Map<String, Object> annuler(Long id) {
                 .collect(Collectors.toList());
     }
 
+    // ✅ NOUVEAU — passagers confirmés pour un trajet (conducteur + passagers confirmés)
+    public List<ReservationResponse> getPassagersConfirmes(Long trajetId) {
+        return reservationRepository.findPassagersConfirmes(trajetId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     public ReservationResponse toResponse(Reservation r) {
         return ReservationResponse.builder()
                 .id(r.getId())
@@ -290,6 +293,8 @@ public Map<String, Object> annuler(Long id) {
                 .passagerId(r.getPassager().getId())
                 .passagerNom(r.getPassager().getNom())
                 .passagerPrenom(r.getPassager().getPrenom())
+                .passagerPhoto(r.getPassager().getPhoto())
+                .passagerTelephone(r.getPassager().getTelephone())
                 .conducteurId(r.getTrajet().getConducteur().getId())
                 .conducteurNom(r.getTrajet().getConducteur().getNom())
                 .conducteurPrenom(r.getTrajet().getConducteur().getPrenom())
@@ -298,7 +303,6 @@ public Map<String, Object> annuler(Long id) {
                 .villeArrivee(r.getTrajet().getVilleArrivee())
                 .prixPropose(r.getPrixPropose())
                 .nbTentatives(r.getNbTentatives())
-                .passagerPhoto(r.getPassager().getPhoto())
                 .djomyTransactionId(r.getDjomyTransactionId())
                 .statutPaiement(r.getStatutPaiement())
                 .urlPaiement(r.getUrlPaiement())

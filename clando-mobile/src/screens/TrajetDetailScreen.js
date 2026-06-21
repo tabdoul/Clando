@@ -17,9 +17,27 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const [prixPropose, setPrixPropose] = useState(trajet.prix.toString());
     const [loading, setLoading] = useState(false);
 
+    // ✅ NOUVEAU — genre de l'utilisateur connecté
+    const [genreUtilisateur, setGenreUtilisateur] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
+
     useEffect(() => {
         chargerAvis();
+        chargerGenreUtilisateur();
     }, []);
+
+    // ✅ NOUVEAU — charge le genre au montage
+    const chargerGenreUtilisateur = async () => {
+        try {
+            const userId = await getUserId();
+            if (!userId) return;
+            setCurrentUserId(userId);
+            const res = await api.get(`/utilisateurs/${userId}`);
+            setGenreUtilisateur(res.data.genre); // "HOMME" ou "FEMME"
+        } catch (err) {
+            console.log('Erreur chargement genre:', err);
+        }
+    };
 
     const chargerAvis = async () => {
         try {
@@ -44,6 +62,19 @@ export default function TrajetDetailScreen({ route, navigation }) {
         return date.toLocaleDateString('fr-FR', {
             weekday: 'long', day: 'numeric', month: 'long'
         });
+    };
+
+    // ✅ NOUVEAU — vérifie le genre avant d'ouvrir le modal
+    const handleReserverPress = () => {
+        if (trajet.femmesUniquement && genreUtilisateur === 'HOMME') {
+            Alert.alert(
+                '🚫 Accès refusé',
+                'Ce trajet est réservé aux femmes uniquement.\n\nVous ne pouvez pas effectuer cette réservation.',
+                [{ text: 'Compris', style: 'default' }]
+            );
+            return; // ← on s'arrête ici, modal jamais ouvert, 0 paiement
+        }
+        setShowPrixModal(true);
     };
 
     const reserver = async () => {
@@ -78,7 +109,9 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 Alert.alert('Réservation envoyée !', 'En attente de confirmation du conducteur.');
             }
         } catch (error) {
-            Alert.alert('Erreur', error.response?.data?.erreur || 'Erreur lors de la réservation');
+            // ✅ Gère aussi le cas où le backend bloque (double sécurité)
+            const msg = error.response?.data?.erreur || 'Erreur lors de la réservation';
+            Alert.alert('Réservation impossible', msg);
         } finally {
             setLoading(false);
         }
@@ -94,6 +127,9 @@ export default function TrajetDetailScreen({ route, navigation }) {
             />
         ));
     };
+
+    // ✅ NOUVEAU — détermine si le bouton réserver doit afficher un avertissement
+    const estBloqueParGenre = trajet.femmesUniquement && genreUtilisateur === 'HOMME';
 
     return (
         <View style={styles.container}>
@@ -111,6 +147,12 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 {/* Date */}
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateText}>{formatDate(trajet.dateHeureDepart)}</Text>
+                    {/* ✅ NOUVEAU — badge femmes dans le détail */}
+                    {trajet.femmesUniquement && (
+                        <View style={styles.femmesUniquementBadge}>
+                            <Text style={styles.femmesUniquementText}>👩 Réservé aux femmes uniquement</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Timeline trajet */}
@@ -205,7 +247,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
                         <View style={styles.separator} />
 
-                        {/* Badge vérifié */}
                         <View style={styles.infoRow}>
                             <Ionicons name="shield-checkmark-outline" size={18} color="#2ecc71" />
                             <Text style={[styles.infoText, { color: '#2ecc71' }]}>Profil vérifié</Text>
@@ -213,7 +254,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
                         <View style={styles.separator} />
 
-                        {/* Bouton contacter */}
                         <TouchableOpacity
                             style={styles.boutonContacter}
                             onPress={() => navigation.navigate('Chat', {
@@ -266,10 +306,10 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     )}
                 </View>
 
-                <View style={{ height: 10 }} />
+                <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* Bouton réserver fixe en bas */}
+            {/* ✅ Bouton réserver — adapté selon genre */}
             {trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && (
                 <View style={styles.bottomBar}>
                     <View style={styles.bottomPrix}>
@@ -277,15 +317,24 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <Text style={styles.bottomPrixValeur}>{trajet.prix?.toLocaleString()} GNF</Text>
                     </View>
                     <TouchableOpacity
-                        style={styles.boutonReserver}
-                        onPress={() => setShowPrixModal(true)}>
-                        <Ionicons name="calendar-outline" size={18} color="white" />
-                        <Text style={styles.boutonReserverText}>Demande de réservation</Text>
+                        style={[
+                            styles.boutonReserver,
+                            estBloqueParGenre && styles.boutonReserverBloque
+                        ]}
+                        onPress={handleReserverPress}>
+                        <Ionicons
+                            name={estBloqueParGenre ? 'lock-closed-outline' : 'calendar-outline'}
+                            size={18}
+                            color="white"
+                        />
+                        <Text style={styles.boutonReserverText}>
+                            {estBloqueParGenre ? 'Femmes uniquement' : 'Demande de réservation'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             )}
 
-            {/* Modal prix */}
+            {/* Modal prix — inchangé */}
             <Modal
                 visible={showPrixModal}
                 transparent={true}
@@ -366,6 +415,24 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
     dateContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
     dateText: { fontSize: 20, fontWeight: 'bold', color: '#eee', textTransform: 'capitalize' },
+
+    // ✅ NOUVEAU badge femmes dans le détail
+    femmesUniquementBadge: {
+        marginTop: 10,
+        backgroundColor: '#1a0a2a',
+        borderRadius: 10,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: '#9b59b6',
+        alignSelf: 'flex-start',
+    },
+    femmesUniquementText: {
+        color: '#9b59b6',
+        fontSize: 13,
+        fontWeight: '700',
+    },
+
     section: { paddingHorizontal: 16, marginTop: 12 },
     sectionTitle: { fontSize: 16, fontWeight: '600', color: '#eee', marginBottom: 10 },
     card: {
@@ -416,14 +483,14 @@ const styles = StyleSheet.create({
     avisEtoiles: { flexDirection: 'row', gap: 2 },
     avisCommentaire: { fontSize: 13, color: '#888', lineHeight: 18 },
     aucunAvis: { fontSize: 14, color: '#666', textAlign: 'center', paddingVertical: 16 },
-   bottomBar: {
-    position: 'absolute', bottom: 15, left: 16, right: 16,
-    backgroundColor: '#1e1e1e', padding: 8,
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 16, borderWidth: 0.5, borderColor: '#2a2a2a',
-    shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 10,
-},
+    bottomBar: {
+        position: 'absolute', bottom: 15, left: 16, right: 16,
+        backgroundColor: '#1e1e1e', padding: 8,
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        borderRadius: 16, borderWidth: 0.5, borderColor: '#2a2a2a',
+        shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.3, shadowRadius: 8, elevation: 10,
+    },
     bottomPrix: { flex: 1 },
     bottomPrixLabel: { fontSize: 12, color: '#888' },
     bottomPrixValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
@@ -431,6 +498,10 @@ const styles = StyleSheet.create({
         flex: 2, backgroundColor: '#00b5e2', borderRadius: 12,
         padding: 14, flexDirection: 'row', alignItems: 'center',
         justifyContent: 'center', gap: 8,
+    },
+    // ✅ NOUVEAU — bouton grisé pour les hommes
+    boutonReserverBloque: {
+        backgroundColor: '#5a3a6a',
     },
     boutonReserverText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
