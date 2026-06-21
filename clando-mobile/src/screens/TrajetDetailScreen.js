@@ -39,10 +39,15 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const chargerGenreUtilisateur = async () => {
         try {
             const userId = await getUserId();
+            console.log('userId brut:', userId);
             if (!userId) return;
+             console.log('userId null, on sort');
             // Convertit en Number pour que la comparaison avec conducteurId fonctionne
-            setCurrentUserId(Number(userId));
             const res = await api.get(`/utilisateurs/${userId}`);
+        console.log('genre:', res.data.genre);
+        console.log('conducteurId trajet:', trajet.conducteurId);
+            setCurrentUserId(Number(userId));
+            const resUser = await api.get(`/utilisateurs/${userId}`);
             setGenreUtilisateur(res.data.genre);
         } catch (err) {
             console.log('Erreur chargement genre:', err);
@@ -53,6 +58,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
         setLoadingPassagers(true);
         try {
             const res = await api.get(`/reservations/trajet/${trajet.id}/passagers`);
+             console.log('passagers recus:', JSON.stringify(res.data));
             setPassagers(res.data);
         } catch (err) {
             console.log('Erreur passagers:', err.message);
@@ -202,6 +208,12 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const aReservationConfirmee = passagers.some(p => Number(p.passagerId) === currentUserId);
     const passagersAffiches = (estConducteur || aReservationConfirmee) ? passagers : [];
     const estBloqueParGenre = trajet.femmesUniquement && genreUtilisateur === 'HOMME';
+    console.log('currentUserId:', currentUserId, typeof currentUserId);
+console.log('trajet.conducteurId:', trajet.conducteurId, typeof trajet.conducteurId);
+console.log('estConducteur:', estConducteur);
+console.log('passagers:', JSON.stringify(passagers));
+console.log('aReservationConfirmee:', aReservationConfirmee);
+console.log('passagersAffiches:', passagersAffiches.length);
 
     return (
         <View style={styles.container}>

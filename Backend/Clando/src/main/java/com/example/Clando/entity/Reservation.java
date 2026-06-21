@@ -52,6 +52,9 @@ public class Reservation {
     @Column(nullable = false)
     private int nbTentatives = 0;
 
+    @Column(nullable = false)
+    private boolean notificationDepartEnvoyee = false;
+
     public enum StatutReservation {
         EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, TERMINEE
     }
@@ -101,6 +104,9 @@ public class Reservation {
 
     public String getUrlPaiement() { return urlPaiement; }
     public void setUrlPaiement(String urlPaiement) { this.urlPaiement = urlPaiement; }
+
+    public boolean isNotificationDepartEnvoyee() { return notificationDepartEnvoyee; }
+    public void setNotificationDepartEnvoyee(boolean v) { this.notificationDepartEnvoyee = v; }
 
     public static Builder builder() { return new Builder(); }
 

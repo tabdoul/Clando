@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl, Image
+    TextInput, RefreshControl, Image, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,6 +21,12 @@ export default function ProfilScreen({ navigation }) {
     const [telephone, setTelephone] = useState('');
     const [miniBio, setMiniBio] = useState('');
     const [photoKey, setPhotoKey] = useState(Date.now());
+
+    // Passagers modal
+    const [showPassagers, setShowPassagers] = useState(false);
+    const [passagersTrajet, setPassagersTrajet] = useState([]);
+    const [loadingPassagers, setLoadingPassagers] = useState(false);
+    const [trajetSelectionne, setTrajetSelectionne] = useState(null);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -60,6 +66,21 @@ export default function ProfilScreen({ navigation }) {
         setRefreshing(false);
     };
 
+    // Charge les passagers confirmés d'un trajet
+    const voirPassagers = async (trajet) => {
+        setTrajetSelectionne(trajet);
+        setShowPassagers(true);
+        setLoadingPassagers(true);
+        try {
+            const res = await api.get(`/reservations/trajet/${trajet.id}/passagers`);
+            setPassagersTrajet(res.data);
+        } catch (err) {
+            Alert.alert('Erreur', 'Impossible de charger les passagers');
+        } finally {
+            setLoadingPassagers(false);
+        }
+    };
+
     const sauvegarderProfil = async () => {
         try {
             const userId = await getUserId();
@@ -72,9 +93,9 @@ export default function ProfilScreen({ navigation }) {
             });
             setEditMode(false);
             chargerProfil();
-            Alert.alert('Profil mis à jour !');
+            Alert.alert('Profil mis a jour !');
         } catch (error) {
-            Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+            Alert.alert('Erreur', 'Impossible de mettre a jour le profil');
         }
     };
 
@@ -94,53 +115,38 @@ export default function ProfilScreen({ navigation }) {
 
             setPhotoKey(Date.now());
             chargerProfil();
-            Alert.alert('Photo mise à jour !');
+            Alert.alert('Photo mise a jour !');
         } catch (error) {
-            Alert.alert('Erreur', 'Impossible de mettre à jour la photo');
+            Alert.alert('Erreur', 'Impossible de mettre a jour la photo');
         }
     };
 
     const changerPhoto = async () => {
-        Alert.alert(
-            'Photo de profil',
-            'Choisir une source',
-            [
-                {
-                    text: 'Galerie',
-                    onPress: async () => {
-                        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                        if (!permission.granted) {
-                            Alert.alert('Permission refusée');
-                            return;
-                        }
-                        const result = await ImagePicker.launchImageLibraryAsync({
-                            mediaTypes: ['images'],
-                            allowsEditing: true,
-                            aspect: [1, 1],
-                            quality: 0.8,
-                        });
-                        if (!result.canceled) await uploadPhoto(result.assets[0].uri);
-                    }
-                },
-                {
-                    text: 'Caméra',
-                    onPress: async () => {
-                        const permission = await ImagePicker.requestCameraPermissionsAsync();
-                        if (!permission.granted) {
-                            Alert.alert('Permission refusée');
-                            return;
-                        }
-                        const result = await ImagePicker.launchCameraAsync({
-                            allowsEditing: true,
-                            aspect: [1, 1],
-                            quality: 0.8,
-                        });
-                        if (!result.canceled) await uploadPhoto(result.assets[0].uri);
-                    }
-                },
-                { text: 'Annuler', style: 'cancel' }
-            ]
-        );
+        Alert.alert('Photo de profil', 'Choisir une source', [
+            {
+                text: 'Galerie',
+                onPress: async () => {
+                    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (!permission.granted) { Alert.alert('Permission refusee'); return; }
+                    const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8,
+                    });
+                    if (!result.canceled) await uploadPhoto(result.assets[0].uri);
+                }
+            },
+            {
+                text: 'Camera',
+                onPress: async () => {
+                    const permission = await ImagePicker.requestCameraPermissionsAsync();
+                    if (!permission.granted) { Alert.alert('Permission refusee'); return; }
+                    const result = await ImagePicker.launchCameraAsync({
+                        allowsEditing: true, aspect: [1, 1], quality: 0.8,
+                    });
+                    if (!result.canceled) await uploadPhoto(result.assets[0].uri);
+                }
+            },
+            { text: 'Annuler', style: 'cancel' }
+        ]);
     };
 
     const terminerTrajet = async (trajet) => {
@@ -152,22 +158,18 @@ export default function ProfilScreen({ navigation }) {
                     try {
                         await api.patch(`/trajets/${trajet.id}/statut?statut=TERMINE`);
                         chargerProfil();
-                        Alert.alert(
-                            'Trajet terminé !',
-                            'Voulez-vous laisser un avis pour vos passagers ?',
-                            [
-                                { text: 'Plus tard', style: 'cancel' },
-                                {
-                                    text: 'Laisser un avis',
-                                    onPress: () => navigation.navigate('Avis', {
-                                        conducteurId: trajet.conducteurId,
-                                        conducteurNom: trajet.conducteurNom,
-                                        conducteurPrenom: trajet.conducteurPrenom,
-                                        trajetId: trajet.id
-                                    })
-                                }
-                            ]
-                        );
+                        Alert.alert('Trajet termine !', 'Voulez-vous laisser un avis pour vos passagers ?', [
+                            { text: 'Plus tard', style: 'cancel' },
+                            {
+                                text: 'Laisser un avis',
+                                onPress: () => navigation.navigate('Avis', {
+                                    conducteurId: trajet.conducteurId,
+                                    conducteurNom: trajet.conducteurNom,
+                                    conducteurPrenom: trajet.conducteurPrenom,
+                                    trajetId: trajet.id
+                                })
+                            }
+                        ]);
                     } catch (error) {
                         Alert.alert('Erreur', 'Impossible de terminer le trajet');
                     }
@@ -177,11 +179,10 @@ export default function ProfilScreen({ navigation }) {
     };
 
     const annulerTrajet = async (id) => {
-        Alert.alert('Annuler', 'Êtes-vous sûr ?', [
+        Alert.alert('Annuler', 'Etes-vous sur ?', [
             { text: 'Non', style: 'cancel' },
             {
-                text: 'Oui',
-                style: 'destructive',
+                text: 'Oui', style: 'destructive',
                 onPress: async () => {
                     try {
                         await api.patch(`/trajets/${id}/statut?statut=ANNULE`);
@@ -195,11 +196,10 @@ export default function ProfilScreen({ navigation }) {
     };
 
     const supprimerVehicule = async (id) => {
-        Alert.alert('Supprimer', 'Supprimer ce véhicule ?', [
+        Alert.alert('Supprimer', 'Supprimer ce vehicule ?', [
             { text: 'Non', style: 'cancel' },
             {
-                text: 'Oui',
-                style: 'destructive',
+                text: 'Oui', style: 'destructive',
                 onPress: async () => {
                     try {
                         await api.delete(`/vehicules/${id}`);
@@ -213,7 +213,7 @@ export default function ProfilScreen({ navigation }) {
     };
 
     const handleLogout = async () => {
-        Alert.alert('Déconnexion', 'Êtes-vous sûr ?', [
+        Alert.alert('Deconnexion', 'Etes-vous sur ?', [
             { text: 'Non', style: 'cancel' },
             {
                 text: 'Oui',
@@ -243,21 +243,13 @@ export default function ProfilScreen({ navigation }) {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor="#00b5e2"
-                        colors={["#00b5e2"]}
-                    />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00b5e2" colors={["#00b5e2"]} />
                 }>
 
                 <View style={styles.header}>
                     <TouchableOpacity onPress={changerPhoto} style={styles.avatarContainer}>
                         {utilisateur?.photo ? (
-                            <Image
-                                source={{ uri: `${utilisateur.photo}?t=${photoKey}` }}
-                                style={styles.avatarImage}
-                            />
+                            <Image source={{ uri: `${utilisateur.photo}?t=${photoKey}` }} style={styles.avatarImage} />
                         ) : (
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{getInitiales()}</Text>
@@ -285,9 +277,7 @@ export default function ProfilScreen({ navigation }) {
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Informations personnelles</Text>
                         <TouchableOpacity onPress={() => editMode ? sauvegarderProfil() : setEditMode(true)}>
-                            <Text style={styles.editButton}>
-                                {editMode ? 'Sauvegarder' : 'Modifier'}
-                            </Text>
+                            <Text style={styles.editButton}>{editMode ? 'Sauvegarder' : 'Modifier'}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -298,74 +288,50 @@ export default function ProfilScreen({ navigation }) {
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Prénom</Text>
+                            <Text style={styles.infoLabel}>Prenom</Text>
                             <Text style={styles.infoValue}>{utilisateur?.prenom}</Text>
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Email</Text>
                             {editMode ? (
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    placeholderTextColor="#666"
-                                />
+                                <TextInput style={styles.editInput} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="#666" />
                             ) : (
                                 <Text style={styles.infoValue}>{utilisateur?.email}</Text>
                             )}
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Téléphone</Text>
+                            <Text style={styles.infoLabel}>Telephone</Text>
                             {editMode ? (
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={telephone}
-                                    onChangeText={setTelephone}
-                                    keyboardType="phone-pad"
-                                    placeholderTextColor="#666"
-                                />
+                                <TextInput style={styles.editInput} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholderTextColor="#666" />
                             ) : (
-                                <Text style={styles.infoValue}>
-                                    {utilisateur?.telephone || 'Non renseigné'}
-                                </Text>
+                                <Text style={styles.infoValue}>{utilisateur?.telephone || 'Non renseigne'}</Text>
                             )}
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Mini bio</Text>
                             {editMode ? (
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={miniBio}
-                                    onChangeText={setMiniBio}
-                                    placeholder="Parlez de vous..."
-                                    placeholderTextColor="#666"
-                                />
+                                <TextInput style={styles.editInput} value={miniBio} onChangeText={setMiniBio} placeholder="Parlez de vous..." placeholderTextColor="#666" />
                             ) : (
-                                <Text style={styles.infoValue}>
-                                    {utilisateur?.miniBio || 'Non renseignée'}
-                                </Text>
+                                <Text style={styles.infoValue}>{utilisateur?.miniBio || 'Non renseignee'}</Text>
                             )}
                         </View>
                     </View>
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity
-                        style={styles.boutonDocuments}
-                        onPress={() => navigation.navigate('Documents')}>
+                    <TouchableOpacity style={styles.boutonDocuments} onPress={() => navigation.navigate('Documents')}>
                         <Ionicons name="document-text-outline" size={20} color="#00b5e2" />
                         <Text style={styles.boutonDocumentsText}>Mes documents</Text>
                         <Ionicons name="chevron-forward" size={16} color="#666" />
                     </TouchableOpacity>
                 </View>
 
+                {/* Mes trajets publiés */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Mes trajets publiés</Text>
+                    <Text style={styles.sectionTitle}>Mes trajets publies</Text>
                     <View style={styles.card}>
                         {trajets.length === 0 && (
                             <Text style={styles.emptyText}>Aucun trajet ouvert</Text>
@@ -383,6 +349,12 @@ export default function ProfilScreen({ navigation }) {
                                         </Text>
                                     </View>
                                     <View style={styles.trajetBoutons}>
+                                        {/* Bouton voir passagers */}
+                                        <TouchableOpacity
+                                            style={styles.boutonPassagers}
+                                            onPress={() => voirPassagers(t)}>
+                                            <Ionicons name="people-outline" size={14} color="#00b5e2" />
+                                        </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.boutonTerminer}
                                             onPress={() => terminerTrajet(t)}>
@@ -401,10 +373,10 @@ export default function ProfilScreen({ navigation }) {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Mes véhicules</Text>
+                    <Text style={styles.sectionTitle}>Mes vehicules</Text>
                     <View style={styles.card}>
                         {vehicules.length === 0 && (
-                            <Text style={styles.emptyText}>Aucun véhicule enregistré</Text>
+                            <Text style={styles.emptyText}>Aucun vehicule enregistre</Text>
                         )}
                         {vehicules.map((v, index) => (
                             <View key={v.id.toString()}>
@@ -412,9 +384,7 @@ export default function ProfilScreen({ navigation }) {
                                 <View style={styles.vehiculeItem}>
                                     <View>
                                         <Text style={styles.vehiculeNom}>{v.marque} {v.modele}</Text>
-                                        <Text style={styles.vehiculeDetails}>
-                                            {v.immatriculation} • {v.nbPlaces} places
-                                        </Text>
+                                        <Text style={styles.vehiculeDetails}>{v.immatriculation} • {v.nbPlaces} places</Text>
                                     </View>
                                     <TouchableOpacity onPress={() => supprimerVehicule(v.id)}>
                                         <Ionicons name="trash-outline" size={20} color="#e74c3c" />
@@ -426,9 +396,7 @@ export default function ProfilScreen({ navigation }) {
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity
-                        style={styles.boutonAide}
-                        onPress={() => navigation.navigate('Aide')}>
+                    <TouchableOpacity style={styles.boutonAide} onPress={() => navigation.navigate('Aide')}>
                         <Ionicons name="help-circle-outline" size={20} color="#00b5e2" />
                         <Text style={styles.boutonAideText}>Aide & Support</Text>
                         <Ionicons name="chevron-forward" size={16} color="#666" />
@@ -438,38 +406,104 @@ export default function ProfilScreen({ navigation }) {
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.boutonLogout} onPress={handleLogout}>
                         <Ionicons name="log-out-outline" size={20} color="#e74c3c" />
-                        <Text style={styles.boutonLogoutText}>Déconnexion</Text>
+                        <Text style={styles.boutonLogoutText}>Deconnexion</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={{ height: 30 }} />
             </ScrollView>
+
+            {/* Modal passagers confirmés */}
+            <Modal
+                visible={showPassagers}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowPassagers(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View style={styles.modalHeader}>
+                            <View>
+                                <Text style={styles.modalTitle}>Passagers confirmes</Text>
+                                {trajetSelectionne && (
+                                    <Text style={styles.modalSubtitle}>
+                                        {trajetSelectionne.villeDepart} → {trajetSelectionne.villeArrivee}
+                                    </Text>
+                                )}
+                            </View>
+                            <TouchableOpacity onPress={() => setShowPassagers(false)}>
+                                <Ionicons name="close" size={24} color="#eee" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {loadingPassagers ? (
+                            <ActivityIndicator color="#00b5e2" style={{ marginTop: 20 }} />
+                        ) : passagersTrajet.length === 0 ? (
+                            <View style={styles.modalVide}>
+                                <Ionicons name="people-outline" size={48} color="#444" />
+                                <Text style={styles.modalVideText}>Aucun passager confirme</Text>
+                            </View>
+                        ) : (
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {passagersTrajet.map((p) => {
+                                    const initiales = `${(p.passagerPrenom || '?')[0]}${(p.passagerNom || '?')[0]}`.toUpperCase();
+                                    return (
+                                        <View key={p.id.toString()} style={styles.passagerCard}>
+                                            {p.passagerPhoto ? (
+                                                <Image source={{ uri: p.passagerPhoto }} style={styles.passagerAvatar} />
+                                            ) : (
+                                                <View style={styles.passagerAvatarPlaceholder}>
+                                                    <Text style={styles.passagerInitiales}>{initiales}</Text>
+                                                </View>
+                                            )}
+                                            <View style={styles.passagerInfos}>
+                                                <Text style={styles.passagerNom}>
+                                                    {p.passagerPrenom} {p.passagerNom}
+                                                </Text>
+                                                {p.passagerTelephone && (
+                                                    <Text style={styles.passagerTel}>{p.passagerTelephone}</Text>
+                                                )}
+                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.passagerBtnChat}
+                                                onPress={() => {
+                                                    setShowPassagers(false);
+                                                    navigation.navigate('Chat', {
+                                                        reservationId: p.id,
+                                                        interlocuteur: {
+                                                            id: p.passagerId,
+                                                            nom: p.passagerNom,
+                                                            prenom: p.passagerPrenom,
+                                                        },
+                                                        userId: null,
+                                                    });
+                                                }}>
+                                                <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    );
+                                })}
+                            </ScrollView>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#121212' },
-    loadingContainer: {
-        flex: 1, backgroundColor: '#121212',
-        justifyContent: 'center', alignItems: 'center',
-    },
+    loadingContainer: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 24, paddingHorizontal: 20,
-        flexDirection: 'row', alignItems: 'center', gap: 16,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 24, paddingHorizontal: 20,
+        flexDirection: 'row', alignItems: 'center', gap: 16, borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     avatarContainer: { position: 'relative' },
-    avatar: {
-        width: 64, height: 64, borderRadius: 32,
-        backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
-    },
+    avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center' },
     avatarImage: { width: 64, height: 64, borderRadius: 32 },
     avatarEdit: {
-        position: 'absolute', bottom: 0, right: 0,
-        backgroundColor: '#00b5e2', borderRadius: 10,
-        width: 20, height: 20, alignItems: 'center', justifyContent: 'center',
+        position: 'absolute', bottom: 0, right: 0, backgroundColor: '#00b5e2',
+        borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center',
     },
     avatarText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
     headerInfo: { flex: 1 },
@@ -478,68 +512,68 @@ const styles = StyleSheet.create({
     email: { fontSize: 13, color: '#888', marginTop: 2 },
     miniBio: { fontSize: 13, color: '#aaa', fontStyle: 'italic', marginTop: 4 },
     section: { paddingHorizontal: 16, marginTop: 20 },
-    sectionHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 10,
-    },
-    sectionTitle: {
-        fontSize: 16, fontWeight: '600', color: '#888',
-        textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,
-    },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    sectionTitle: { fontSize: 16, fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
     editButton: { fontSize: 14, color: '#00b5e2', fontWeight: '600' },
-    card: {
-        backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        borderWidth: 1, borderColor: '#2a2a2a',
-    },
-    infoRow: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', paddingVertical: 8,
-    },
+    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
+    infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
     infoLabel: { fontSize: 14, color: '#888', flex: 1 },
     infoValue: { fontSize: 14, color: '#ddd', flex: 2, textAlign: 'right' },
-    editInput: {
-        flex: 2, fontSize: 14, color: '#eee', textAlign: 'right',
-        borderBottomWidth: 1, borderBottomColor: '#00b5e2', paddingVertical: 2,
-    },
+    editInput: { flex: 2, fontSize: 14, color: '#eee', textAlign: 'right', borderBottomWidth: 1, borderBottomColor: '#00b5e2', paddingVertical: 2 },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 4 },
     emptyText: { fontSize: 14, color: '#666', textAlign: 'center', paddingVertical: 8 },
     boutonDocuments: {
         backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#2a2a2a',
     },
     boutonDocumentsText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
     trajetItem: { paddingVertical: 8, gap: 8 },
     trajetItemInfo: { gap: 4 },
     trajetVilles: { fontSize: 14, fontWeight: '600', color: '#ddd' },
     trajetDetails: { fontSize: 12, color: '#666' },
-    trajetBoutons: { flexDirection: 'row', gap: 8 },
-    boutonTerminer: {
-        backgroundColor: '#00b5e2', borderRadius: 8,
-        paddingVertical: 6, paddingHorizontal: 14,
+    trajetBoutons: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+    boutonPassagers: {
+        borderWidth: 1, borderColor: '#00b5e2', borderRadius: 8,
+        paddingVertical: 6, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
     },
+    boutonTerminer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14 },
     boutonTerminerText: { color: 'white', fontSize: 12, fontWeight: '600' },
-    boutonAnnuler: {
-        borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8,
-        paddingVertical: 6, paddingHorizontal: 14,
-    },
+    boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14 },
     boutonAnnulerText: { color: '#e74c3c', fontSize: 12, fontWeight: '600' },
-    vehiculeItem: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', paddingVertical: 8,
-    },
+    vehiculeItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
     vehiculeNom: { fontSize: 14, fontWeight: '600', color: '#ddd' },
     vehiculeDetails: { fontSize: 12, color: '#666', marginTop: 2 },
     boutonLogout: {
         backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        gap: 8, borderWidth: 1, borderColor: '#2a2a2a',
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2a2a2a',
     },
     boutonLogoutText: { color: '#e74c3c', fontSize: 16, fontWeight: '600' },
     boutonAide: {
         backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#2a2a2a',
     },
     boutonAideText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
+
+    // Modal passagers
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+    modalCard: {
+        backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: 24, maxHeight: '75%', borderTopWidth: 1, borderColor: '#2a2a2a',
+    },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
+    modalSubtitle: { fontSize: 13, color: '#888', marginTop: 4 },
+    modalVide: { alignItems: 'center', paddingVertical: 40, gap: 12 },
+    modalVideText: { color: '#666', fontSize: 15 },
+    passagerCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        backgroundColor: '#252525', borderRadius: 12, padding: 12, marginBottom: 8,
+    },
+    passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
+    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#00b5e233', alignItems: 'center', justifyContent: 'center' },
+    passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
+    passagerInfos: { flex: 1 },
+    passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
+    passagerTel: { color: '#00b5e2', fontSize: 13, marginTop: 3 },
+    passagerBtnChat: { padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20 },
 });

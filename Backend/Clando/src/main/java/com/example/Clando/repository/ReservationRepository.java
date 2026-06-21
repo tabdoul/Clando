@@ -1,7 +1,7 @@
 package com.example.Clando.repository;
 
 import java.util.List;
-
+import java.time.LocalDateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,5 +24,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // ✅ NOUVEAU — passagers confirmés pour affichage dans TrajetDetailScreen
     @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
            "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
+
     List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
+    @Query("SELECT r FROM Reservation r " +
+       "WHERE r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE " +
+       "AND r.notificationDepartEnvoyee = false " +
+       "AND r.trajet.dateHeureDepart BETWEEN :debut AND :fin")
+List<Reservation> findReservationsANotifier(
+    @Param("debut") LocalDateTime debut,
+    @Param("fin") LocalDateTime fin
+);
 }
