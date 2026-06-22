@@ -53,6 +53,40 @@ public class NotificationService {
         }
     }
 
+    // ✅ Notification avec lien Google Maps
+    public void envoyerNotificationAvecLien(String expoPushToken, String titre, String message, String lien) {
+        if (expoPushToken == null || expoPushToken.isBlank()) {
+            log.warn("Token push manquant, notification non envoyee");
+            return;
+        }
+
+        try {
+            Map<String, Object> body = Map.of(
+                "to", expoPushToken,
+                "title", titre,
+                "body", message,
+                "sound", "default",
+                "priority", "high",
+                "data", Map.of("lienMaps", lien)
+            );
+
+            String json = objectMapper.writeValueAsString(body);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(EXPO_PUSH_URL))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info("Notification avec lien envoyee a {} — status: {}", expoPushToken, response.statusCode());
+
+        } catch (Exception e) {
+            log.error("Erreur envoi notification avec lien: {}", e.getMessage());
+        }
+    }
+
     public void envoyerNotifications(List<String> tokens, String titre, String message) {
         tokens.forEach(token -> envoyerNotification(token, titre, message));
     }

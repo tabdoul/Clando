@@ -25,7 +25,7 @@ import com.example.Clando.repository.DocumentRepository;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
-
+import com.example.Clando.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -39,24 +39,27 @@ public class TrajetService {
     private final AvisRepository avisRepository;
     private final ItineraireService itineraireService;
     private final DocumentRepository documentRepository;
+    private final NotificationService notificationService;
 
     public TrajetService(TrajetRepository trajetRepository,
-                         UtilisateurService utilisateurService,
-                         VehiculeService vehiculeService,
-                         ReservationRepository reservationRepository,
-                         UtilisateurRepository utilisateurRepository,
-                         AvisRepository avisRepository,
-                         ItineraireService itineraireService,
-                         DocumentRepository documentRepository) {
-        this.trajetRepository = trajetRepository;
-        this.utilisateurService = utilisateurService;
-        this.vehiculeService = vehiculeService;
-        this.reservationRepository = reservationRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.avisRepository = avisRepository;
-        this.itineraireService = itineraireService;
-        this.documentRepository = documentRepository;
-    }
+                     UtilisateurService utilisateurService,
+                     VehiculeService vehiculeService,
+                     ReservationRepository reservationRepository,
+                     UtilisateurRepository utilisateurRepository,
+                     AvisRepository avisRepository,
+                     ItineraireService itineraireService,
+                     DocumentRepository documentRepository,
+                     NotificationService notificationService) {
+    this.trajetRepository = trajetRepository;
+    this.utilisateurService = utilisateurService;
+    this.vehiculeService = vehiculeService;
+    this.reservationRepository = reservationRepository;
+    this.utilisateurRepository = utilisateurRepository;
+    this.avisRepository = avisRepository;
+    this.itineraireService = itineraireService;
+    this.documentRepository = documentRepository;
+    this.notificationService = notificationService;
+}
 
     private LocalDateTime maintenant() {
         return ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime();
@@ -70,6 +73,32 @@ public class TrajetService {
             .replace("î", "i").replace("ù", "u").trim();
     }
 
+    @Transactional
+public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double longitude) {
+    Trajet trajet = findById(trajetId);
+
+    trajet.setLatitudeConducteur(latitude);
+    trajet.setLongitudeConducteur(longitude);
+    trajet.setTrajetDemarre(true);
+    trajetRepository.save(trajet);
+
+    String lienMaps = "https://www.google.com/maps?q=" + latitude + "," + longitude;
+
+    List<Reservation> passagers = reservationRepository.findPassagersConfirmes(trajetId);
+    for (Reservation reservation : passagers) {
+        String token = reservation.getPassager().getExpoPushToken();
+        if (token != null && !token.isBlank()) {
+            notificationService.envoyerNotificationAvecLien(
+                token,
+                "Votre trajet a demarre !",
+                trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee() + " est en route. Appuyez pour voir la position.",
+                lienMaps
+            );
+        }
+    }
+
+    return toResponse(trajet);
+}
     @Transactional
     public TrajetResponse creer(TrajetRequest request) {
         Utilisateur conducteur = utilisateurRepository.findById(request.getConducteurId())
@@ -236,31 +265,34 @@ public class TrajetService {
                 .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé avec l'id : " + id));
     }
 
-    public TrajetResponse toResponse(Trajet t) {
-        Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(t.getConducteur().getId());
-        Long nbTrajets = avisRepository.countTrajetsTerminesByConducteur(t.getConducteur().getId());
+   public TrajetResponse toResponse(Trajet t) {
+    Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(t.getConducteur().getId());
+    Long nbTrajets = avisRepository.countTrajetsTerminesByConducteur(t.getConducteur().getId());
 
-        return TrajetResponse.builder()
-                .id(t.getId())
-                .villeDepart(t.getVilleDepart())
-                .villeArrivee(t.getVilleArrivee())
-                .dateHeureDepart(t.getDateHeureDepart())
-                .placesDisponibles(t.getPlacesDisponibles())
-                .prix(t.getPrix())
-                .itineraire(t.getItineraire())
-                .statut(t.getStatut())
-                .conducteurId(t.getConducteur().getId())
-                .conducteurNom(t.getConducteur().getNom())
-                .conducteurPrenom(t.getConducteur().getPrenom())
-                .conducteurPhoto(t.getConducteur().getPhoto())
-                .vehiculeId(t.getVehicule().getId())
-                .vehiculeMarque(t.getVehicule().getMarque())
-                .vehiculeModele(t.getVehicule().getModele())
-                .noteMoyenneConducteur(noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : null)
-                .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
-                .conducteurGenre(t.getConducteur().getGenre())
-                .femmesUniquement(t.isFemmesUniquement())
-                .conducteurTelephone(t.getConducteur().getTelephone())
-                .build();
-    }
+    return TrajetResponse.builder()
+            .id(t.getId())
+            .villeDepart(t.getVilleDepart())
+            .villeArrivee(t.getVilleArrivee())
+            .dateHeureDepart(t.getDateHeureDepart())
+            .placesDisponibles(t.getPlacesDisponibles())
+            .prix(t.getPrix())
+            .itineraire(t.getItineraire())
+            .statut(t.getStatut())
+            .conducteurId(t.getConducteur().getId())
+            .conducteurNom(t.getConducteur().getNom())
+            .conducteurPrenom(t.getConducteur().getPrenom())
+            .conducteurPhoto(t.getConducteur().getPhoto())
+            .conducteurTelephone(t.getConducteur().getTelephone())
+            .vehiculeId(t.getVehicule().getId())
+            .vehiculeMarque(t.getVehicule().getMarque())
+            .vehiculeModele(t.getVehicule().getModele())
+            .noteMoyenneConducteur(noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : null)
+            .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
+            .conducteurGenre(t.getConducteur().getGenre())
+            .femmesUniquement(t.isFemmesUniquement())
+            .latitudeConducteur(t.getLatitudeConducteur())
+            .longitudeConducteur(t.getLongitudeConducteur())
+            .trajetDemarre(t.isTrajetDemarre())
+            .build();
+}
 }

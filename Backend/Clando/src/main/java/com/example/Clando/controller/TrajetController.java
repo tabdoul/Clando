@@ -15,7 +15,6 @@ import com.example.Clando.dtos.request.TrajetRequest;
 import com.example.Clando.dtos.response.TrajetResponse;
 import com.example.Clando.entity.Trajet;
 import com.example.Clando.service.TrajetService;
-
 import jakarta.validation.Valid;
 
 @RestController
@@ -79,6 +78,20 @@ public class TrajetController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("erreur", "Statut invalide : " + statut));
+        }
+    }
+
+    // Nouveau endpoint demarrer trajet
+    @PatchMapping("/{id}/demarrer")
+    public ResponseEntity<?> demarrerTrajet(
+            @PathVariable Long id,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude) {
+        try {
+            return ResponseEntity.ok(trajetService.demarrerTrajet(id, latitude, longitude));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
         }
     }
 

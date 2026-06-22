@@ -25,6 +25,9 @@ public class ReservationResponse {
     private String statutPaiement;
     private String urlPaiement;
     private String passagerTelephone;
+    private boolean trajetDemarre;
+    private Double latitudeConducteur;
+    private Double longitudeConducteur;
 
     public ReservationResponse() {}
 
@@ -88,6 +91,15 @@ public class ReservationResponse {
     public String getPassagerTelephone() { return passagerTelephone; }
     public void setPassagerTelephone(String v) { this.passagerTelephone = v; }
 
+    public boolean isTrajetDemarre() { return trajetDemarre; }
+    public void setTrajetDemarre(boolean v) { this.trajetDemarre = v; }
+
+    public Double getLatitudeConducteur() { return latitudeConducteur; }
+    public void setLatitudeConducteur(Double v) { this.latitudeConducteur = v; }
+
+    public Double getLongitudeConducteur() { return longitudeConducteur; }
+    public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -111,7 +123,10 @@ public class ReservationResponse {
         public Builder djomyTransactionId(String val) { r.djomyTransactionId = val; return this; }
         public Builder statutPaiement(String val) { r.statutPaiement = val; return this; }
         public Builder urlPaiement(String val) { r.urlPaiement = val; return this; }
-        public Builder passagerTelephone(String val) { r.passagerTelephone = val; return this; } 
+        public Builder passagerTelephone(String val) { r.passagerTelephone = val; return this; }
+        public Builder trajetDemarre(boolean val) { r.trajetDemarre = val; return this; }
+        public Builder latitudeConducteur(Double val) { r.latitudeConducteur = val; return this; }
+        public Builder longitudeConducteur(Double val) { r.longitudeConducteur = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

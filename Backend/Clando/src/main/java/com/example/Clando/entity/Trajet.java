@@ -14,11 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.persistence.PrePersist;
+
 @Entity
 @Table(name = "trajets")
 public class Trajet {
@@ -35,7 +36,6 @@ public class Trajet {
     @Column(nullable = false)
     private String villeArrivee;
 
-    
     @Column(nullable = false)
     private LocalDateTime dateHeureDepart;
 
@@ -67,15 +67,27 @@ public class Trajet {
 
     @OneToMany(mappedBy = "trajet", cascade = CascadeType.ALL)
     private List<Avis> avis;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime dateCreation;
+
     @Column(nullable = false)
     private boolean femmesUniquement = false;
 
-@PrePersist
-protected void onCreate() {
-    this.dateCreation = LocalDateTime.now();
-}
+    // GPS
+    @Column
+    private Double latitudeConducteur;
+
+    @Column
+    private Double longitudeConducteur;
+
+    @Column(nullable = false)
+    private boolean trajetDemarre = false;
+
+    @PrePersist
+    protected void onCreate() {
+        this.dateCreation = LocalDateTime.now();
+    }
 
     public enum StatutTrajet {
         OUVERT, COMPLET, ANNULE, TERMINE
@@ -117,9 +129,17 @@ protected void onCreate() {
     public List<Avis> getAvis() { return avis; }
     public LocalDateTime getDateCreation() { return dateCreation; }
 
-
     public boolean isFemmesUniquement() { return femmesUniquement; }
     public void setFemmesUniquement(boolean femmesUniquement) { this.femmesUniquement = femmesUniquement; }
+
+    public Double getLatitudeConducteur() { return latitudeConducteur; }
+    public void setLatitudeConducteur(Double v) { this.latitudeConducteur = v; }
+
+    public Double getLongitudeConducteur() { return longitudeConducteur; }
+    public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
+
+    public boolean isTrajetDemarre() { return trajetDemarre; }
+    public void setTrajetDemarre(boolean v) { this.trajetDemarre = v; }
 
     public static Builder builder() { return new Builder(); }
 

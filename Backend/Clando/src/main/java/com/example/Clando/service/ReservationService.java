@@ -18,9 +18,8 @@ import com.example.Clando.entity.Utilisateur;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
-
 import jakarta.persistence.EntityNotFoundException;
-
+import com.example.Clando.service.DjomyService;
 @Service
 public class ReservationService {
 
@@ -285,27 +284,30 @@ public class ReservationService {
     }
 
     public ReservationResponse toResponse(Reservation r) {
-        return ReservationResponse.builder()
-                .id(r.getId())
-                .dateReservation(r.getDateReservation())
-                .nbPlaces(r.getNbPlaces())
-                .statut(r.getStatut())
-                .passagerId(r.getPassager().getId())
-                .passagerNom(r.getPassager().getNom())
-                .passagerPrenom(r.getPassager().getPrenom())
-                .passagerPhoto(r.getPassager().getPhoto())
-                .passagerTelephone(r.getPassager().getTelephone())
-                .conducteurId(r.getTrajet().getConducteur().getId())
-                .conducteurNom(r.getTrajet().getConducteur().getNom())
-                .conducteurPrenom(r.getTrajet().getConducteur().getPrenom())
-                .trajetId(r.getTrajet().getId())
-                .villeDepart(r.getTrajet().getVilleDepart())
-                .villeArrivee(r.getTrajet().getVilleArrivee())
-                .prixPropose(r.getPrixPropose())
-                .nbTentatives(r.getNbTentatives())
-                .djomyTransactionId(r.getDjomyTransactionId())
-                .statutPaiement(r.getStatutPaiement())
-                .urlPaiement(r.getUrlPaiement())
-                .build();
-    }
+    return ReservationResponse.builder()
+            .id(r.getId())
+            .dateReservation(r.getDateReservation())
+            .nbPlaces(r.getNbPlaces())
+            .statut(r.getStatut())
+            .passagerId(r.getPassager().getId())
+            .passagerNom(r.getPassager().getNom())
+            .passagerPrenom(r.getPassager().getPrenom())
+            .passagerPhoto(r.getPassager().getPhoto())
+            .passagerTelephone(r.getPassager().getTelephone())
+            .conducteurId(r.getTrajet().getConducteur().getId())
+            .conducteurNom(r.getTrajet().getConducteur().getNom())
+            .conducteurPrenom(r.getTrajet().getConducteur().getPrenom())
+            .trajetId(r.getTrajet().getId())
+            .villeDepart(r.getTrajet().getVilleDepart())
+            .villeArrivee(r.getTrajet().getVilleArrivee())
+            .prixPropose(r.getPrixPropose())
+            .nbTentatives(r.getNbTentatives())
+            .djomyTransactionId(r.getDjomyTransactionId())
+            .statutPaiement(r.getStatutPaiement())
+            .urlPaiement(r.getUrlPaiement())
+            .trajetDemarre(r.getTrajet().isTrajetDemarre())
+            .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
+            .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
+            .build();
+}
 }

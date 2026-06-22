@@ -16,7 +16,6 @@ export default function ReservationsScreen({ navigation }) {
     const [prixNouveau, setPrixNouveau] = useState({});
     const [ongletActif, setOngletActif] = useState('encours');
 
-    // Modal copassagers
     const [showCopassagers, setShowCopassagers] = useState(false);
     const [copassagers, setCopassagers] = useState([]);
     const [loadingCopassagers, setLoadingCopassagers] = useState(false);
@@ -47,14 +46,12 @@ export default function ReservationsScreen({ navigation }) {
         setRefreshing(false);
     };
 
-    // Charge les copassagers du même trajet
     const voirCopassagers = async (reservation) => {
         setReservationSelectionnee(reservation);
         setShowCopassagers(true);
         setLoadingCopassagers(true);
         try {
             const res = await api.get(`/reservations/trajet/${reservation.trajetId}/passagers`);
-            // Exclut le passager lui-même
             const userId = await getUserId();
             setCopassagers(res.data.filter(p => Number(p.passagerId) !== Number(userId)));
         } catch (err) {
@@ -195,13 +192,25 @@ export default function ReservationsScreen({ navigation }) {
                                         <Text style={styles.boutonContacterText}>Contacter</Text>
                                     </TouchableOpacity>
 
-                                    {/* Bouton voir copassagers */}
                                     <TouchableOpacity
                                         style={styles.boutonCopassagers}
                                         onPress={() => voirCopassagers(item)}>
                                         <Ionicons name="people-outline" size={14} color="#9b59b6" />
                                         <Text style={styles.boutonCopassagersText}>Copassagers</Text>
                                     </TouchableOpacity>
+
+                                    {/* Bouton voir position si trajet demarre */}
+                                    {item.trajetDemarre && item.latitudeConducteur && (
+                                        <TouchableOpacity
+                                            style={styles.boutonSuivre}
+                                            onPress={() => {
+                                                const lien = `https://www.google.com/maps?q=${item.latitudeConducteur},${item.longitudeConducteur}`;
+                                                Linking.openURL(lien);
+                                            }}>
+                                            <Ionicons name="navigate-outline" size={14} color="white" />
+                                            <Text style={styles.boutonSuivreText}>Voir position</Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </>
                             )}
 
@@ -318,7 +327,6 @@ export default function ReservationsScreen({ navigation }) {
                 <View style={{ height: 30 }} />
             </ScrollView>
 
-            {/* Modal copassagers */}
             <Modal
                 visible={showCopassagers}
                 transparent={true}
@@ -411,6 +419,8 @@ const styles = StyleSheet.create({
     boutonContacterText: { color: '#00b5e2', fontSize: 13, fontWeight: '600' },
     boutonCopassagers: { borderWidth: 1, borderColor: '#9b59b6', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
     boutonCopassagersText: { color: '#9b59b6', fontSize: 13, fontWeight: '600' },
+    boutonSuivre: { backgroundColor: '#2ecc71', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    boutonSuivreText: { color: 'white', fontSize: 13, fontWeight: '600' },
     boutonAvis: { borderWidth: 1, borderColor: '#f39c12', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
     boutonAvisText: { color: '#f39c12', fontSize: 13, fontWeight: '600' },
     boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 16 },
@@ -424,8 +434,6 @@ const styles = StyleSheet.create({
     propositionInput: { flex: 1, backgroundColor: '#252525', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#333' },
     boutonProposer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
     boutonProposerText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
-
-    // Modal copassagers
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: { backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '75%', borderTopWidth: 1, borderColor: '#2a2a2a' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },

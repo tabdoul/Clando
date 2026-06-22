@@ -25,6 +25,9 @@ public class TrajetResponse {
     private Long nbTrajetsTerminesConducteur;
     private String conducteurGenre;
     private boolean femmesUniquement;
+    private Double latitudeConducteur;
+    private Double longitudeConducteur;
+    private boolean trajetDemarre;
 
     public TrajetResponse() {}
 
@@ -88,6 +91,15 @@ public class TrajetResponse {
     public boolean isFemmesUniquement() { return femmesUniquement; }
     public void setFemmesUniquement(boolean v) { this.femmesUniquement = v; }
 
+    public Double getLatitudeConducteur() { return latitudeConducteur; }
+    public void setLatitudeConducteur(Double v) { this.latitudeConducteur = v; }
+
+    public Double getLongitudeConducteur() { return longitudeConducteur; }
+    public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
+
+    public boolean isTrajetDemarre() { return trajetDemarre; }
+    public void setTrajetDemarre(boolean v) { this.trajetDemarre = v; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -112,6 +124,9 @@ public class TrajetResponse {
         public Builder nbTrajetsTerminesConducteur(Long val) { r.nbTrajetsTerminesConducteur = val; return this; }
         public Builder conducteurGenre(String val) { r.conducteurGenre = val; return this; }
         public Builder femmesUniquement(boolean val) { r.femmesUniquement = val; return this; }
+        public Builder latitudeConducteur(Double val) { r.latitudeConducteur = val; return this; }
+        public Builder longitudeConducteur(Double val) { r.longitudeConducteur = val; return this; }
+        public Builder trajetDemarre(boolean val) { r.trajetDemarre = val; return this; }
         public TrajetResponse build() { return r; }
     }
 }

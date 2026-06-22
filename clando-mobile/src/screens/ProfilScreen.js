@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl, Image, Modal
+    TextInput, RefreshControl, Image, Modal, Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import api from '../services/api';
 import { getUserId, logout } from '../services/auth.service';
 
@@ -22,7 +23,6 @@ export default function ProfilScreen({ navigation }) {
     const [miniBio, setMiniBio] = useState('');
     const [photoKey, setPhotoKey] = useState(Date.now());
 
-    // Passagers modal
     const [showPassagers, setShowPassagers] = useState(false);
     const [passagersTrajet, setPassagersTrajet] = useState([]);
     const [loadingPassagers, setLoadingPassagers] = useState(false);
@@ -66,7 +66,6 @@ export default function ProfilScreen({ navigation }) {
         setRefreshing(false);
     };
 
-    // Charge les passagers confirmés d'un trajet
     const voirPassagers = async (trajet) => {
         setTrajetSelectionne(trajet);
         setShowPassagers(true);
@@ -79,6 +78,59 @@ export default function ProfilScreen({ navigation }) {
         } finally {
             setLoadingPassagers(false);
         }
+    };
+
+    const demarrerTrajet = async (trajet) => {
+        const maintenant = new Date();
+        const depart = new Date(trajet.dateHeureDepart);
+        const diffMinutes = (depart - maintenant) / 1000 / 60;
+
+        if (diffMinutes > 30) {
+            Alert.alert(
+                'Trop tot',
+                `Vous pourrez demarrer le trajet 30 minutes avant le depart.\n\nDepart prevu : ${depart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+            );
+            return;
+        }
+
+        if (diffMinutes < -60) {
+            Alert.alert('Trajet expire', 'Ce trajet est termine.');
+            return;
+        }
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission refusee', 'Veuillez autoriser la localisation pour demarrer le trajet.');
+            return;
+        }
+
+        Alert.alert(
+            'Demarrer le trajet',
+            `Confirmer le depart de ${trajet.villeDepart} -> ${trajet.villeArrivee} ?\n\nVos passagers seront notifies avec votre position.`,
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Demarrer',
+                    onPress: async () => {
+                        try {
+                            const location = await Location.getCurrentPositionAsync({
+                                accuracy: Location.Accuracy.High
+                            });
+
+                            const { latitude, longitude } = location.coords;
+
+                            await api.patch(`/trajets/${trajet.id}/demarrer?latitude=${latitude}&longitude=${longitude}`);
+
+                            Alert.alert('Trajet demarre !', 'Vos passagers ont ete notifies avec votre position actuelle.');
+                            chargerProfil();
+
+                        } catch (err) {
+                            Alert.alert('Erreur', err.response?.data?.erreur || 'Impossible de demarrer le trajet');
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const sauvegarderProfil = async () => {
@@ -103,16 +155,10 @@ export default function ProfilScreen({ navigation }) {
         try {
             const userId = await getUserId();
             const formData = new FormData();
-            formData.append('fichier', {
-                uri,
-                type: 'image/jpeg',
-                name: `photo_${userId}.jpg`
-            });
-
+            formData.append('fichier', { uri, type: 'image/jpeg', name: `photo_${userId}.jpg` });
             await api.post(`/utilisateurs/${userId}/photo`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-
             setPhotoKey(Date.now());
             chargerProfil();
             Alert.alert('Photo mise a jour !');
@@ -280,7 +326,6 @@ export default function ProfilScreen({ navigation }) {
                             <Text style={styles.editButton}>{editMode ? 'Sauvegarder' : 'Modifier'}</Text>
                         </TouchableOpacity>
                     </View>
-
                     <View style={styles.card}>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Nom</Text>
@@ -329,46 +374,64 @@ export default function ProfilScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                {/* Mes trajets publiés */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Mes trajets publies</Text>
                     <View style={styles.card}>
                         {trajets.length === 0 && (
                             <Text style={styles.emptyText}>Aucun trajet ouvert</Text>
                         )}
-                        {trajets.map((t, index) => (
-                            <View key={t.id.toString()}>
-                                {index > 0 && <View style={styles.separator} />}
-                                <View style={styles.trajetItem}>
-                                    <View style={styles.trajetItemInfo}>
-                                        <Text style={styles.trajetVilles}>
-                                            {t.villeDepart} → {t.villeArrivee}
-                                        </Text>
-                                        <Text style={styles.trajetDetails}>
-                                            {t.placesDisponibles} place(s) • {t.prix?.toLocaleString()} GNF
-                                        </Text>
-                                    </View>
-                                    <View style={styles.trajetBoutons}>
-                                        {/* Bouton voir passagers */}
-                                        <TouchableOpacity
-                                            style={styles.boutonPassagers}
-                                            onPress={() => voirPassagers(t)}>
-                                            <Ionicons name="people-outline" size={14} color="#00b5e2" />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.boutonTerminer}
-                                            onPress={() => terminerTrajet(t)}>
-                                            <Text style={styles.boutonTerminerText}>Terminer</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.boutonAnnuler}
-                                            onPress={() => annulerTrajet(t.id)}>
-                                            <Text style={styles.boutonAnnulerText}>Annuler</Text>
-                                        </TouchableOpacity>
+                        {trajets.map((t, index) => {
+                            const diffMinutes = (new Date(t.dateHeureDepart) - new Date()) / 1000 / 60;
+                            const peutDemarrer = !t.trajetDemarre && diffMinutes <= 30 && diffMinutes > -60;
+
+                            return (
+                                <View key={t.id.toString()}>
+                                    {index > 0 && <View style={styles.separator} />}
+                                    <View style={styles.trajetItem}>
+                                        <View style={styles.trajetItemInfo}>
+                                            <Text style={styles.trajetVilles}>
+                                                {t.villeDepart} → {t.villeArrivee}
+                                            </Text>
+                                            <Text style={styles.trajetDetails}>
+                                                {t.placesDisponibles} place(s) • {t.prix?.toLocaleString()} GNF
+                                            </Text>
+                                        </View>
+                                        <View style={styles.trajetBoutons}>
+                                            <TouchableOpacity
+                                                style={styles.boutonPassagers}
+                                                onPress={() => voirPassagers(t)}>
+                                                <Ionicons name="people-outline" size={14} color="#00b5e2" />
+                                            </TouchableOpacity>
+
+                                            {t.trajetDemarre ? (
+                                                <View style={styles.trajetEnCours}>
+                                                    <Ionicons name="navigate" size={14} color="#2ecc71" />
+                                                    <Text style={styles.trajetEnCoursText}>En cours</Text>
+                                                </View>
+                                            ) : peutDemarrer ? (
+                                                <TouchableOpacity
+                                                    style={styles.boutonDemarrer}
+                                                    onPress={() => demarrerTrajet(t)}>
+                                                    <Ionicons name="navigate-outline" size={14} color="white" />
+                                                    <Text style={styles.boutonDemarrerText}>Demarrer</Text>
+                                                </TouchableOpacity>
+                                            ) : null}
+
+                                            <TouchableOpacity
+                                                style={styles.boutonTerminer}
+                                                onPress={() => terminerTrajet(t)}>
+                                                <Text style={styles.boutonTerminerText}>Terminer</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={styles.boutonAnnuler}
+                                                onPress={() => annulerTrajet(t.id)}>
+                                                <Text style={styles.boutonAnnulerText}>Annuler</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        ))}
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -413,7 +476,6 @@ export default function ProfilScreen({ navigation }) {
                 <View style={{ height: 30 }} />
             </ScrollView>
 
-            {/* Modal passagers confirmés */}
             <Modal
                 visible={showPassagers}
                 transparent={true}
@@ -531,14 +593,26 @@ const styles = StyleSheet.create({
     trajetItemInfo: { gap: 4 },
     trajetVilles: { fontSize: 14, fontWeight: '600', color: '#ddd' },
     trajetDetails: { fontSize: 12, color: '#666' },
-    trajetBoutons: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+    trajetBoutons: { flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' },
     boutonPassagers: {
         borderWidth: 1, borderColor: '#00b5e2', borderRadius: 8,
         paddingVertical: 6, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
     },
-    boutonTerminer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14 },
+    boutonDemarrer: {
+        backgroundColor: '#2ecc71', borderRadius: 8,
+        paddingVertical: 6, paddingHorizontal: 10,
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+    },
+    boutonDemarrerText: { color: 'white', fontSize: 12, fontWeight: '600' },
+    trajetEnCours: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: '#1a3a2a', borderRadius: 8,
+        paddingVertical: 6, paddingHorizontal: 10,
+    },
+    trajetEnCoursText: { color: '#2ecc71', fontSize: 12, fontWeight: '600' },
+    boutonTerminer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
     boutonTerminerText: { color: 'white', fontSize: 12, fontWeight: '600' },
-    boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14 },
+    boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
     boutonAnnulerText: { color: '#e74c3c', fontSize: 12, fontWeight: '600' },
     vehiculeItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
     vehiculeNom: { fontSize: 14, fontWeight: '600', color: '#ddd' },
@@ -553,8 +627,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#2a2a2a',
     },
     boutonAideText: { color: '#eee', fontSize: 15, fontWeight: '600', flex: 1 },
-
-    // Modal passagers
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: {
         backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
