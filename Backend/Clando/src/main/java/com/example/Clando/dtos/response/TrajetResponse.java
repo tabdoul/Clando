@@ -10,7 +10,8 @@ public class TrajetResponse {
     private String villeArrivee;
     private LocalDateTime dateHeureDepart;
     private int placesDisponibles;
-    private double prix;
+    private double prix;           // prix passager avec commission
+    private double prixConducteur; // prix réel sans commission
     private String itineraire;
     private Trajet.StatutTrajet statut;
     private Long conducteurId;
@@ -48,6 +49,9 @@ public class TrajetResponse {
 
     public double getPrix() { return prix; }
     public void setPrix(double prix) { this.prix = prix; }
+
+    public double getPrixConducteur() { return prixConducteur; }
+    public void setPrixConducteur(double v) { this.prixConducteur = v; }
 
     public String getItineraire() { return itineraire; }
     public void setItineraire(String itineraire) { this.itineraire = itineraire; }
@@ -110,6 +114,7 @@ public class TrajetResponse {
         public Builder dateHeureDepart(LocalDateTime val) { r.dateHeureDepart = val; return this; }
         public Builder placesDisponibles(int val) { r.placesDisponibles = val; return this; }
         public Builder prix(double val) { r.prix = val; return this; }
+        public Builder prixConducteur(double val) { r.prixConducteur = val; return this; }
         public Builder itineraire(String val) { r.itineraire = val; return this; }
         public Builder statut(Trajet.StatutTrajet val) { r.statut = val; return this; }
         public Builder conducteurId(Long val) { r.conducteurId = val; return this; }

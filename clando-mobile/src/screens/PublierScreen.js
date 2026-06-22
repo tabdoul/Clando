@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    Platform
+    Platform,Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -246,7 +246,7 @@ export default function PublierScreen({ navigation }) {
 
                         {/* Date */}
                         <Text style={styles.fieldLabel}>Date de depart</Text>
-                        <TouchableOpacity style={styles.inputContainer} onPress={() => { setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
+                        <TouchableOpacity style={styles.inputContainer} onPress={() => {Keyboard.dismiss(); setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
                             <Ionicons name="calendar-outline" size={18} color="#888" />
                             <Text style={[styles.input, !dateDepart && styles.placeholder]}>{formatDate(dateDepart)}</Text>
                         </TouchableOpacity>

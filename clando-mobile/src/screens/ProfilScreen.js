@@ -98,9 +98,21 @@ export default function ProfilScreen({ navigation }) {
             return;
         }
 
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+
         if (status !== 'granted') {
-            Alert.alert('Permission refusee', 'Veuillez autoriser la localisation pour demarrer le trajet.');
+            if (!canAskAgain) {
+                Alert.alert(
+                    'Permission refusee',
+                    'Veuillez autoriser la localisation dans les parametres de votre telephone.',
+                    [
+                        { text: 'Annuler', style: 'cancel' },
+                        { text: 'Ouvrir les parametres', onPress: () => Location.openSettingsAsync() }
+                    ]
+                );
+            } else {
+                Alert.alert('Permission refusee', 'Veuillez autoriser la localisation pour demarrer le trajet.');
+            }
             return;
         }
 
@@ -392,8 +404,9 @@ export default function ProfilScreen({ navigation }) {
                                             <Text style={styles.trajetVilles}>
                                                 {t.villeDepart} → {t.villeArrivee}
                                             </Text>
+                                            {/* ✅ Prix conducteur sans commission */}
                                             <Text style={styles.trajetDetails}>
-                                                {t.placesDisponibles} place(s) • {t.prix?.toLocaleString()} GNF
+                                                {t.placesDisponibles} place(s) • {t.prixConducteur?.toLocaleString()} GNF
                                             </Text>
                                         </View>
                                         <View style={styles.trajetBoutons}>

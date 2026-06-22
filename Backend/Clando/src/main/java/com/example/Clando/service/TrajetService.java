@@ -25,7 +25,6 @@ import com.example.Clando.repository.DocumentRepository;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
-import com.example.Clando.service.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -41,25 +40,28 @@ public class TrajetService {
     private final DocumentRepository documentRepository;
     private final NotificationService notificationService;
 
+    // Commission WayVo 13%
+    private static final double COMMISSION = 1.13;
+
     public TrajetService(TrajetRepository trajetRepository,
-                     UtilisateurService utilisateurService,
-                     VehiculeService vehiculeService,
-                     ReservationRepository reservationRepository,
-                     UtilisateurRepository utilisateurRepository,
-                     AvisRepository avisRepository,
-                     ItineraireService itineraireService,
-                     DocumentRepository documentRepository,
-                     NotificationService notificationService) {
-    this.trajetRepository = trajetRepository;
-    this.utilisateurService = utilisateurService;
-    this.vehiculeService = vehiculeService;
-    this.reservationRepository = reservationRepository;
-    this.utilisateurRepository = utilisateurRepository;
-    this.avisRepository = avisRepository;
-    this.itineraireService = itineraireService;
-    this.documentRepository = documentRepository;
-    this.notificationService = notificationService;
-}
+                         UtilisateurService utilisateurService,
+                         VehiculeService vehiculeService,
+                         ReservationRepository reservationRepository,
+                         UtilisateurRepository utilisateurRepository,
+                         AvisRepository avisRepository,
+                         ItineraireService itineraireService,
+                         DocumentRepository documentRepository,
+                         NotificationService notificationService) {
+        this.trajetRepository = trajetRepository;
+        this.utilisateurService = utilisateurService;
+        this.vehiculeService = vehiculeService;
+        this.reservationRepository = reservationRepository;
+        this.utilisateurRepository = utilisateurRepository;
+        this.avisRepository = avisRepository;
+        this.itineraireService = itineraireService;
+        this.documentRepository = documentRepository;
+        this.notificationService = notificationService;
+    }
 
     private LocalDateTime maintenant() {
         return ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime();
@@ -74,37 +76,37 @@ public class TrajetService {
     }
 
     @Transactional
-public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double longitude) {
-    Trajet trajet = findById(trajetId);
+    public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double longitude) {
+        Trajet trajet = findById(trajetId);
 
-    trajet.setLatitudeConducteur(latitude);
-    trajet.setLongitudeConducteur(longitude);
-    trajet.setTrajetDemarre(true);
-    trajetRepository.save(trajet);
+        trajet.setLatitudeConducteur(latitude);
+        trajet.setLongitudeConducteur(longitude);
+        trajet.setTrajetDemarre(true);
+        trajetRepository.save(trajet);
 
-    String lienMaps = "https://www.google.com/maps?q=" + latitude + "," + longitude;
+        String lienMaps = "https://www.google.com/maps?q=" + latitude + "," + longitude;
 
-    List<Reservation> passagers = reservationRepository.findPassagersConfirmes(trajetId);
-    for (Reservation reservation : passagers) {
-        String token = reservation.getPassager().getExpoPushToken();
-        if (token != null && !token.isBlank()) {
-            notificationService.envoyerNotificationAvecLien(
-                token,
-                "Votre trajet a demarre !",
-                trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee() + " est en route. Appuyez pour voir la position.",
-                lienMaps
-            );
+        List<Reservation> passagers = reservationRepository.findPassagersConfirmes(trajetId);
+        for (Reservation reservation : passagers) {
+            String token = reservation.getPassager().getExpoPushToken();
+            if (token != null && !token.isBlank()) {
+                notificationService.envoyerNotificationAvecLien(
+                    token,
+                    "Votre trajet a demarre !",
+                    trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee() + " est en route. Appuyez pour voir la position.",
+                    lienMaps
+                );
+            }
         }
+
+        return toResponse(trajet);
     }
 
-    return toResponse(trajet);
-}
     @Transactional
     public TrajetResponse creer(TrajetRequest request) {
         Utilisateur conducteur = utilisateurRepository.findById(request.getConducteurId())
-                .orElseThrow(() -> new EntityNotFoundException("Conducteur non trouvé"));
+                .orElseThrow(() -> new EntityNotFoundException("Conducteur non trouve"));
 
-        // ✅ Vérification des documents requis
         List<Document> documents = documentRepository.findByUtilisateurId(request.getConducteurId());
 
         boolean aPermis = documents.stream()
@@ -118,11 +120,10 @@ public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double long
 
         if (!aPermis || !aIdentite) {
             throw new IllegalStateException(
-                "Vous devez avoir un permis de conduire et une pièce d'identité validés pour publier un trajet"
+                "Vous devez avoir un permis de conduire et une piece d'identite valides pour publier un trajet"
             );
         }
 
-        //  Limite 3 trajets/jour
         LocalDateTime debutJour = LocalDate.now(ZoneId.of("Africa/Conakry")).atStartOfDay();
         LocalDateTime finJour = debutJour.plusDays(1);
         long nbTrajetsAujourdhui = trajetRepository.countByConducteurIdAndDateCreationBetween(
@@ -132,12 +133,11 @@ public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double long
             throw new IllegalStateException("Vous avez atteint la limite de 3 trajets par jour");
         }
 
-        //  "Femmes uniquement" : seule une femme peut publier ce type de trajet
         if (request.isFemmesUniquement()) {
             String genreConducteur = conducteur.getGenre();
             if (genreConducteur == null || !genreConducteur.equals("FEMME")) {
                 throw new IllegalStateException(
-                    "Seules les conductrices peuvent publier un trajet réservé aux femmes"
+                    "Seules les conductrices peuvent publier un trajet reserve aux femmes"
                 );
             }
         }
@@ -151,7 +151,7 @@ public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double long
         trajet.setVilleArrivee(request.getVilleArrivee());
         trajet.setDateHeureDepart(request.getDateHeureDepart());
         trajet.setPlacesDisponibles(request.getPlacesDisponibles());
-        trajet.setPrix(request.getPrix());
+        trajet.setPrix(request.getPrix()); // prix conducteur stocké en base
         trajet.setItineraire(request.getItineraire());
         trajet.setFemmesUniquement(request.isFemmesUniquement());
         trajet.setStatut(Trajet.StatutTrajet.OUVERT);
@@ -262,37 +262,41 @@ public TrajetResponse demarrerTrajet(Long trajetId, Double latitude, Double long
 
     public Trajet findById(Long id) {
         return trajetRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé avec l'id : " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouve avec l'id : " + id));
     }
 
-   public TrajetResponse toResponse(Trajet t) {
-    Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(t.getConducteur().getId());
-    Long nbTrajets = avisRepository.countTrajetsTerminesByConducteur(t.getConducteur().getId());
+    public TrajetResponse toResponse(Trajet t) {
+        Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(t.getConducteur().getId());
+        Long nbTrajets = avisRepository.countTrajetsTerminesByConducteur(t.getConducteur().getId());
 
-    return TrajetResponse.builder()
-            .id(t.getId())
-            .villeDepart(t.getVilleDepart())
-            .villeArrivee(t.getVilleArrivee())
-            .dateHeureDepart(t.getDateHeureDepart())
-            .placesDisponibles(t.getPlacesDisponibles())
-            .prix(t.getPrix())
-            .itineraire(t.getItineraire())
-            .statut(t.getStatut())
-            .conducteurId(t.getConducteur().getId())
-            .conducteurNom(t.getConducteur().getNom())
-            .conducteurPrenom(t.getConducteur().getPrenom())
-            .conducteurPhoto(t.getConducteur().getPhoto())
-            .conducteurTelephone(t.getConducteur().getTelephone())
-            .vehiculeId(t.getVehicule().getId())
-            .vehiculeMarque(t.getVehicule().getMarque())
-            .vehiculeModele(t.getVehicule().getModele())
-            .noteMoyenneConducteur(noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : null)
-            .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
-            .conducteurGenre(t.getConducteur().getGenre())
-            .femmesUniquement(t.isFemmesUniquement())
-            .latitudeConducteur(t.getLatitudeConducteur())
-            .longitudeConducteur(t.getLongitudeConducteur())
-            .trajetDemarre(t.isTrajetDemarre())
-            .build();
-}
+        // ✅ Prix affiché au passager = prix conducteur × 1.13
+        double prixAvecCommission = Math.round(t.getPrix() * COMMISSION);
+
+        return TrajetResponse.builder()
+                .id(t.getId())
+                .villeDepart(t.getVilleDepart())
+                .villeArrivee(t.getVilleArrivee())
+                .dateHeureDepart(t.getDateHeureDepart())
+                .placesDisponibles(t.getPlacesDisponibles())
+                .prix(prixAvecCommission)        // ✅ prix passager avec commission
+                .prixConducteur(t.getPrix())     // ✅ prix réel sans commission
+                .itineraire(t.getItineraire())
+                .statut(t.getStatut())
+                .conducteurId(t.getConducteur().getId())
+                .conducteurNom(t.getConducteur().getNom())
+                .conducteurPrenom(t.getConducteur().getPrenom())
+                .conducteurPhoto(t.getConducteur().getPhoto())
+                .conducteurTelephone(t.getConducteur().getTelephone())
+                .vehiculeId(t.getVehicule().getId())
+                .vehiculeMarque(t.getVehicule().getMarque())
+                .vehiculeModele(t.getVehicule().getModele())
+                .noteMoyenneConducteur(noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : null)
+                .nbTrajetsTerminesConducteur(nbTrajets != null ? nbTrajets : 0L)
+                .conducteurGenre(t.getConducteur().getGenre())
+                .femmesUniquement(t.isFemmesUniquement())
+                .latitudeConducteur(t.getLatitudeConducteur())
+                .longitudeConducteur(t.getLongitudeConducteur())
+                .trajetDemarre(t.isTrajetDemarre())
+                .build();
+    }
 }

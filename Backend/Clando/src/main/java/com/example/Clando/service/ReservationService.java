@@ -20,8 +20,11 @@ import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
 import com.example.Clando.service.DjomyService;
+
 @Service
 public class ReservationService {
+
+    private static final double COMMISSION = 1.13;
 
     private final ReservationRepository reservationRepository;
     private final UtilisateurRepository utilisateurRepository;
@@ -44,21 +47,19 @@ public class ReservationService {
         System.out.println("=== Numero telephone: " + request.getNumeroTelephone());
 
         Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
-                .orElseThrow(() -> new EntityNotFoundException("Passager non trouvé"));
+                .orElseThrow(() -> new EntityNotFoundException("Passager non trouve"));
 
         Trajet trajet = trajetRepository.findById(request.getTrajetId())
-                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé"));
+                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouve"));
 
-        // ✅ Vérification places disponibles
         if (trajet.getPlacesDisponibles() < request.getNbPlaces()) {
             throw new IllegalStateException("Pas assez de places disponibles");
         }
 
-        // ✅ Vérification "Femmes uniquement" — double sécurité côté backend
         if (trajet.isFemmesUniquement()) {
             String genrePassager = passager.getGenre();
             if (genrePassager == null || !genrePassager.equals("FEMME")) {
-                throw new IllegalStateException("Ce trajet est réservé aux femmes uniquement");
+                throw new IllegalStateException("Ce trajet est reserve aux femmes uniquement");
             }
         }
 
@@ -78,12 +79,13 @@ public class ReservationService {
         if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
             System.out.println("=== Initier paiement gateway...");
             try {
+                // ✅ Montant = prix avec commission WayVo 13%
                 double montant = request.getPrixPropose() != null
                     ? request.getPrixPropose()
-                    : trajet.getPrix();
+                    : Math.round(trajet.getPrix() * COMMISSION);
 
-                String description = "Réservation WayVo : " +
-                    trajet.getVilleDepart() + " → " + trajet.getVilleArrivee();
+                String description = "Reservation WayVo : " +
+                    trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
 
                 String reference = "WAYVO-" + System.currentTimeMillis();
 
@@ -94,7 +96,7 @@ public class ReservationService {
                     description
                 );
 
-                System.out.println("=== Réponse Djomy: " + paiement);
+                System.out.println("=== Reponse Djomy: " + paiement);
 
                 Map<String, Object> data = (Map<String, Object>) paiement.get("data");
                 System.out.println("=== Data: " + data);
@@ -128,11 +130,11 @@ public class ReservationService {
         Reservation reservation = findById(id);
 
         if (reservation.getStatut() == Reservation.StatutReservation.ANNULEE) {
-            throw new IllegalStateException("Cette réservation est déjà annulée");
+            throw new IllegalStateException("Cette reservation est deja annulee");
         }
 
         if (reservation.getStatut() == Reservation.StatutReservation.TERMINEE) {
-            throw new IllegalStateException("Impossible d'annuler un trajet terminé");
+            throw new IllegalStateException("Impossible d'annuler un trajet termine");
         }
 
         Trajet trajet = reservation.getTrajet();
@@ -143,9 +145,11 @@ public class ReservationService {
         boolean moinsDe2h = heureDepart.minusHours(2).isBefore(maintenant);
 
         String typeRemboursement;
+
+        // ✅ Montant payé = prix avec commission
         double montantPaye = reservation.getPrixPropose() != null
             ? reservation.getPrixPropose()
-            : trajet.getPrix();
+            : Math.round(trajet.getPrix() * COMMISSION);
 
         double montantRembourse;
         double fraisAnnulation = 0;
@@ -168,9 +172,9 @@ public class ReservationService {
         reservation.setStatut(Reservation.StatutReservation.ANNULEE);
         reservationRepository.save(reservation);
 
-        System.out.println("=== Annulation réservation " + id);
+        System.out.println("=== Annulation reservation " + id);
         System.out.println("=== Type remboursement: " + typeRemboursement);
-        System.out.println("=== Montant remboursé: " + montantRembourse);
+        System.out.println("=== Montant rembourse: " + montantRembourse);
 
         return Map.of(
             "typeRemboursement", typeRemboursement,
@@ -178,7 +182,7 @@ public class ReservationService {
             "montantRembourse", montantRembourse,
             "fraisAnnulation", fraisAnnulation,
             "message", typeRemboursement.equals("TOTAL")
-                ? "Remboursement intégral de " + (long) montantRembourse + " GNF sous 24-48h"
+                ? "Remboursement integral de " + (long) montantRembourse + " GNF sous 24-48h"
                 : "Remboursement de " + (long) montantRembourse + " GNF sous 24-48h (frais d'annulation : " + (long) fraisAnnulation + " GNF)"
         );
     }
@@ -186,7 +190,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponse repondreNegociation(Long reservationId, boolean accepter) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée"));
+                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
 
         if (accepter) {
             reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
@@ -210,7 +214,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponse nouvelleProposition(Long reservationId, Double nouveauPrix) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée"));
+                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
 
         if (reservation.getStatut() != Reservation.StatutReservation.PRIX_REFUSE) {
             throw new IllegalStateException("Impossible de faire une nouvelle proposition");
@@ -265,7 +269,7 @@ public class ReservationService {
 
     public Reservation findById(Long id) {
         return reservationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée avec l'id : " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee avec l'id : " + id));
     }
 
     public List<ReservationResponse> getReservationsEnAttenteParConducteur(Long conducteurId) {
@@ -275,7 +279,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ NOUVEAU — passagers confirmés pour un trajet (conducteur + passagers confirmés)
     public List<ReservationResponse> getPassagersConfirmes(Long trajetId) {
         return reservationRepository.findPassagersConfirmes(trajetId)
                 .stream()
@@ -284,30 +287,30 @@ public class ReservationService {
     }
 
     public ReservationResponse toResponse(Reservation r) {
-    return ReservationResponse.builder()
-            .id(r.getId())
-            .dateReservation(r.getDateReservation())
-            .nbPlaces(r.getNbPlaces())
-            .statut(r.getStatut())
-            .passagerId(r.getPassager().getId())
-            .passagerNom(r.getPassager().getNom())
-            .passagerPrenom(r.getPassager().getPrenom())
-            .passagerPhoto(r.getPassager().getPhoto())
-            .passagerTelephone(r.getPassager().getTelephone())
-            .conducteurId(r.getTrajet().getConducteur().getId())
-            .conducteurNom(r.getTrajet().getConducteur().getNom())
-            .conducteurPrenom(r.getTrajet().getConducteur().getPrenom())
-            .trajetId(r.getTrajet().getId())
-            .villeDepart(r.getTrajet().getVilleDepart())
-            .villeArrivee(r.getTrajet().getVilleArrivee())
-            .prixPropose(r.getPrixPropose())
-            .nbTentatives(r.getNbTentatives())
-            .djomyTransactionId(r.getDjomyTransactionId())
-            .statutPaiement(r.getStatutPaiement())
-            .urlPaiement(r.getUrlPaiement())
-            .trajetDemarre(r.getTrajet().isTrajetDemarre())
-            .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
-            .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
-            .build();
-}
+        return ReservationResponse.builder()
+                .id(r.getId())
+                .dateReservation(r.getDateReservation())
+                .nbPlaces(r.getNbPlaces())
+                .statut(r.getStatut())
+                .passagerId(r.getPassager().getId())
+                .passagerNom(r.getPassager().getNom())
+                .passagerPrenom(r.getPassager().getPrenom())
+                .passagerPhoto(r.getPassager().getPhoto())
+                .passagerTelephone(r.getPassager().getTelephone())
+                .conducteurId(r.getTrajet().getConducteur().getId())
+                .conducteurNom(r.getTrajet().getConducteur().getNom())
+                .conducteurPrenom(r.getTrajet().getConducteur().getPrenom())
+                .trajetId(r.getTrajet().getId())
+                .villeDepart(r.getTrajet().getVilleDepart())
+                .villeArrivee(r.getTrajet().getVilleArrivee())
+                .prixPropose(r.getPrixPropose())
+                .nbTentatives(r.getNbTentatives())
+                .djomyTransactionId(r.getDjomyTransactionId())
+                .statutPaiement(r.getStatutPaiement())
+                .urlPaiement(r.getUrlPaiement())
+                .trajetDemarre(r.getTrajet().isTrajetDemarre())
+                .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
+                .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
+                .build();
+    }
 }

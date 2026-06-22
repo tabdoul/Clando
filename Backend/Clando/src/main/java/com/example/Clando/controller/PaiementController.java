@@ -1,14 +1,22 @@
 package com.example.Clando.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.Clando.entity.Reservation;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.service.DjomyService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/paiements")
@@ -17,6 +25,7 @@ public class PaiementController {
     private final DjomyService djomyService;
     private final ReservationRepository reservationRepository;
     private final TrajetRepository trajetRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PaiementController(DjomyService djomyService,
                                ReservationRepository reservationRepository,
@@ -56,20 +65,30 @@ public class PaiementController {
     @PostMapping("/webhook")
     public ResponseEntity<?> webhook(
             @RequestHeader(value = "X-Webhook-Signature", required = false) String signature,
-            @RequestBody Map<String, Object> body) {
+            @RequestBody String rawBody) { // ✅ corps brut en String
 
-        System.out.println("=== Webhook Djomy reçu ===");
+        System.out.println("=== Webhook Djomy recu ===");
         System.out.println("=== Signature: " + signature);
-        System.out.println("=== Body: " + body);
+        System.out.println("=== Body brut: " + rawBody);
 
         try {
-            // Vérifier la signature
+            // ✅ Parse le corps brut en Map
+            Map<String, Object> body = objectMapper.readValue(rawBody, Map.class);
+
+            // ✅ Vérification HMAC sur le corps brut
             if (signature != null && signature.startsWith("v1:")) {
-                String signatureValue = signature.substring(3);
-                String expectedSignature = djomyService.generateHmac(
-                    body.toString(), djomyService.getClientSecret());
-                System.out.println("=== Signature attendue: " + expectedSignature);
-                System.out.println("=== Signature reçue: " + signatureValue);
+                String signatureRecue = signature.substring(3);
+                String signatureAttendue = djomyService.generateHmac(
+                    rawBody, djomyService.getClientSecret());
+
+                System.out.println("=== Signature attendue: " + signatureAttendue);
+                System.out.println("=== Signature recue: " + signatureRecue);
+
+                if (!signatureAttendue.equals(signatureRecue)) {
+                    System.out.println("=== Signature invalide — webhook rejete");
+                    // En production décommente la ligne suivante pour rejeter les webhooks invalides
+                    // return ResponseEntity.status(401).body(Map.of("erreur", "Signature invalide"));
+                }
             }
 
             String eventType = (String) body.get("eventType");
@@ -94,7 +113,7 @@ public class PaiementController {
                 .findByDjomyTransactionId(transactionId);
 
             if (reservations.isEmpty()) {
-                System.out.println("=== Réservation non trouvée");
+                System.out.println("=== Reservation non trouvee");
                 return ResponseEntity.ok(Map.of("status", "not_found"));
             }
 
@@ -102,7 +121,7 @@ public class PaiementController {
 
             if ("payment.success".equals(eventType) || "SUCCESS".equals(status)) {
                 reservation.setStatutPaiement("SUCCESS");
-                System.out.println("=== Paiement réussi !");
+                System.out.println("=== Paiement reussi !");
             } else if ("payment.failed".equals(eventType) || "FAILED".equals(status)) {
                 reservation.setStatutPaiement("FAILED");
                 var trajet = reservation.getTrajet();
@@ -110,7 +129,7 @@ public class PaiementController {
                     trajet.getPlacesDisponibles() + reservation.getNbPlaces()
                 );
                 trajetRepository.save(trajet);
-                System.out.println("=== Paiement échoué !");
+                System.out.println("=== Paiement echoue !");
             } else if ("payment.cancelled".equals(eventType) || "CANCELLED".equals(status)) {
                 reservation.setStatutPaiement("CANCELLED");
                 var trajet = reservation.getTrajet();
@@ -118,7 +137,7 @@ public class PaiementController {
                     trajet.getPlacesDisponibles() + reservation.getNbPlaces()
                 );
                 trajetRepository.save(trajet);
-                System.out.println("=== Paiement annulé !");
+                System.out.println("=== Paiement annule !");
             }
 
             reservationRepository.save(reservation);

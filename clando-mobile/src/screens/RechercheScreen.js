@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ActivityIndicator, Alert,
-    ScrollView, Platform, FlatList
+    ScrollView, Platform, FlatList,Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -137,6 +137,7 @@ export default function RechercheScreen({ navigation }) {
         }
         setChampActif(null);
         setSuggestions([]);
+        Keyboard.dismiss();
     };
 
     const fermerSuggestions = () => {
@@ -291,7 +292,7 @@ export default function RechercheScreen({ navigation }) {
 
                     {/* Date */}
                     <Text style={styles.fieldLabel}>Date aller</Text>
-                    <TouchableOpacity style={styles.inputContainer} onPress={() => { fermerSuggestions(); setShowDatePicker(true); }}>
+                    <TouchableOpacity style={styles.inputContainer} onPress={() => {Keyboard.dismiss(); fermerSuggestions(); setShowDatePicker(true); }}>
                         <Ionicons name="calendar-outline" size={18} color="#888" />
                         <Text style={[styles.input, !dateDepart && styles.placeholder]}>
                             {dateDepart ? formatDateAffichage(dateDepart) : 'Choisir une date'}
