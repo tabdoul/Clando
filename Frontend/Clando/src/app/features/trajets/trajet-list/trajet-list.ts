@@ -68,6 +68,7 @@ export class TrajetListComponent implements OnInit {
 
     ngOnInit(): void {
         // Autocomplete départ
+        this.chargerTrajets();
         this.searchForm.get('villeDepart')?.valueChanges.subscribe(val => {
             this.quartiersDepart = this.filtrerQuartiers(val);
         });
@@ -107,29 +108,31 @@ export class TrajetListComponent implements OnInit {
     }
 
     rechercher(): void {
-        const { villeDepart, villeArrivee } = this.searchForm.value;
-        this.rechercheLancee = true;
-        this.loading = true;
+    const { villeDepart, villeArrivee } = this.searchForm.value;
+    this.rechercheLancee = true;
+    this.loading = true;
 
-        if (!villeDepart || !villeArrivee) {
-            this.chargerTrajets();
-            return;
-        }
-
-        this.trajetService.rechercher(
-            villeDepart.trim().toLowerCase(),
-            villeArrivee.trim().toLowerCase()
-        ).subscribe({
-            next: (data) => {
-                this.trajets = data;
-                this.loading = false;
-                this.cdr.detectChanges();
-            },
-            error: () => {
-                this.loading = false;
-                this.cdr.detectChanges();
-                this.snackBar.open('Erreur lors de la recherche', 'Fermer', { duration: 3000 });
-            }
-        });
+    if (!villeDepart || !villeArrivee) {
+        this.chargerTrajets();
+        return;
     }
+
+    this.trajetService.rechercher(
+        villeDepart.trim().toLowerCase(),
+        villeArrivee.trim().toLowerCase()
+    ).subscribe({
+        next: (data: any) => {
+            
+            this.trajets = data.content || data;
+            this.loading = false;
+            this.cdr.detectChanges();
+        },
+        error: (err) => {
+            console.log('Erreur recherche:', err);
+            this.loading = false;
+            this.cdr.detectChanges();
+            this.snackBar.open('Erreur lors de la recherche', 'Fermer', { duration: 3000 });
+        }
+    });
+}
 }

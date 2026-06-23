@@ -1,43 +1,43 @@
 <mat-toolbar color="primary" style="position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-    <a routerLink="/" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 8px;">
+    <a routerLink="/" style="text-decoration: none; color: black; display: flex; align-items: center; gap: 8px;">
         <mat-icon>directions_car</mat-icon>
         <span style="font-weight: bold; font-size: 1.2rem;">Wayvo</span>
     </a>
     <span style="flex: 1;"></span>
 
-    <a mat-button routerLink="/trajets" style="color: white;">
+    <a mat-button routerLink="/trajets" style="color: black;">
         <mat-icon>search</mat-icon> Trajets
     </a>
-    <a mat-button routerLink="/telecharger" style="color: white;">
+    <a mat-button routerLink="/telecharger" style="color: black;">
         <mat-icon>phone_android</mat-icon> Appli
     </a>
 
     <ng-container *ngIf="authService.isLoggedIn()">
-        <a mat-button routerLink="/publier" style="color: white;">
-            <mat-icon>add_circle</mat-icon> Publier
+        <a mat-button routerLink="/publier" style="color: black;">
+            <mat-icon>add_circle</mat-icon> Publie
         </a>
-        <a mat-button routerLink="/mes-reservations" style="color: white;">
+        <a mat-button routerLink="/mes-reservations" style="color: black;">
             <mat-icon>event_seat</mat-icon> Réservations
         </a>
-        <a mat-button routerLink="/notifications" style="color: white;">
+        <a mat-button routerLink="/notifications" style="color: black;">
             <mat-icon [matBadge]="nbNotifications > 0 ? nbNotifications : null"
                       matBadgeColor="warn"
                       [matBadgeHidden]="nbNotifications === 0">
                 notifications
             </mat-icon>
         </a>
-        <a mat-button routerLink="/profil" style="color: white;">
+        <a mat-button routerLink="/profil" style="color: black;">
             <mat-icon>account_circle</mat-icon> Profil
         </a>
-        <button mat-button style="color: white;" (click)="logout()">
+        <button mat-button style="color: black;" (click)="logout()">
             <mat-icon>logout</mat-icon>
         </button>
     </ng-container>
 
     <ng-container *ngIf="!authService.isLoggedIn()">
-        <a mat-button routerLink="/login" style="color: white;">Connexion</a>
+        <a mat-button routerLink="/login" style="color: black;">Connexion</a>
         <a mat-raised-button routerLink="/register"
-           style="background: white; color: #00b5e2; margin-left: 8px;">
+           style="background: black; color: #00b5e2; margin-left: 8px;">
             S'inscrire
         </a>
     </ng-container>

@@ -21,12 +21,11 @@ export class TrajetService {
     getById(id: number): Observable<Trajet> {
         return this.http.get<Trajet>(`${this.apiUrl}/${id}`);
     }
-
-    rechercher(villeDepart: string, villeArrivee: string): Observable<Trajet[]> {
-        return this.http.get<Trajet[]>(`${this.apiUrl}/rechercher`, {
-            params: { villeDepart, villeArrivee }
-        });
-    }
+rechercher(villeDepart: string, villeArrivee: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/rechercher`, {
+        params: { villeDepart, villeArrivee }
+    });
+}
 
     getByConducteur(conducteurId: number): Observable<Trajet[]> {
         return this.http.get<Trajet[]>(`${this.apiUrl}/conducteur/${conducteurId}`);
