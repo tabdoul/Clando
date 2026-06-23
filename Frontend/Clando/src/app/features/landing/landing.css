@@ -11,13 +11,11 @@
 
 .hero-content { flex: 1; max-width: 600px; }
 
-.hero-badge {
-    display: inline-block;
-    color: #00b5e2;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    margin-bottom: 24px;
+.hero-badge img {
+    height: 60px;
+    width: auto;
+    mix-blend-mode: multiply; /* supprime le fond blanc */
+    border-radius: 8px;
 }
 
 h1 {
