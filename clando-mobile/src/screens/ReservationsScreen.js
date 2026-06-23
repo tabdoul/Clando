@@ -69,6 +69,11 @@ export default function ReservationsScreen({ navigation }) {
     const [loadingCopassagers, setLoadingCopassagers] = useState(false);
     const [reservationSelectionnee, setReservationSelectionnee] = useState(null);
 
+    const [showModalPaiement, setShowModalPaiement] = useState(false);
+    const [numeroPaiement, setNumeroPaiement] = useState('');
+    const [reservationAPayer, setReservationAPayer] = useState(null);
+    const [loadingPaiement, setLoadingPaiement] = useState(false);
+
     useFocusEffect(
         React.useCallback(() => {
             chargerReservations();
