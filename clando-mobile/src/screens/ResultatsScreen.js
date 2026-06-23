@@ -43,7 +43,7 @@ export default function ResultatsScreen({ route, navigation }) {
                     <TouchableOpacity
                         key={item.id.toString()}
                         style={styles.cardWrapper}
-                        onPress={() => navigation.navigate('TrajetDetail', { trajet: item })}>
+                        onPress={() => navigation.navigate('TrajetDetail', { trajet: item,villeDepart, villeArrivee })}>
                         <View style={styles.card}>
                             <View style={styles.cardTop}>
                                 <View style={styles.heureContainer}>
