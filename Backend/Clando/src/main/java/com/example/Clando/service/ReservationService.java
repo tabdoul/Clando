@@ -20,6 +20,7 @@ import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
 import com.example.Clando.service.DjomyService;
+import com.example.Clando.service.NotificationService;
 
 @Service
 public class ReservationService {
@@ -30,22 +31,22 @@ public class ReservationService {
     private final UtilisateurRepository utilisateurRepository;
     private final TrajetRepository trajetRepository;
     private final DjomyService djomyService;
+    private final NotificationService notificationService;
 
     public ReservationService(ReservationRepository reservationRepository,
                                UtilisateurRepository utilisateurRepository,
                                TrajetRepository trajetRepository,
-                               DjomyService djomyService) {
+                               DjomyService djomyService,
+                               NotificationService notificationService) {
         this.reservationRepository = reservationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.trajetRepository = trajetRepository;
         this.djomyService = djomyService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
     public ReservationResponse creer(ReservationRequest request) {
-        System.out.println("=== CREER RESERVATION ===");
-        System.out.println("=== Numero telephone: " + request.getNumeroTelephone());
-
         Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
                 .orElseThrow(() -> new EntityNotFoundException("Passager non trouve"));
 
@@ -76,51 +77,65 @@ public class ReservationService {
             reservation.setPrixPropose(request.getPrixPropose());
         }
 
-        if (request.getNumeroTelephone() != null && !request.getNumeroTelephone().isBlank()) {
-            System.out.println("=== Initier paiement gateway...");
-            try {
-                // ✅ Montant = prix avec commission WayVo 13%
-                double montant = request.getPrixPropose() != null
-                    ? request.getPrixPropose()
-                    : Math.round(trajet.getPrix() * COMMISSION);
-
-                String description = "Reservation WayVo : " +
-                    trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
-
-                String reference = "WAYVO-" + System.currentTimeMillis();
-
-                Map<String, Object> paiement = djomyService.initierPaiementGateway(
-                    request.getNumeroTelephone(),
-                    montant,
-                    reference,
-                    description
-                );
-
-                System.out.println("=== Reponse Djomy: " + paiement);
-
-                Map<String, Object> data = (Map<String, Object>) paiement.get("data");
-                System.out.println("=== Data: " + data);
-
-                if (data != null) {
-                    if (data.containsKey("transactionId")) {
-                        reservation.setDjomyTransactionId((String) data.get("transactionId"));
-                    }
-                    if (data.containsKey("redirectUrl")) {
-                        System.out.println("=== URL Paiement: " + data.get("redirectUrl"));
-                        reservation.setUrlPaiement((String) data.get("redirectUrl"));
-                    }
-                    reservation.setStatutPaiement("PENDING");
-                    reservation.setNumeroTelephone(request.getNumeroTelephone());
-                }
-            } catch (Exception e) {
-                System.out.println("=== Erreur paiement Djomy: " + e.getMessage());
-            }
-        } else {
-            System.out.println("=== Pas de numero telephone fourni");
-        }
-
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
         trajetRepository.save(trajet);
+
+        // ✅ Notifier le conducteur
+        String tokenConducteur = trajet.getConducteur().getExpoPushToken();
+        if (tokenConducteur != null && !tokenConducteur.isBlank()) {
+            notificationService.envoyerNotification(
+                tokenConducteur,
+                "Nouvelle reservation !",
+                passager.getPrenom() + " " + passager.getNom() +
+                " veut reserver votre trajet " + trajet.getVilleDepart() +
+                " -> " + trajet.getVilleArrivee()
+            );
+        }
+
+        return toResponse(reservationRepository.save(reservation));
+    }
+
+    @Transactional
+    public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
+        Reservation reservation = findById(reservationId);
+
+        if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
+            throw new IllegalStateException("La reservation doit etre confirmee pour payer");
+        }
+
+        if ("SUCCESS".equals(reservation.getStatutPaiement())) {
+            throw new IllegalStateException("Cette reservation est deja payee");
+        }
+
+        Trajet trajet = reservation.getTrajet();
+        double montant = reservation.getPrixPropose() != null
+            ? reservation.getPrixPropose()
+            : Math.round(trajet.getPrix() * COMMISSION);
+
+        String description = "Reservation Wayvo : " +
+            trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
+
+        String reference = "WAYVO-" + System.currentTimeMillis();
+
+        try {
+            Map<String, Object> paiement = djomyService.initierPaiementGateway(
+                numeroTelephone, montant, reference, description
+            );
+
+            Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+            if (data != null) {
+                if (data.containsKey("transactionId")) {
+                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                }
+                if (data.containsKey("redirectUrl")) {
+                    reservation.setUrlPaiement((String) data.get("redirectUrl"));
+                }
+                reservation.setStatutPaiement("PENDING");
+                reservation.setNumeroTelephone(numeroTelephone);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Erreur lors de l'initiation du paiement : " + e.getMessage());
+        }
 
         return toResponse(reservationRepository.save(reservation));
     }
@@ -142,11 +157,10 @@ public class ReservationService {
         LocalDateTime heureDepart = trajet.getDateHeureDepart();
 
         boolean apresConfirmation = reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE;
+        boolean apayé = "SUCCESS".equals(reservation.getStatutPaiement());
         boolean moinsDe2h = heureDepart.minusHours(2).isBefore(maintenant);
 
         String typeRemboursement;
-
-        // ✅ Montant payé = prix avec commission
         double montantPaye = reservation.getPrixPropose() != null
             ? reservation.getPrixPropose()
             : Math.round(trajet.getPrix() * COMMISSION);
@@ -154,9 +168,9 @@ public class ReservationService {
         double montantRembourse;
         double fraisAnnulation = 0;
 
-        if (!apresConfirmation) {
-            typeRemboursement = "TOTAL";
-            montantRembourse = montantPaye;
+        if (!apresConfirmation || !apayé) {
+            typeRemboursement = "AUCUN";
+            montantRembourse = 0;
         } else if (!moinsDe2h) {
             typeRemboursement = "TOTAL";
             montantRembourse = montantPaye;
@@ -172,18 +186,21 @@ public class ReservationService {
         reservation.setStatut(Reservation.StatutReservation.ANNULEE);
         reservationRepository.save(reservation);
 
-        System.out.println("=== Annulation reservation " + id);
-        System.out.println("=== Type remboursement: " + typeRemboursement);
-        System.out.println("=== Montant rembourse: " + montantRembourse);
+        String message;
+        if (typeRemboursement.equals("AUCUN")) {
+            message = "Reservation annulee. Aucun remboursement (paiement non effectue).";
+        } else if (typeRemboursement.equals("TOTAL")) {
+            message = "Remboursement integral de " + (long) montantRembourse + " GNF sous 24-48h";
+        } else {
+            message = "Remboursement de " + (long) montantRembourse + " GNF sous 24-48h (frais d'annulation : " + (long) fraisAnnulation + " GNF)";
+        }
 
         return Map.of(
             "typeRemboursement", typeRemboursement,
             "montantPaye", montantPaye,
             "montantRembourse", montantRembourse,
             "fraisAnnulation", fraisAnnulation,
-            "message", typeRemboursement.equals("TOTAL")
-                ? "Remboursement integral de " + (long) montantRembourse + " GNF sous 24-48h"
-                : "Remboursement de " + (long) montantRembourse + " GNF sous 24-48h (frais d'annulation : " + (long) fraisAnnulation + " GNF)"
+            "message", message
         );
     }
 
@@ -194,6 +211,21 @@ public class ReservationService {
 
         if (accepter) {
             reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
+            // ✅ Enregistrer la date de confirmation
+            reservation.setDateConfirmation(
+                ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
+            );
+            // ✅ Notifier le passager
+            String token = reservation.getPassager().getExpoPushToken();
+            if (token != null && !token.isBlank()) {
+                notificationService.envoyerNotification(
+                    token,
+                    "Reservation confirmee !",
+                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
+                    " -> " + reservation.getTrajet().getVilleArrivee() +
+                    " est confirme. Vous avez 30 minutes pour effectuer le paiement."
+                );
+            }
         } else {
             if (reservation.getNbTentatives() >= 1) {
                 reservation.setStatut(Reservation.StatutReservation.REFUSEE);
@@ -311,6 +343,7 @@ public class ReservationService {
                 .trajetDemarre(r.getTrajet().isTrajetDemarre())
                 .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
                 .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
+                .dateConfirmation(r.getDateConfirmation())
                 .build();
     }
 }

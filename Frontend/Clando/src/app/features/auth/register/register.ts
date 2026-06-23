@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -21,6 +22,7 @@ import { environment } from '../../../../environments/environments';
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
+        MatIconModule,
         MatSnackBarModule
     ],
     templateUrl: './register.html',
@@ -51,7 +53,7 @@ export class RegisterComponent {
         if (this.registerForm.invalid) return;
 
         this.loading = true;
-        this.cdr.detectChanges(); // ← informe Angular immédiatement
+        this.cdr.detectChanges();
 
         this.http.post(`${environment.apiUrl}/utilisateurs`, this.registerForm.value).subscribe({
             next: () => {

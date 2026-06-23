@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
@@ -8,6 +8,54 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+
+// ✅ Composant compte à rebours
+const CompteARebours = ({ dateConfirmation }) => {
+    const [tempsRestant, setTempsRestant] = useState('');
+    const [expire, setExpire] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!dateConfirmation) return;
+            const confirmation = new Date(dateConfirmation);
+            const expiration = new Date(confirmation.getTime() + 30 * 60 * 1000);
+            const maintenant = new Date();
+            const diff = expiration - maintenant;
+
+            if (diff <= 0) {
+                setExpire(true);
+                setTempsRestant('Expire');
+                clearInterval(interval);
+            } else {
+                const minutes = Math.floor(diff / 1000 / 60);
+                const secondes = Math.floor((diff / 1000) % 60);
+                setTempsRestant(`${minutes}m ${secondes < 10 ? '0' : ''}${secondes}s`);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [dateConfirmation]);
+
+    return (
+        <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 6,
+            backgroundColor: expire ? '#3a1a1a' : '#1a2a1a',
+            borderRadius: 8, padding: 8, marginBottom: 8
+        }}>
+            <Ionicons
+                name="time-outline"
+                size={14}
+                color={expire ? '#e74c3c' : '#2ecc71'}
+            />
+            <Text style={{
+                fontSize: 12, fontWeight: '600',
+                color: expire ? '#e74c3c' : '#2ecc71'
+            }}>
+                {expire ? 'Delai expire' : `Temps restant pour payer : ${tempsRestant}`}
+            </Text>
+        </View>
+    );
+};
 
 export default function ReservationsScreen({ navigation }) {
     const [reservations, setReservations] = useState([]);
@@ -59,6 +107,39 @@ export default function ReservationsScreen({ navigation }) {
         } finally {
             setLoadingCopassagers(false);
         }
+    };
+
+    const initierPaiement = async (reservation) => {
+        Alert.prompt(
+            'Paiement',
+            'Entrez votre numero de telephone pour le paiement :',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Payer',
+                    onPress: async (telephone) => {
+                        if (!telephone || telephone.trim() === '') {
+                            Alert.alert('Erreur', 'Numero de telephone requis');
+                            return;
+                        }
+                        try {
+                            const res = await api.post(
+                                `/reservations/${reservation.id}/payer?numeroTelephone=${telephone.trim()}`
+                            );
+                            if (res.data.urlPaiement) {
+                                await Linking.openURL(res.data.urlPaiement);
+                                chargerReservations();
+                            }
+                        } catch (err) {
+                            Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
+                        }
+                    }
+                }
+            ],
+            'plain-text',
+            '',
+            'phone-pad'
+        );
     };
 
     const reservationsEnCours = reservations.filter(r =>
@@ -126,6 +207,8 @@ export default function ReservationsScreen({ navigation }) {
 
     const renderReservation = (item) => {
         const statut = getStatutStyle(item.statut);
+        const doitPayer = item.statut === 'CONFIRMEE' && item.statutPaiement !== 'SUCCESS';
+
         return (
             <View key={item.id.toString()} style={styles.cardWrapper}>
                 <View style={styles.card}>
@@ -145,6 +228,11 @@ export default function ReservationsScreen({ navigation }) {
                     </View>
 
                     <View style={styles.separator} />
+
+                    {/* Compte à rebours si confirmée et non payée */}
+                    {doitPayer && item.dateConfirmation && (
+                        <CompteARebours dateConfirmation={item.dateConfirmation} />
+                    )}
 
                     <View style={styles.cardBottom}>
                         <View style={styles.details}>
@@ -199,7 +287,26 @@ export default function ReservationsScreen({ navigation }) {
                                         <Text style={styles.boutonCopassagersText}>Copassagers</Text>
                                     </TouchableOpacity>
 
-                                    {/* Bouton voir position si trajet demarre */}
+                                    {/* Bouton Payer si non payé */}
+                                    {doitPayer && (
+                                        <TouchableOpacity
+                                            style={styles.boutonPayer}
+                                            onPress={() => initierPaiement(item)}>
+                                            <Ionicons name="card-outline" size={14} color="white" />
+                                            <Text style={styles.boutonPayerText}>Payer maintenant</Text>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    {/* Lien paiement en attente */}
+                                    {item.urlPaiement && item.statutPaiement === 'PENDING' && (
+                                        <TouchableOpacity
+                                            style={styles.boutonPayerLien}
+                                            onPress={() => Linking.openURL(item.urlPaiement)}>
+                                            <Ionicons name="open-outline" size={14} color="#00b5e2" />
+                                            <Text style={styles.boutonPayerLienText}>Reprendre le paiement</Text>
+                                        </TouchableOpacity>
+                                    )}
+
                                     {item.trajetDemarre && item.latitudeConducteur && (
                                         <TouchableOpacity
                                             style={styles.boutonSuivre}
@@ -231,13 +338,6 @@ export default function ReservationsScreen({ navigation }) {
                             {(item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE') && (
                                 <TouchableOpacity style={styles.boutonAnnuler} onPress={() => annuler(item)}>
                                     <Text style={styles.boutonAnnulerText}>Annuler</Text>
-                                </TouchableOpacity>
-                            )}
-
-                            {item.urlPaiement && item.statutPaiement === 'PENDING' && (
-                                <TouchableOpacity style={styles.boutonPayer} onPress={() => Linking.openURL(item.urlPaiement)}>
-                                    <Ionicons name="card-outline" size={14} color="white" />
-                                    <Text style={styles.boutonPayerText}>Payer</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -427,6 +527,8 @@ const styles = StyleSheet.create({
     boutonAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
     boutonPayer: { backgroundColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
     boutonPayerText: { color: 'white', fontSize: 13, fontWeight: '600' },
+    boutonPayerLien: { borderWidth: 1, borderColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    boutonPayerLienText: { color: '#00b5e2', fontSize: 13, fontWeight: '600' },
     prixRefuseContainer: { backgroundColor: '#2a1a1a', borderRadius: 10, padding: 12, marginTop: 12, borderWidth: 1, borderColor: '#e74c3c' },
     prixRefuseTexte: { fontSize: 13, color: '#e74c3c', fontWeight: '600' },
     tentativesRestantes: { fontSize: 12, color: '#888', marginTop: 4, marginBottom: 8 },

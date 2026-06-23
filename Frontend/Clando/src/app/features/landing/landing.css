@@ -12,10 +12,15 @@
 .hero-content { flex: 1; max-width: 600px; }
 
 .hero-badge img {
-    height: 60px;
+    height: 80px;
     width: auto;
-    mix-blend-mode: multiply; /* supprime le fond blanc */
-    border-radius: 8px;
+    mix-blend-mode: screen;
+}
+
+@media (max-width: 768px) {
+    .hero-badge img {
+        height: 60px;
+    }
 }
 
 h1 {
@@ -135,6 +140,26 @@ h1 {
     font-weight: 700;
     margin-bottom: 48px;
     color: #1a1a1a;
+    padding: 0 16px;
+    line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+    .section-dark h2 {
+        font-size: 1.4rem;
+        padding: 0 16px;
+        line-height: 1.3;
+    }
+
+    .section-dark p {
+        font-size: 0.95rem;
+        padding: 0 16px;
+    }
+
+    .section-dark div {
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 /* Steps */

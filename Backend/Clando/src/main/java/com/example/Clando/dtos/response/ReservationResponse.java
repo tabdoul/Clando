@@ -1,6 +1,7 @@
 package com.example.Clando.dtos.response;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import com.example.Clando.entity.Reservation;
 
 public class ReservationResponse {
@@ -28,6 +29,7 @@ public class ReservationResponse {
     private boolean trajetDemarre;
     private Double latitudeConducteur;
     private Double longitudeConducteur;
+    private LocalDateTime dateConfirmation;
 
     public ReservationResponse() {}
 
@@ -100,6 +102,9 @@ public class ReservationResponse {
     public Double getLongitudeConducteur() { return longitudeConducteur; }
     public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
 
+    public LocalDateTime getDateConfirmation() { return dateConfirmation; }
+    public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -127,6 +132,7 @@ public class ReservationResponse {
         public Builder trajetDemarre(boolean val) { r.trajetDemarre = val; return this; }
         public Builder latitudeConducteur(Double val) { r.latitudeConducteur = val; return this; }
         public Builder longitudeConducteur(Double val) { r.longitudeConducteur = val; return this; }
+        public Builder dateConfirmation(LocalDateTime val) { r.dateConfirmation = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

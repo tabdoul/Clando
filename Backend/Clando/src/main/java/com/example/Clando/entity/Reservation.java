@@ -3,6 +3,7 @@ package com.example.Clando.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
@@ -54,6 +55,9 @@ public class Reservation {
 
     @Column(nullable = false)
     private boolean notificationDepartEnvoyee = false;
+
+    @Column
+    private LocalDateTime dateConfirmation;
 
     public enum StatutReservation {
         EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, TERMINEE
@@ -107,6 +111,9 @@ public class Reservation {
 
     public boolean isNotificationDepartEnvoyee() { return notificationDepartEnvoyee; }
     public void setNotificationDepartEnvoyee(boolean v) { this.notificationDepartEnvoyee = v; }
+
+    public LocalDateTime getDateConfirmation() { return dateConfirmation; }
+    public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }
 
     public static Builder builder() { return new Builder(); }
 

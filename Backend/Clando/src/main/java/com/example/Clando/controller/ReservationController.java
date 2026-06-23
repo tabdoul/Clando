@@ -23,7 +23,6 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
-    // ✅ Catch propre : retourne {"erreur": "..."} lisible par le mobile
     @PostMapping
     public ResponseEntity<?> creer(@Valid @RequestBody ReservationRequest request) {
         try {
@@ -53,7 +52,6 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getByTrajet(trajetId));
     }
 
-    // ✅ NOUVEAU — passagers confirmés visibles par conducteur et passagers confirmés
     @GetMapping("/trajet/{trajetId}/passagers")
     public ResponseEntity<List<ReservationResponse>> getPassagersConfirmes(
             @PathVariable Long trajetId) {
@@ -100,6 +98,19 @@ public class ReservationController {
         try {
             return ResponseEntity.ok(reservationService.annuler(id));
         } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
+    // ✅ Nouvel endpoint — initier le paiement après confirmation
+    @PostMapping("/{id}/payer")
+    public ResponseEntity<?> initierPaiement(
+            @PathVariable Long id,
+            @RequestParam String numeroTelephone) {
+        try {
+            return ResponseEntity.ok(reservationService.initierPaiement(id, numeroTelephone));
+        } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("erreur", e.getMessage()));
         }

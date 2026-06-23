@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { TrajetService } from '../../../core/services/trajet.service';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Trajet } from '../../../shared/models/trajet.model';
+
 
 @Component({
     selector: 'app-trajet-detail',
@@ -27,22 +28,28 @@ export class TrajetDetailComponent implements OnInit {
         private trajetService: TrajetService,
         private reservationService: ReservationService,
         private authService: AuthService,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private cdr: ChangeDetectorRef
     ) {}
 
-    ngOnInit(): void {
-        const id = Number(this.route.snapshot.paramMap.get('id'));
-        this.trajetService.getById(id).subscribe({
-            next: (data) => {
-                this.trajet = data;
-                this.loading = false;
-            },
-            error: () => {
-                this.loading = false;
-                this.router.navigate(['/trajets']);
-            }
-        });
-    }
+   ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    console.log('ID:', id);
+    this.trajetService.getById(id).subscribe({
+        next: (data) => {
+            console.log('Data reçue:', JSON.stringify(data));
+            this.trajet = data;
+            this.loading = false;
+             this.cdr.detectChanges();
+        },
+        error: (err) => {
+            console.log('Erreur:', err);
+            this.loading = false;
+            this.cdr.detectChanges();
+            this.router.navigate(['/trajets']);
+        }
+    });
+}
 
     reserver(): void {
         if (!this.authService.isLoggedIn()) {

@@ -13,21 +13,17 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const { trajet } = route.params;
     const [avis, setAvis] = useState([]);
     const [loadingAvis, setLoadingAvis] = useState(true);
-    const [showPrixModal, setShowPrixModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [prixPropose, setPrixPropose] = useState(trajet.prix.toString());
     const [loading, setLoading] = useState(false);
     const [genreUtilisateur, setGenreUtilisateur] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [passagers, setPassagers] = useState([]);
     const [loadingPassagers, setLoadingPassagers] = useState(false);
-    const pollingRef = useRef(null);
 
     useEffect(() => {
         chargerAvis();
         chargerGenreUtilisateur();
-        return () => {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-        };
     }, []);
 
     useEffect(() => {
@@ -39,15 +35,9 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const chargerGenreUtilisateur = async () => {
         try {
             const userId = await getUserId();
-            console.log('userId brut:', userId);
             if (!userId) return;
-             console.log('userId null, on sort');
-            // Convertit en Number pour que la comparaison avec conducteurId fonctionne
             const res = await api.get(`/utilisateurs/${userId}`);
-        console.log('genre:', res.data.genre);
-        console.log('conducteurId trajet:', trajet.conducteurId);
             setCurrentUserId(Number(userId));
-            const resUser = await api.get(`/utilisateurs/${userId}`);
             setGenreUtilisateur(res.data.genre);
         } catch (err) {
             console.log('Erreur chargement genre:', err);
@@ -58,7 +48,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
         setLoadingPassagers(true);
         try {
             const res = await api.get(`/reservations/trajet/${trajet.id}/passagers`);
-             console.log('passagers recus:', JSON.stringify(res.data));
             setPassagers(res.data);
         } catch (err) {
             console.log('Erreur passagers:', err.message);
@@ -76,46 +65,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
         } finally {
             setLoadingAvis(false);
         }
-    };
-
-    const demarrerPolling = (reservationId) => {
-        let tentatives = 0;
-        const MAX_TENTATIVES = 20;
-
-        pollingRef.current = setInterval(async () => {
-            tentatives++;
-            try {
-                const res = await api.get(`/reservations/${reservationId}`);
-                const statutPaiement = res.data.statutPaiement;
-
-                if (statutPaiement === 'SUCCESS' || statutPaiement === 'PENDING') {
-                    clearInterval(pollingRef.current);
-                    setShowPrixModal(false);
-                    Alert.alert(
-                        'Reservation envoyee !',
-                        'Votre paiement a ete recu. Votre reservation est en attente de confirmation du conducteur.',
-                        [{
-                            text: 'Voir mes reservations',
-                            onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
-                        }]
-                    );
-                }
-
-                if (tentatives >= MAX_TENTATIVES) {
-                    clearInterval(pollingRef.current);
-                    Alert.alert(
-                        'Reservation en cours',
-                        'Votre paiement est en cours de traitement. Consultez vos reservations dans quelques instants.',
-                        [{
-                            text: 'Voir mes reservations',
-                            onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
-                        }]
-                    );
-                }
-            } catch (err) {
-                console.log('Erreur polling:', err.message);
-            }
-        }, 3000);
     };
 
     const formatHeure = (dateString) => {
@@ -136,12 +85,12 @@ export default function TrajetDetailScreen({ route, navigation }) {
         if (trajet.femmesUniquement && genreUtilisateur === 'HOMME') {
             Alert.alert(
                 'Acces refuse',
-                'Ce trajet est reserve aux femmes uniquement. Vous ne pouvez pas effectuer cette reservation.',
+                'Ce trajet est reserve aux femmes uniquement.',
                 [{ text: 'Compris', style: 'default' }]
             );
             return;
         }
-        setShowPrixModal(true);
+        setShowConfirmModal(true);
     };
 
     const reserver = async () => {
@@ -160,31 +109,22 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
         setLoading(true);
         try {
-            const response = await api.post('/reservations', {
+            await api.post('/reservations', {
                 nbPlaces: 1,
                 passagerId: userId,
                 trajetId: trajet.id,
                 prixPropose: prixFinal !== trajet.prix ? prixFinal : null,
-                numeroTelephone: 'GATEWAY'
             });
 
-            const reservationId = response.data.id;
-            const urlPaiement = response.data.urlPaiement;
-
-            if (urlPaiement) {
-                await Linking.openURL(urlPaiement);
-                demarrerPolling(reservationId);
-            } else {
-                setShowPrixModal(false);
-                Alert.alert(
-                    'Reservation envoyee !',
-                    'En attente de confirmation du conducteur.',
-                    [{
-                        text: 'Voir mes reservations',
-                        onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
-                    }]
-                );
-            }
+            setShowConfirmModal(false);
+            Alert.alert(
+                'Demande envoyee !',
+                'Votre demande de reservation a ete envoyee au conducteur. Vous serez notifie des qu\'il confirme.',
+                [{
+                    text: 'Voir mes reservations',
+                    onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
+                }]
+            );
         } catch (error) {
             const msg = error.response?.data?.erreur || 'Erreur lors de la reservation';
             Alert.alert('Reservation impossible', msg);
@@ -208,12 +148,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const aReservationConfirmee = passagers.some(p => Number(p.passagerId) === currentUserId);
     const passagersAffiches = (estConducteur || aReservationConfirmee) ? passagers : [];
     const estBloqueParGenre = trajet.femmesUniquement && genreUtilisateur === 'HOMME';
-    console.log('currentUserId:', currentUserId, typeof currentUserId);
-console.log('trajet.conducteurId:', trajet.conducteurId, typeof trajet.conducteurId);
-console.log('estConducteur:', estConducteur);
-console.log('passagers:', JSON.stringify(passagers));
-console.log('aReservationConfirmee:', aReservationConfirmee);
-console.log('passagersAffiches:', passagersAffiches.length);
 
     return (
         <View style={styles.container}>
@@ -280,15 +214,14 @@ console.log('passagersAffiches:', passagersAffiches.length);
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
-                            <Ionicons name="checkmark-circle-outline" size={18} color="#888" />
+                            <Ionicons name="information-circle-outline" size={18} color="#888" />
                             <Text style={styles.infoText}>
-                                Reservation confirmee par le conducteur
+                                Paiement requis apres confirmation du conducteur
                             </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Section passagers confirmés */}
                 {passagersAffiches.length > 0 && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>
@@ -310,14 +243,11 @@ console.log('passagersAffiches:', passagersAffiches.length);
                                                 <Text style={styles.passagerInitiales}>{initiales}</Text>
                                             </View>
                                         )}
-
                                         <View style={styles.passagerInfos}>
                                             <Text style={styles.passagerNom}>
                                                 {item.passagerPrenom} {item.passagerNom}
                                             </Text>
-                                            {/* Pas de numero, pas de places */}
                                         </View>
-
                                         <TouchableOpacity
                                             style={styles.passagerBtnChat}
                                             onPress={() => navigation.navigate('Chat', {
@@ -338,7 +268,6 @@ console.log('passagersAffiches:', passagersAffiches.length);
                     </View>
                 )}
 
-                {/* Profil conducteur */}
                 <View style={styles.section}>
                     <View style={styles.card}>
                         <View style={styles.conducteurRow}>
@@ -400,7 +329,6 @@ console.log('passagersAffiches:', passagersAffiches.length);
                             </Text>
                         </TouchableOpacity>
 
-                        {/* Numero conducteur visible uniquement par passager confirme */}
                         {aReservationConfirmee && trajet.conducteurTelephone ? (
                             <Text style={styles.conducteurTel}>
                                 {trajet.conducteurTelephone}
@@ -467,76 +395,68 @@ console.log('passagersAffiches:', passagersAffiches.length);
                 </View>
             )}
 
+            {/* Modal confirmation sans paiement */}
             <Modal
-                visible={showPrixModal}
+                visible={showConfirmModal}
                 transparent={true}
                 animationType="slide"
-                onRequestClose={() => setShowPrixModal(false)}>
+                onRequestClose={() => setShowConfirmModal(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{ width: '100%' }}>
                         <View style={styles.modalCard}>
-                            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                                <Text style={styles.modalTitle}>Confirmer la reservation</Text>
-                                <Text style={styles.modalSubtitle}>
-                                    {trajet.villeDepart} → {trajet.villeArrivee}
-                                </Text>
+                            <Text style={styles.modalTitle}>Demande de reservation</Text>
+                            <Text style={styles.modalSubtitle}>
+                                {trajet.villeDepart} → {trajet.villeArrivee}
+                            </Text>
 
-                                <View style={styles.modalPrixOriginal}>
-                                    <Text style={styles.modalPrixLabel}>Prix affiche</Text>
-                                    <Text style={styles.modalPrixValeur}>
-                                        {trajet.prix?.toLocaleString()} GNF
+                            <View style={styles.modalInfo}>
+                                <Ionicons name="information-circle-outline" size={16} color="#00b5e2" />
+                                <Text style={styles.modalInfoText}>
+                                    Le conducteur doit confirmer votre reservation. Vous aurez ensuite 30 minutes pour payer.
+                                </Text>
+                            </View>
+
+                            <View style={styles.modalPrixOriginal}>
+                                <Text style={styles.modalPrixLabel}>Prix affiche</Text>
+                                <Text style={styles.modalPrixValeur}>
+                                    {trajet.prix?.toLocaleString()} GNF
+                                </Text>
+                            </View>
+
+                            <Text style={styles.modalLabel}>Votre proposition (optionnel)</Text>
+                            <View style={styles.modalInput}>
+                                <TextInput
+                                    style={styles.modalInputText}
+                                    value={prixPropose}
+                                    onChangeText={setPrixPropose}
+                                    keyboardType="numeric"
+                                    placeholderTextColor="#666"
+                                    returnKeyType="done"
+                                    onSubmitEditing={() => Keyboard.dismiss()}
+                                />
+                                <Text style={styles.modalDevise}>GNF</Text>
+                            </View>
+
+                            <View style={styles.modalBoutons}>
+                                <TouchableOpacity
+                                    style={styles.modalBoutonAnnuler}
+                                    onPress={() => {
+                                        Keyboard.dismiss();
+                                        setShowConfirmModal(false);
+                                    }}>
+                                    <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.modalBoutonConfirmer, loading && { opacity: 0.7 }]}
+                                    onPress={reserver}
+                                    disabled={loading}>
+                                    <Text style={styles.modalBoutonConfirmerText}>
+                                        {loading ? 'Envoi...' : 'Envoyer la demande'}
                                     </Text>
-                                </View>
-
-                                <Text style={styles.modalLabel}>Votre proposition (optionnel)</Text>
-                                <View style={styles.modalInput}>
-                                    <TextInput
-                                        style={styles.modalInputText}
-                                        value={prixPropose}
-                                        onChangeText={setPrixPropose}
-                                        keyboardType="numeric"
-                                        placeholderTextColor="#666"
-                                        returnKeyType="done"
-                                        onSubmitEditing={() => Keyboard.dismiss()}
-                                    />
-                                    <Text style={styles.modalDevise}>GNF</Text>
-                                </View>
-
-                                {pollingRef.current && (
-                                    <View style={styles.pollingIndicator}>
-                                        <ActivityIndicator size={14} color="#00b5e2" />
-                                        <Text style={styles.pollingText}>
-                                            En attente de confirmation du paiement...
-                                        </Text>
-                                    </View>
-                                )}
-
-                                <Text style={styles.modalInfo}>
-                                    Vous serez redirige vers la page de paiement securisee
-                                </Text>
-
-                                <View style={styles.modalBoutons}>
-                                    <TouchableOpacity
-                                        style={styles.modalBoutonAnnuler}
-                                        onPress={() => {
-                                            Keyboard.dismiss();
-                                            if (pollingRef.current) clearInterval(pollingRef.current);
-                                            setShowPrixModal(false);
-                                        }}>
-                                        <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.modalBoutonConfirmer, loading && { opacity: 0.7 }]}
-                                        onPress={reserver}
-                                        disabled={loading}>
-                                        <Text style={styles.modalBoutonConfirmerText}>
-                                            {loading ? 'Chargement...' : 'Payer & Reserver'}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </ScrollView>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </KeyboardAvoidingView>
                 </View>
@@ -599,12 +519,8 @@ const styles = StyleSheet.create({
     passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
-    passagerBtnChat: {
-        padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20,
-    },
-    conducteurTel: {
-        fontSize: 14, color: '#00b5e2', fontWeight: '600', marginTop: 8,
-    },
+    passagerBtnChat: { padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20 },
+    conducteurTel: { fontSize: 14, color: '#00b5e2', fontWeight: '600', marginTop: 8 },
     conducteurRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
     conducteurAvatar: {
         width: 52, height: 52, borderRadius: 26,
@@ -618,9 +534,7 @@ const styles = StyleSheet.create({
     conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
     conducteurNote: { fontSize: 14, color: '#f39c12', fontWeight: '600' },
     conducteurNbAvis: { fontSize: 12, color: '#666' },
-    boutonContacter: {
-        flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10,
-    },
+    boutonContacter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
     boutonContacterText: { color: '#00b5e2', fontSize: 15, fontWeight: '600' },
     infoSecurite: { fontSize: 11, color: '#555', fontStyle: 'italic', marginTop: 4 },
     avisItem: {
@@ -657,7 +571,12 @@ const styles = StyleSheet.create({
         padding: 24, borderTopWidth: 1, borderColor: '#2a2a2a',
     },
     modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#eee', marginBottom: 4 },
-    modalSubtitle: { fontSize: 14, color: '#888', marginBottom: 20 },
+    modalSubtitle: { fontSize: 14, color: '#888', marginBottom: 16 },
+    modalInfo: {
+        flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+        backgroundColor: '#0a2a35', borderRadius: 10, padding: 12, marginBottom: 16,
+    },
+    modalInfoText: { fontSize: 13, color: '#00b5e2', flex: 1, lineHeight: 20 },
     modalPrixOriginal: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
         backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 16,
@@ -668,16 +587,10 @@ const styles = StyleSheet.create({
     modalInput: {
         flexDirection: 'row', alignItems: 'center',
         borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
-        paddingHorizontal: 12, backgroundColor: '#252525', marginBottom: 12,
+        paddingHorizontal: 12, backgroundColor: '#252525', marginBottom: 20,
     },
     modalInputText: { flex: 1, padding: 12, fontSize: 16, color: '#eee' },
     modalDevise: { color: '#888', fontSize: 14 },
-    pollingIndicator: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: '#0a2a35', borderRadius: 8, padding: 10, marginBottom: 12,
-    },
-    pollingText: { fontSize: 13, color: '#00b5e2', flex: 1 },
-    modalInfo: { fontSize: 12, color: '#888', textAlign: 'center', marginBottom: 20, fontStyle: 'italic' },
     modalBoutons: { flexDirection: 'row', gap: 12 },
     modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#444', borderRadius: 10, padding: 14, alignItems: 'center' },
     modalBoutonAnnulerText: { color: '#888', fontSize: 15, fontWeight: '600' },
