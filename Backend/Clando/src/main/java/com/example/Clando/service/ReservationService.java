@@ -96,49 +96,47 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
-        Reservation reservation = findById(reservationId);
+public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
+    Reservation reservation = findById(reservationId);
 
-        if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
-            throw new IllegalStateException("La reservation doit etre confirmee pour payer");
-        }
-
-        if ("SUCCESS".equals(reservation.getStatutPaiement())) {
-            throw new IllegalStateException("Cette reservation est deja payee");
-        }
-
-        Trajet trajet = reservation.getTrajet();
-        double montant = reservation.getPrixPropose() != null
-            ? reservation.getPrixPropose()
-            : Math.round(trajet.getPrix() * COMMISSION);
-
-        String description = "Reservation Wayvo : " +
-            trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
-
-        String reference = "WAYVO-" + System.currentTimeMillis();
-
-        try {
-            Map<String, Object> paiement = djomyService.initierPaiementGateway(
-                numeroTelephone, montant, reference, description
-            );
-
-            Map<String, Object> data = (Map<String, Object>) paiement.get("data");
-            if (data != null) {
-                if (data.containsKey("transactionId")) {
-                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
-                }
-                if (data.containsKey("redirectUrl")) {
-                    reservation.setUrlPaiement((String) data.get("redirectUrl"));
-                }
-                reservation.setStatutPaiement("PENDING");
-                reservation.setNumeroTelephone(numeroTelephone);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Erreur lors de l'initiation du paiement : " + e.getMessage());
-        }
-
-        return toResponse(reservationRepository.save(reservation));
+    if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
+        throw new IllegalStateException("La reservation doit etre confirmee pour payer");
     }
+
+    if ("SUCCESS".equals(reservation.getStatutPaiement())) {
+        throw new IllegalStateException("Cette reservation est deja payee");
+    }
+
+    Trajet trajet = reservation.getTrajet();
+    double montant = reservation.getPrixPropose() != null
+        ? reservation.getPrixPropose()
+        : Math.round(trajet.getPrix() * COMMISSION);
+
+    String description = "Reservation Wayvo : " +
+        trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
+
+    String reference = "WAYVO-" + System.currentTimeMillis();
+
+    try {
+        // ✅ Paiement OM direct — pas de redirection
+        Map<String, Object> paiement = djomyService.initierPaiementOM(
+            numeroTelephone, montant, reference, description
+        );
+
+        Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+        if (data != null) {
+            if (data.containsKey("transactionId")) {
+                reservation.setDjomyTransactionId((String) data.get("transactionId"));
+            }
+            reservation.setStatutPaiement("PENDING");
+            reservation.setNumeroTelephone(numeroTelephone);
+        }
+    } catch (Exception e) {
+        throw new IllegalStateException("Erreur lors de l'initiation du paiement : " + e.getMessage());
+    }
+
+    return toResponse(reservationRepository.save(reservation));
+}
 
     @Transactional
     public Map<String, Object> annuler(Long id) {

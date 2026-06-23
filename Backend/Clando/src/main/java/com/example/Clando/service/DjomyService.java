@@ -1,7 +1,6 @@
 package com.example.Clando.service;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.crypto.Mac;
@@ -112,45 +111,41 @@ public class DjomyService {
         return response.getBody();
     }
 
-    public Map<String, Object> initierPaiementGateway(
-            String numeroTelephone,
-            double montant,
-            String reference,
-            String description) throws Exception {
+    public Map<String, Object> initierPaiementOM(
+        String numeroTelephone,
+        double montant,
+        String reference,
+        String description) throws Exception {
 
-        String token = getAccessToken();
+    String token = getAccessToken();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-API-KEY", generateApiKey());
-        headers.setBearerAuth(token);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("X-API-KEY", generateApiKey());
+    headers.setBearerAuth(token);
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("amount", montant);
-        body.put("countryCode", "GN");
-        body.put("payerNumber", numeroTelephone);
-        // body.put("allowedPaymentMethods", List.of("OM"));
-        // Accepte toutes les méthodes incluant les cartes
-        body.put("allowedPaymentMethods", List.of("OM", "CARD", "PAYCARD", "SOUTRA_MONEY"));
-        body.put("description", description);
-        body.put("merchantPaymentReference", reference);
-        body.put("returnUrl", "https://clando-production.up.railway.app/paiement-retour.html");
-        body.put("cancelUrl", "https://clando-production.up.railway.app/paiement-annule.html");
+    Map<String, Object> body = new HashMap<>();
+    body.put("paymentMethod", "OM");
+    body.put("payerIdentifier", numeroTelephone);
+    body.put("amount", montant);
+    body.put("countryCode", "GN");
+    body.put("description", description);
+    body.put("merchantPaymentReference", reference);
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        System.out.println("=== Initier paiement gateway: " + body);
+    System.out.println("=== Initier paiement OM direct: " + body);
 
-        ResponseEntity<Map> response = restTemplate.exchange(
-            baseUrl + "/v1/payments/gateway",
-            HttpMethod.POST,
-            request,
-            Map.class
-        );
+    ResponseEntity<Map> response = restTemplate.exchange(
+        baseUrl + "/v1/payments",
+        HttpMethod.POST,
+        request,
+        Map.class
+    );
 
-        System.out.println("=== Réponse gateway: " + response.getBody());
-        return response.getBody();
-    }
+    System.out.println("=== Reponse OM: " + response.getBody());
+    return response.getBody();
+}
 
     public Map<String, Object> verifierStatutPaiement(String transactionId) throws Exception {
         String token = getAccessToken();

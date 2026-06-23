@@ -47,30 +47,30 @@ export default function ChatScreen({ route, navigation }) {
             if (loading) setLoading(false);
         }
     };
+const envoyer = async () => {
+    if (!contenu.trim()) return;
+    if (!currentUserId) {
+        Alert.alert('Erreur', 'Veuillez vous reconnecter');
+        return;
+    }
 
-    const envoyer = async () => {
-        if (!contenu.trim()) return;
-        if (!currentUserId) {
-            Alert.alert('Erreur', 'Veuillez vous reconnecter');
-            return;
-        }
+    const messageTemp = contenu;
+    setContenu('');
 
-        const messageTemp = contenu;
-        setContenu('');
-
-        try {
-            await api.post('/messages', {
-                contenu: messageTemp,
-                expediteurId: currentUserId,
-                destinataireId: interlocuteur.id,
-                reservationId
-            });
-            chargerMessages();
-        } catch (error) {
-            Alert.alert('Erreur', "Impossible d'envoyer le message");
-            setContenu(messageTemp);
-        }
-    };
+    try {
+        await api.post('/messages', {
+            contenu: messageTemp,
+            expediteurId: currentUserId,
+            destinataireId: interlocuteur.id,
+            reservationId
+        });
+        chargerMessages();
+    } catch (error) {
+        console.log('Erreur:', error.message);
+        Alert.alert('Erreur', "Impossible d'envoyer le message");
+        setContenu(messageTemp);
+    }
+};
 
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
