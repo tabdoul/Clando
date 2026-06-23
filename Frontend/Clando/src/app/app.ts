@@ -1,5 +1,3 @@
-// src/app/app.ts
-
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -27,7 +25,7 @@ import { Reservation } from './shared/models/reservation.model';
     styleUrl: './app.css'
 })
 export class AppComponent implements OnInit {
-    title = 'Clando';
+    title = 'WayVo';
     nbNotifications = 0;
 
     constructor(
@@ -51,7 +49,6 @@ export class AppComponent implements OnInit {
         const userId = this.authService.getUserId();
         if (!userId) return;
 
-        // GET /reservations/conducteur/{id}/en-attente
         this.reservationService.getEnAttenteParConducteur(userId).subscribe({
             next: (data: Reservation[]) => {
                 this.nbNotifications = data.length;

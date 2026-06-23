@@ -1,0 +1,148 @@
+.page { background: #f8f9fa; min-height: 100vh; padding: 40px 20px; }
+
+.container { max-width: 1000px; margin: 0 auto; }
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+.main-card, .sidebar-card {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+}
+
+.badge-femmes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f3e5f5;
+    color: #9c27b0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+
+.trajet-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.ville { text-align: center; }
+
+.ville-nom { display: block; font-size: 1.8rem; font-weight: 700; color: #1a1a1a; }
+.ville-label { font-size: 0.85rem; color: #888; }
+
+.route-line { flex: 1; display: flex; align-items: center; gap: 8px; margin: 0 20px; }
+.line { flex: 1; height: 2px; background: #e0e0e0; }
+.car-icon { color: #00b5e2; }
+
+.itineraire {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #00b5e2;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+
+.info-grid { display: flex; flex-direction: column; gap: 16px; }
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.info-item mat-icon { color: #00b5e2; }
+
+.info-label { display: block; font-size: 0.8rem; color: #888; }
+.info-value { display: block; font-size: 0.95rem; font-weight: 500; color: #1a1a1a; }
+
+/* Conducteur */
+.conducteur {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.conducteur-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #e3f6fc;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+
+.conducteur-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.conducteur-avatar mat-icon { color: #00b5e2; font-size: 32px; }
+
+.conducteur-info { display: flex; flex-direction: column; gap: 4px; }
+.conducteur-nom { font-weight: 600; color: #1a1a1a; }
+.conducteur-note, .conducteur-trajets { font-size: 0.85rem; color: #888; }
+
+.vehicule {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9rem;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Prix */
+.sidebar-prix { text-align: center; }
+
+.prix { font-size: 2.5rem; font-weight: 800; color: #00b5e2; }
+.prix-label { color: #888; font-size: 0.9rem; margin-bottom: 24px; }
+
+.btn-reserver {
+    width: 100%;
+    background: #00b5e2 !important;
+    color: white !important;
+    padding: 14px !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px;
+}
+
+.badge-complet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #ffebee;
+    color: #e53935;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.login-hint { font-size: 0.85rem; color: #888; margin-top: 12px; }
+.login-hint a { color: #00b5e2; text-decoration: none; }
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #888;
+}
+
+.loading mat-icon { font-size: 64px; color: #ddd; margin-bottom: 16px; }
+
+@media (max-width: 768px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .ville-nom { font-size: 1.3rem; }
+}

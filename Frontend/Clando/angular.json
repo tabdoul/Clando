@@ -5,6 +5,7 @@
     "packageManager": "npm",
     "analytics": false
   },
+ 
   "newProjectRoot": "projects",
   "projects": {
     "Clando": {

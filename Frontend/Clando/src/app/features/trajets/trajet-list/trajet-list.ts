@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,10 +11,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { TrajetService } from '../../../core/services/trajet.service';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Trajet } from '../../../shared/models/trajet.model';
+import { QUARTIERS_CONAKRY } from '../../../shared/models/constants/quartiers';
 
 @Component({
     selector: 'app-trajet-list',
@@ -21,6 +24,7 @@ import { Trajet } from '../../../shared/models/trajet.model';
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        RouterLink,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
@@ -29,7 +33,8 @@ import { Trajet } from '../../../shared/models/trajet.model';
         MatSnackBarModule,
         MatChipsModule,
         MatDatepickerModule,
-        MatNativeDateModule
+        MatNativeDateModule,
+        MatAutocompleteModule
     ],
     templateUrl: './trajet-list.html',
     styleUrl: './trajet-list.css'
@@ -40,6 +45,10 @@ export class TrajetListComponent implements OnInit {
     searchForm: FormGroup;
     loading = false;
     rechercheLancee = false;
+
+    // Autocomplete
+    quartiersDepart: string[] = [];
+    quartiersArrivee: string[] = [];
 
     constructor(
         private trajetService: TrajetService,
@@ -57,7 +66,25 @@ export class TrajetListComponent implements OnInit {
         });
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        // Autocomplete départ
+        this.searchForm.get('villeDepart')?.valueChanges.subscribe(val => {
+            this.quartiersDepart = this.filtrerQuartiers(val);
+        });
+
+        // Autocomplete arrivée
+        this.searchForm.get('villeArrivee')?.valueChanges.subscribe(val => {
+            this.quartiersArrivee = this.filtrerQuartiers(val);
+        });
+    }
+
+    filtrerQuartiers(val: string): string[] {
+        if (!val || val.length < 2) return [];
+        const recherche = val.toLowerCase().trim();
+        return QUARTIERS_CONAKRY.filter(q =>
+            q.toLowerCase().includes(recherche)
+        ).slice(0, 6);
+    }
 
     chargerTrajets(): void {
         this.loading = true;
@@ -105,42 +132,4 @@ export class TrajetListComponent implements OnInit {
             }
         });
     }
-
-    // src/app/features/trajets/trajet-list/trajet-list.ts
-// Seule la méthode reserver() est modifiée — le reste de ton fichier reste identique
-
-// REMPLACE uniquement la méthode reserver() par celle-ci :
-
-reserver(trajet: Trajet): void {
-    const userId = this.authService.getUserId();
-
-    if (!userId) {
-        this.snackBar.open('Veuillez vous connecter', 'Fermer', { duration: 3000 });
-        return;
-    }
-
-    // Garde TypeScript : trajet.id peut être undefined selon le modèle
-    if (trajet.id == null) {
-        this.snackBar.open('Trajet invalide', 'Fermer', { duration: 3000 });
-        return;
-    }
-
-    const reservation = {
-        nbPlaces: 1,
-        passagerId: userId,
-        trajetId: trajet.id  // TypeScript sait que c'est un number grâce à la garde ci-dessus
-    };
-
-    this.reservationService.creer(reservation).subscribe({
-        next: () => {
-            this.snackBar.open('✅ Réservation effectuée avec succès !', 'Fermer', { duration: 3000 });
-            this.rechercher();
-            this.cdr.detectChanges();
-        },
-        error: (err) => {
-            const message = err.error?.erreur || '❌ Erreur lors de la réservation';
-            this.snackBar.open(message, 'Fermer', { duration: 3000 });
-        }
-    });
-}
 }

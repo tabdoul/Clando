@@ -1,0 +1,61 @@
+<div class="page">
+    <div class="container">
+        <a mat-button routerLink="/" style="margin-bottom: 24px; display: inline-flex;">
+            <mat-icon>arrow_back</mat-icon> Retour
+        </a>
+
+        <div class="hero">
+            <mat-icon class="app-icon">phone_android</mat-icon>
+            <h1>Téléchargez WayVo</h1>
+            <p>L'application de covoiturage guinéenne disponible sur Android</p>
+        </div>
+
+        <div class="download-card">
+            <div class="platform">
+                <mat-icon style="font-size: 48px; color: #3ddc84;">android</mat-icon>
+                <h2>Android</h2>
+                <p>Compatible Android 8.0 et supérieur</p>
+                <a mat-raised-button [href]="apkUrl" target="_blank" class="btn-download">
+                    <mat-icon>download</mat-icon> Télécharger l'APK
+                </a>
+                <p class="hint">
+                    <mat-icon style="font-size: 16px; vertical-align: middle;">info</mat-icon>
+                    Activez "Sources inconnues" dans vos paramètres Android pour installer l'APK
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="platform">
+                <mat-icon style="font-size: 48px; color: #888;">apple</mat-icon>
+                <h2>iOS (iPhone)</h2>
+                <p>Disponible prochainement sur l'App Store</p>
+                <button mat-stroked-button disabled>
+                    <mat-icon>hourglass_empty</mat-icon> Bientôt disponible
+                </button>
+            </div>
+        </div>
+
+        <div class="steps-install">
+            <h3>Comment installer l'APK ?</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <p>Téléchargez l'APK en cliquant sur le bouton ci-dessus</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <p>Allez dans Paramètres → Sécurité → Sources inconnues</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <p>Ouvrez le fichier APK téléchargé et installez l'application</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <p>Créez votre compte et commencez à voyager !</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

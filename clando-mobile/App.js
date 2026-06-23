@@ -47,12 +47,12 @@ export default function App() {
             }
         });
 
-        // ✅ Gère le deep link quand l'app est déjà ouverte
+        //  Gère le deep link quand l'app est déjà ouverte
         const subscription = Linking.addEventListener('url', ({ url }) => {
             handleDeepLink(url);
         });
 
-        // ✅ Gère le deep link quand l'app s'ouvre depuis un lien
+        //  Gère le deep link quand l'app s'ouvre depuis un lien
         Linking.getInitialURL().then((url) => {
             if (url) handleDeepLink(url);
         });

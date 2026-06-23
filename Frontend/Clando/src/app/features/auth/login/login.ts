@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -20,7 +21,8 @@ import { AuthService } from '../../../core/services/auth.service';
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatIconModule
     ],
     templateUrl: './login.html',
     styleUrl: './login.css'
@@ -29,6 +31,7 @@ export class LoginComponent {
 
     loginForm: FormGroup;
     loading = false;
+    hidePassword = true;
 
     constructor(
         private fb: FormBuilder,
@@ -54,7 +57,10 @@ export class LoginComponent {
             next: () => {
                 this.loading = false;
                 this.cdr.detectChanges();
-                this.router.navigate(['/trajets']);
+
+                //  Rediriger vers l'URL sauvegardée ou /trajets par défaut
+                const redirectUrl = this.authService.getAndClearRedirectUrl();
+                this.router.navigateByUrl(redirectUrl || '/trajets');
             },
             error: () => {
                 this.loading = false;

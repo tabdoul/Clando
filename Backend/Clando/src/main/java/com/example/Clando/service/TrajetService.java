@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -40,7 +41,6 @@ public class TrajetService {
     private final DocumentRepository documentRepository;
     private final NotificationService notificationService;
 
-    // Commission WayVo 13%
     private static final double COMMISSION = 1.13;
 
     public TrajetService(TrajetRepository trajetRepository,
@@ -102,6 +102,72 @@ public class TrajetService {
         return toResponse(trajet);
     }
 
+    public Map<String, Object> getStatsConducteur(Long conducteurId) {
+        List<Trajet> tousLesTrajets = trajetRepository.findByConducteurId(conducteurId);
+
+        // Trajets terminés uniquement
+        List<Trajet> trajetsTermines = tousLesTrajets.stream()
+            .filter(t -> t.getStatut() == Trajet.StatutTrajet.TERMINE)
+            .collect(Collectors.toList());
+
+        long nbTrajets = trajetsTermines.size();
+
+        // Gains totaux — prix conducteur sans commission
+        double gainsTotaux = trajetsTermines.stream()
+            .mapToDouble(Trajet::getPrix)
+            .sum();
+
+        // Nombre de passagers transportés
+        long nbPassagers = reservationRepository.findAll().stream()
+            .filter(r -> r.getStatut() == Reservation.StatutReservation.TERMINEE
+                      && r.getTrajet().getConducteur().getId().equals(conducteurId))
+            .mapToLong(Reservation::getNbPlaces)
+            .sum();
+
+        // Note moyenne
+        Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(conducteurId);
+
+        // Trajet le plus fréquent
+        String trajetFrequent = trajetsTermines.stream()
+            .collect(Collectors.groupingBy(
+                t -> t.getVilleDepart() + " -> " + t.getVilleArrivee(),
+                Collectors.counting()
+            ))
+            .entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey)
+            .orElse(null);
+
+        // Taux d'acceptation
+        long totalReservations = reservationRepository.findAll().stream()
+            .filter(r -> r.getTrajet().getConducteur().getId().equals(conducteurId))
+            .count();
+
+        long reservationsConfirmees = reservationRepository.findAll().stream()
+            .filter(r -> r.getTrajet().getConducteur().getId().equals(conducteurId)
+                      && (r.getStatut() == Reservation.StatutReservation.CONFIRMEE
+                       || r.getStatut() == Reservation.StatutReservation.TERMINEE))
+            .count();
+
+        int tauxAcceptation = totalReservations > 0
+            ? (int) Math.round((reservationsConfirmees * 100.0) / totalReservations)
+            : 0;
+
+        // Date membre depuis
+        Utilisateur conducteur = utilisateurRepository.findById(conducteurId)
+            .orElseThrow(() -> new EntityNotFoundException("Conducteur non trouve"));
+
+        return Map.of(
+            "nbTrajets", nbTrajets,
+            "gainsTotaux", gainsTotaux,
+            "nbPassagers", nbPassagers,
+            "noteMoyenne", noteMoyenne != null ? Math.round(noteMoyenne * 10.0) / 10.0 : 0.0,
+            "trajetFrequent", trajetFrequent != null ? trajetFrequent : "",
+            "tauxAcceptation", tauxAcceptation,
+            "membreDepuis", conducteur.getDateInscription().toString()
+        );
+    }
+
     @Transactional
     public TrajetResponse creer(TrajetRequest request) {
         Utilisateur conducteur = utilisateurRepository.findById(request.getConducteurId())
@@ -151,7 +217,7 @@ public class TrajetService {
         trajet.setVilleArrivee(request.getVilleArrivee());
         trajet.setDateHeureDepart(request.getDateHeureDepart());
         trajet.setPlacesDisponibles(request.getPlacesDisponibles());
-        trajet.setPrix(request.getPrix()); // prix conducteur stocké en base
+        trajet.setPrix(request.getPrix());
         trajet.setItineraire(request.getItineraire());
         trajet.setFemmesUniquement(request.isFemmesUniquement());
         trajet.setStatut(Trajet.StatutTrajet.OUVERT);
@@ -269,7 +335,6 @@ public class TrajetService {
         Double noteMoyenne = avisRepository.findNoteMoyenneByDestinataire(t.getConducteur().getId());
         Long nbTrajets = avisRepository.countTrajetsTerminesByConducteur(t.getConducteur().getId());
 
-        // ✅ Prix affiché au passager = prix conducteur × 1.13
         double prixAvecCommission = Math.round(t.getPrix() * COMMISSION);
 
         return TrajetResponse.builder()
@@ -278,8 +343,8 @@ public class TrajetService {
                 .villeArrivee(t.getVilleArrivee())
                 .dateHeureDepart(t.getDateHeureDepart())
                 .placesDisponibles(t.getPlacesDisponibles())
-                .prix(prixAvecCommission)        // ✅ prix passager avec commission
-                .prixConducteur(t.getPrix())     // ✅ prix réel sans commission
+                .prix(prixAvecCommission)
+                .prixConducteur(t.getPrix())
                 .itineraire(t.getItineraire())
                 .statut(t.getStatut())
                 .conducteurId(t.getConducteur().getId())

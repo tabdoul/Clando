@@ -63,6 +63,16 @@ public class TrajetController {
         return ResponseEntity.ok(trajetService.getByConducteur(conducteurId));
     }
 
+    @GetMapping("/conducteur/{conducteurId}/stats")
+    public ResponseEntity<?> getStatsConducteur(@PathVariable Long conducteurId) {
+        try {
+            return ResponseEntity.ok(trajetService.getStatsConducteur(conducteurId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<TrajetResponse> modifier(@PathVariable Long id,
                                                     @Valid @RequestBody TrajetRequest request) {
@@ -81,7 +91,6 @@ public class TrajetController {
         }
     }
 
-    // Nouveau endpoint demarrer trajet
     @PatchMapping("/{id}/demarrer")
     public ResponseEntity<?> demarrerTrajet(
             @PathVariable Long id,

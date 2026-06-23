@@ -1,0 +1,120 @@
+<div class="page" *ngIf="!loading">
+    <div class="container">
+        <a mat-button routerLink="/trajets" style="margin-bottom: 24px; display: inline-flex;">
+            <mat-icon>arrow_back</mat-icon> Retour aux trajets
+        </a>
+
+        <div *ngIf="trajet" class="detail-layout">
+
+            <!-- Carte principale -->
+            <div class="main-card">
+                <!-- Badge femmes -->
+                <div *ngIf="trajet.femmesUniquement" class="badge-femmes">
+                    <mat-icon>female</mat-icon> Trajet réservé aux femmes
+                </div>
+
+                <!-- Trajet -->
+                <div class="trajet-route">
+                    <div class="ville">
+                        <span class="ville-nom">{{ trajet.villeDepart }}</span>
+                        <span class="ville-label">Départ</span>
+                    </div>
+                    <div class="route-line">
+                        <div class="line"></div>
+                        <mat-icon class="car-icon">directions_car</mat-icon>
+                        <div class="line"></div>
+                    </div>
+                    <div class="ville">
+                        <span class="ville-nom">{{ trajet.villeArrivee }}</span>
+                        <span class="ville-label">Arrivée</span>
+                    </div>
+                </div>
+
+                <div *ngIf="trajet.itineraire" class="itineraire">
+                    <mat-icon>route</mat-icon>
+                    Via {{ trajet.itineraire }}
+                </div>
+
+                <!-- Infos -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <mat-icon>schedule</mat-icon>
+                        <div>
+                            <span class="info-label">Date et heure</span>
+                            <span class="info-value">{{ trajet.dateHeureDepart | date:'EEEE dd MMMM yyyy à HH:mm' }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <mat-icon>event_seat</mat-icon>
+                        <div>
+                            <span class="info-label">Places disponibles</span>
+                            <span class="info-value">{{ trajet.placesDisponibles }} place(s)</span>
+                        </div>
+                    </div>
+                    <div class="info-item" *ngIf="trajet.noteMoyenneConducteur">
+                        <mat-icon>star</mat-icon>
+                        <div>
+                            <span class="info-label">Note conducteur</span>
+                            <span class="info-value">{{ trajet.noteMoyenneConducteur }}/5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+
+                <!-- Conducteur -->
+                <div class="sidebar-card">
+                    <h3>Votre conducteur</h3>
+                    <div class="conducteur">
+                        <div class="conducteur-avatar">
+                            <img *ngIf="trajet.conducteurPhoto" [src]="trajet.conducteurPhoto" alt="Photo conducteur" />
+                            <mat-icon *ngIf="!trajet.conducteurPhoto">person</mat-icon>
+                        </div>
+                        <div class="conducteur-info">
+                            <span class="conducteur-nom">{{ trajet.conducteurPrenom }} {{ trajet.conducteurNom }}</span>
+                            <span *ngIf="trajet.noteMoyenneConducteur" class="conducteur-note">
+                                ⭐ {{ trajet.noteMoyenneConducteur }}/5
+                            </span>
+                            <span *ngIf="trajet.nbTrajetsTerminesConducteur" class="conducteur-trajets">
+                                {{ trajet.nbTrajetsTerminesConducteur }} trajets effectués
+                            </span>
+                        </div>
+                    </div>
+                    <div class="vehicule">
+                        <mat-icon>directions_car</mat-icon>
+                        {{ trajet.vehiculeMarque }} {{ trajet.vehiculeModele }}
+                    </div>
+                </div>
+
+                <!-- Prix et réservation -->
+                <div class="sidebar-card sidebar-prix">
+                    <div class="prix">{{ trajet.prix | number }} GNF</div>
+                    <div class="prix-label">par place</div>
+
+                    <button *ngIf="trajet.statut === 'OUVERT'"
+                            mat-raised-button class="btn-reserver"
+                            (click)="reserver()">
+                        <mat-icon>{{ isConnecte ? 'event_seat' : 'login' }}</mat-icon>
+                        {{ isConnecte ? 'Réserver ce trajet' : 'Se connecter pour réserver' }}
+                    </button>
+
+                    <div *ngIf="trajet.statut === 'COMPLET'" class="badge-complet">
+                        <mat-icon>block</mat-icon> Trajet complet
+                    </div>
+
+                    <p *ngIf="!isConnecte" class="login-hint">
+                        <a routerLink="/login">Connectez-vous</a> ou
+                        <a routerLink="/register">créez un compte</a> pour réserver
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="loading" class="loading">
+    <mat-icon>directions_car</mat-icon>
+    <p>Chargement du trajet...</p>
+</div>

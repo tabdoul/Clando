@@ -11,7 +11,8 @@ export class AuthService {
 
     private apiUrl = environment.apiUrl;
     private tokenKey = 'Clando_token';
-private userIdKey = 'Clando_user_id';
+    private userIdKey = 'Clando_user_id';
+    private redirectUrlKey = 'Clando_redirect_url'; //  URL de retour
     private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasToken());
 
     isLoggedIn$ = this.isLoggedInSubject.asObservable();
@@ -21,15 +22,8 @@ private userIdKey = 'Clando_user_id';
     login(email: string, motDePasse: string): Observable<any> {
         return this.http.post<any>(`${this.apiUrl}/auth/login`, { email, motDePasse }).pipe(
             tap(response => {
-                console.log('Réponse complète:', JSON.stringify(response));
-                console.log('Type de response.token:', typeof response.token);
-                console.log('Valeur de response.token:', response.token);
-
                 if (response && response.token) {
                     localStorage.setItem(this.tokenKey, response.token);
-                    console.log('Token stocké:', localStorage.getItem(this.tokenKey));
-                } else {
-                    console.error('Token manquant dans la réponse !');
                 }
                 this.isLoggedInSubject.next(true);
                 this.fetchUtilisateurByEmail(email);
@@ -51,6 +45,7 @@ private userIdKey = 'Clando_user_id';
     logout(): void {
         localStorage.removeItem(this.tokenKey);
         localStorage.removeItem(this.userIdKey);
+        localStorage.removeItem(this.redirectUrlKey);
         this.isLoggedInSubject.next(false);
     }
 
@@ -84,5 +79,17 @@ private userIdKey = 'Clando_user_id';
     getUserId(): number | null {
         const id = localStorage.getItem(this.userIdKey);
         return id ? parseInt(id) : null;
+    }
+
+    //  Sauvegarder l'URL avant redirection vers login
+    setRedirectUrl(url: string): void {
+        localStorage.setItem(this.redirectUrlKey, url);
+    }
+
+    //  Récupérer et effacer l'URL de retour
+    getAndClearRedirectUrl(): string | null {
+        const url = localStorage.getItem(this.redirectUrlKey);
+        localStorage.removeItem(this.redirectUrlKey);
+        return url;
     }
 }

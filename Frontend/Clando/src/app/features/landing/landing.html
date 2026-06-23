@@ -1,0 +1,154 @@
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-content">
+       <div class="hero-badge">
+    <img src="icon.png" alt="Wayvo" style="height: 150px; width: auto;">
+</div>
+        <h1>Voyagez ensemble,<br><span class="hero-accent">économisez ensemble</span></h1>
+        <p class="hero-subtitle">
+            Wayvo connecte conducteurs et passagers à Conakry et partout en Guinée.
+            Partagez les frais, réduisez les coûts, voyagez en sécurité.
+        </p>
+        <div class="hero-actions">
+            <a mat-raised-button routerLink="/trajets" class="btn-primary">
+                <mat-icon>search</mat-icon> Trouver un trajet
+            </a>
+            <a mat-stroked-button routerLink="/telecharger" class="btn-secondary">
+                <mat-icon>phone_android</mat-icon> Télécharger l'app
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-value">100%</span>
+                <span class="stat-label">Sécurisé</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-value">OM</span>
+                <span class="stat-label">Orange Money</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-value">0</span>
+                <span class="stat-label">Frais cachés</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="phone-mockup">
+            <mat-icon class="phone-icon">phone_iphone</mat-icon>
+            <p>Application mobile</p>
+            <a mat-raised-button routerLink="/telecharger" class="btn-download">
+                <mat-icon>android</mat-icon> Télécharger APK
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Comment ça marche -->
+<section class="section">
+    <div class="section-container">
+        <h2 class="section-title">Comment ça marche ?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-icon">🔍</div>
+                <h3>Recherchez</h3>
+                <p>Entrez votre point de départ et d'arrivée pour trouver des trajets disponibles</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-icon">✅</div>
+                <h3>Réservez</h3>
+                <p>Choisissez votre trajet et payez en toute sécurité via Orange Money</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-icon">🚗</div>
+                <h3>Voyagez</h3>
+                <p>Retrouvez votre conducteur et profitez du trajet en bonne compagnie</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Avantages -->
+<section class="section section-gray">
+    <div class="section-container">
+        <h2 class="section-title">Pourquoi choisir Wayvo ?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <mat-icon class="feature-icon">security</mat-icon>
+                <h3>Trajets vérifiés</h3>
+                <p>Chaque conducteur doit fournir permis de conduire et pièce d'identité vérifiés</p>
+            </div>
+            <div class="feature-card">
+                <mat-icon class="feature-icon">payments</mat-icon>
+                <h3>Paiement sécurisé</h3>
+                <p>Paiement via Orange Money, carte bancaire ou Soutra Money</p>
+            </div>
+            <div class="feature-card">
+                <mat-icon class="feature-icon">star</mat-icon>
+                <h3>Avis fiables</h3>
+                <p>Notez vos conducteurs et consultez les avis de la communauté</p>
+            </div>
+            <div class="feature-card">
+                <mat-icon class="feature-icon">female</mat-icon>
+                <h3>Trajets femmes</h3>
+                <p>Des trajets réservés aux femmes pour voyager en toute sérénité</p>
+            </div>
+            <div class="feature-card">
+                <mat-icon class="feature-icon">location_on</mat-icon>
+                <h3>Suivi en temps réel</h3>
+                <p>Suivez la position de votre conducteur directement depuis l'app</p>
+            </div>
+            <div class="feature-card">
+                <mat-icon class="feature-icon">savings</mat-icon>
+                <h3>Économisez</h3>
+                <p>Partagez les frais de route et réduisez le coût de vos déplacements</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Téléchargement -->
+<section class="section section-dark">
+    <div class="section-container" style="text-align: center;">
+        <h2 style="color: white; font-size: 2rem; margin-bottom: 16px;">
+            Prêt à voyager avec Wayvo ?
+        </h2>
+        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 32px;">
+            Téléchargez l'application et commencez à voyager dès aujourd'hui
+        </p>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a mat-raised-button routerLink="/telecharger"
+               style="background: white; color: #00b5e2; padding: 12px 32px; font-size: 1rem;">
+                <mat-icon>android</mat-icon> Télécharger l'APK Android
+            </a>
+            <a mat-stroked-button routerLink="/trajets"
+               style="color: white; border-color: white; padding: 12px 32px; font-size: 1rem;">
+                <mat-icon>search</mat-icon> Voir les trajets disponibles
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-brand">
+            <mat-icon>directions_car</mat-icon>
+            <span>Wayvo</span>
+        </div>
+        <div class="footer-links">
+            <a routerLink="/mentions-legales">Mentions légales</a>
+            <a routerLink="/mentions-legales">CGU</a>
+            <a routerLink="/mentions-legales">Politique de confidentialité</a>
+            <a routerLink="/trajets">Trajets</a>
+            <a routerLink="/telecharger">Télécharger</a>
+        </div>
+        <p class="footer-copy">© 2026 Wayvo — Fait avec ❤️</p>
+    </div>
+</footer>

@@ -15,6 +15,7 @@ export default function ProfilScreen({ navigation }) {
     const [utilisateur, setUtilisateur] = useState(null);
     const [vehicules, setVehicules] = useState([]);
     const [trajets, setTrajets] = useState([]);
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [editMode, setEditMode] = useState(false);
@@ -39,10 +40,11 @@ export default function ProfilScreen({ navigation }) {
             const userId = await getUserId();
             if (!userId) return;
 
-            const [userRes, vehiculesRes, trajetsRes] = await Promise.all([
+            const [userRes, vehiculesRes, trajetsRes, statsRes] = await Promise.all([
                 api.get(`/utilisateurs/${userId}`),
                 api.get(`/vehicules/conducteur/${userId}`),
-                api.get(`/trajets/conducteur/${userId}`)
+                api.get(`/trajets/conducteur/${userId}`),
+                api.get(`/trajets/conducteur/${userId}/stats`)
             ]);
 
             setUtilisateur(userRes.data);
@@ -50,6 +52,7 @@ export default function ProfilScreen({ navigation }) {
             setTelephone(userRes.data.telephone || '');
             setMiniBio(userRes.data.miniBio || '');
             setVehicules(vehiculesRes.data);
+            setStats(statsRes.data);
             setTrajets(trajetsRes.data.filter(t =>
                 t.statut === 'OUVERT' || t.statut === 'COMPLET'
             ));
@@ -128,14 +131,10 @@ export default function ProfilScreen({ navigation }) {
                             const location = await Location.getCurrentPositionAsync({
                                 accuracy: Location.Accuracy.High
                             });
-
                             const { latitude, longitude } = location.coords;
-
                             await api.patch(`/trajets/${trajet.id}/demarrer?latitude=${latitude}&longitude=${longitude}`);
-
                             Alert.alert('Trajet demarre !', 'Vos passagers ont ete notifies avec votre position actuelle.');
                             chargerProfil();
-
                         } catch (err) {
                             Alert.alert('Erreur', err.response?.data?.erreur || 'Impossible de demarrer le trajet');
                         }
@@ -331,6 +330,72 @@ export default function ProfilScreen({ navigation }) {
                     </View>
                 </View>
 
+                {/* Dashboard conducteur */}
+                {stats && stats.nbTrajets > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Mon activite</Text>
+                        <View style={styles.dashboardCard}>
+
+                            <View style={styles.dashboardRow}>
+                                <View style={styles.dashboardStat}>
+                                    <Text style={styles.dashboardValeur}>{stats.nbTrajets}</Text>
+                                    <Text style={styles.dashboardLabel}>Trajets effectues</Text>
+                                </View>
+                                <View style={styles.dashboardDivider} />
+                                <View style={styles.dashboardStat}>
+                                    <Text style={styles.dashboardValeur}>
+                                        {stats.gainsTotaux?.toLocaleString()}
+                                    </Text>
+                                    <Text style={styles.dashboardLabel}>GNF gagnes</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.dashboardSeparator} />
+
+                            <View style={styles.dashboardRow}>
+                                <View style={styles.dashboardStat}>
+                                    <Text style={styles.dashboardValeur}>{stats.nbPassagers}</Text>
+                                    <Text style={styles.dashboardLabel}>Passagers</Text>
+                                </View>
+                                <View style={styles.dashboardDivider} />
+                                <View style={styles.dashboardStat}>
+                                    <Text style={[styles.dashboardValeur, { color: '#f39c12' }]}>
+                                        {stats.noteMoyenne > 0 ? `${stats.noteMoyenne}★` : 'Nouveau'}
+                                    </Text>
+                                    <Text style={styles.dashboardLabel}>Note moyenne</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.dashboardSeparator} />
+
+                            <View style={styles.dashboardRow}>
+                                <View style={styles.dashboardStat}>
+                                    <Text style={styles.dashboardValeur}>{stats.tauxAcceptation}%</Text>
+                                    <Text style={styles.dashboardLabel}>Taux acceptation</Text>
+                                </View>
+                                <View style={styles.dashboardDivider} />
+                                <View style={styles.dashboardStat}>
+                                    <Text style={[styles.dashboardValeur, { fontSize: 12 }]} numberOfLines={1}>
+                                        {stats.trajetFrequent || 'Aucun'}
+                                    </Text>
+                                    <Text style={styles.dashboardLabel}>Trajet frequent</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.dashboardSeparator} />
+
+                            <View style={styles.dashboardMembreRow}>
+                                <Ionicons name="calendar-outline" size={14} color="#888" />
+                                <Text style={styles.dashboardMembreTexte}>
+                                    Membre depuis le {new Date(stats.membreDepuis).toLocaleDateString('fr-FR', {
+                                        day: '2-digit', month: 'long', year: 'numeric'
+                                    })}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Informations personnelles</Text>
@@ -404,7 +469,6 @@ export default function ProfilScreen({ navigation }) {
                                             <Text style={styles.trajetVilles}>
                                                 {t.villeDepart} → {t.villeArrivee}
                                             </Text>
-                                            {/* ✅ Prix conducteur sans commission */}
                                             <Text style={styles.trajetDetails}>
                                                 {t.placesDisponibles} place(s) • {t.prixConducteur?.toLocaleString()} GNF
                                             </Text>
@@ -597,6 +661,24 @@ const styles = StyleSheet.create({
     editInput: { flex: 2, fontSize: 14, color: '#eee', textAlign: 'right', borderBottomWidth: 1, borderBottomColor: '#00b5e2', paddingVertical: 2 },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 4 },
     emptyText: { fontSize: 14, color: '#666', textAlign: 'center', paddingVertical: 8 },
+
+    // Dashboard
+    dashboardCard: {
+        backgroundColor: '#1e1e1e', borderRadius: 14,
+        borderWidth: 1, borderColor: '#2a2a2a', overflow: 'hidden',
+    },
+    dashboardRow: { flexDirection: 'row', alignItems: 'center' },
+    dashboardStat: { flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8 },
+    dashboardValeur: { fontSize: 22, fontWeight: 'bold', color: '#00b5e2', marginBottom: 4 },
+    dashboardLabel: { fontSize: 11, color: '#888', textAlign: 'center' },
+    dashboardDivider: { width: 1, height: 50, backgroundColor: '#2a2a2a' },
+    dashboardSeparator: { height: 1, backgroundColor: '#2a2a2a' },
+    dashboardMembreRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        paddingVertical: 12, paddingHorizontal: 16,
+    },
+    dashboardMembreTexte: { fontSize: 13, color: '#888' },
+
     boutonDocuments: {
         backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
         flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#2a2a2a',

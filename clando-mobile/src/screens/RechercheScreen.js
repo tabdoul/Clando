@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ActivityIndicator, Alert,
-    ScrollView, Platform, FlatList,Keyboard
+    ScrollView, Platform, Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -20,27 +20,15 @@ export default function RechercheScreen({ navigation }) {
     const [nbNotifications, setNbNotifications] = useState(0);
     const [historique, setHistorique] = useState([]);
     const [favoris, setFavoris] = useState([]);
-    const [utilisateur, setUtilisateur] = useState(null);
 
-    // Autocomplete
-    const [champActif, setChampActif] = useState(null); // 'depart' | 'arrivee' | null
+    const [champActif, setChampActif] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
 
     useEffect(() => {
         chargerNotifications();
         chargerHistorique();
         chargerFavoris();
-        chargerUtilisateur();
     }, []);
-
-    const chargerUtilisateur = async () => {
-        try {
-            const userId = await getUserId();
-            if (!userId) return;
-            const res = await api.get(`/utilisateurs/${userId}`);
-            setUtilisateur(res.data);
-        } catch (error) {}
-    };
 
     const chargerNotifications = async () => {
         try {
@@ -67,7 +55,12 @@ export default function RechercheScreen({ navigation }) {
 
     const sauvegarderHistorique = async (depart, arrivee) => {
         try {
-            const nouvelleRecherche = { id: Date.now(), depart, arrivee, date: new Date().toLocaleDateString('fr-FR') };
+            const nouvelleRecherche = {
+                id: Date.now(),
+                depart,
+                arrivee,
+                date: new Date().toLocaleDateString('fr-FR')
+            };
             const nouvelleListe = [
                 nouvelleRecherche,
                 ...historique.filter(h => !(h.depart === depart && h.arrivee === arrivee))
@@ -88,7 +81,8 @@ export default function RechercheScreen({ navigation }) {
         } catch (error) {}
     };
 
-    const estFavori = (depart, arrivee) => favoris.some(f => f.depart === depart && f.arrivee === arrivee);
+    const estFavori = (depart, arrivee) =>
+        favoris.some(f => f.depart === depart && f.arrivee === arrivee);
 
     const utiliserRecherche = (depart, arrivee) => {
         setVilleDepart(depart);
@@ -103,7 +97,6 @@ export default function RechercheScreen({ navigation }) {
         await AsyncStorage.setItem('clando_historique', JSON.stringify(nouvelleListe));
     };
 
-    // Filtre les suggestions en fonction de la saisie
     const filtrerSuggestions = (texte) => {
         if (!texte || texte.length < 2) {
             setSuggestions([]);
@@ -130,11 +123,8 @@ export default function RechercheScreen({ navigation }) {
     };
 
     const choisirSuggestion = (quartier) => {
-        if (champActif === 'depart') {
-            setVilleDepart(quartier);
-        } else if (champActif === 'arrivee') {
-            setVilleArrivee(quartier);
-        }
+        if (champActif === 'depart') setVilleDepart(quartier);
+        else if (champActif === 'arrivee') setVilleArrivee(quartier);
         setChampActif(null);
         setSuggestions([]);
         Keyboard.dismiss();
@@ -147,10 +137,13 @@ export default function RechercheScreen({ navigation }) {
 
     const formatDateAffichage = (date) => {
         if (!date) return null;
-        return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+        return date.toLocaleDateString('fr-FR', {
+            day: '2-digit', month: 'long', year: 'numeric'
+        });
     };
 
-    const normaliser = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normaliser = (str) =>
+        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     const rechercher = async () => {
         if (!villeDepart || !villeArrivee) {
@@ -172,7 +165,7 @@ export default function RechercheScreen({ navigation }) {
             await sauvegarderHistorique(villeDepart.trim(), villeArrivee.trim());
 
             if (response.data.content.length === 0) {
-                Alert.alert('Aucun trajet trouve', "Aucun trajet disponible pour cette destination.");
+                Alert.alert('Aucun trajet trouve', 'Aucun trajet disponible pour cette destination.');
             } else {
                 navigation.navigate('Resultats', {
                     trajets: response.data.content,
@@ -197,7 +190,9 @@ export default function RechercheScreen({ navigation }) {
                     <View style={styles.headerRow}>
                         <View style={{ width: 40 }} />
                         <Text style={styles.headerTitle}>Wayvo</Text>
-                        <TouchableOpacity style={styles.cloche} onPress={() => navigation.navigate('Notifications')}>
+                        <TouchableOpacity
+                            style={styles.cloche}
+                            onPress={() => navigation.navigate('Notifications')}>
                             <Ionicons name="notifications-outline" size={26} color="#eee" />
                             {nbNotifications > 0 && (
                                 <View style={styles.badge}>
@@ -207,12 +202,6 @@ export default function RechercheScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    {utilisateur && (
-                        <Text style={styles.bienvenue}>
-                            Bonjour, {utilisateur.prenom} {utilisateur.nom}
-                        </Text>
-                    )}
-
                     <Text style={styles.headerSubtitle}>
                         Trouvez votre covoiturage, partagez les frais et profitez du trajet en bonne compagnie
                     </Text>
@@ -220,7 +209,6 @@ export default function RechercheScreen({ navigation }) {
 
                 <View style={styles.searchCard}>
 
-                    {/* Champ depart */}
                     <Text style={styles.fieldLabel}>Depart</Text>
                     <View style={[styles.inputContainer, champActif === 'depart' && styles.inputContainerActif]}>
                         <Ionicons name="location-outline" size={18} color="#888" />
@@ -240,7 +228,6 @@ export default function RechercheScreen({ navigation }) {
                         )}
                     </View>
 
-                    {/* Suggestions depart */}
                     {champActif === 'depart' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
@@ -255,7 +242,6 @@ export default function RechercheScreen({ navigation }) {
                         </View>
                     )}
 
-                    {/* Champ arrivee */}
                     <Text style={styles.fieldLabel}>Arrivee</Text>
                     <View style={[styles.inputContainer, champActif === 'arrivee' && styles.inputContainerActif]}>
                         <Ionicons name="location" size={18} color="#888" />
@@ -275,7 +261,6 @@ export default function RechercheScreen({ navigation }) {
                         )}
                     </View>
 
-                    {/* Suggestions arrivee */}
                     {champActif === 'arrivee' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
@@ -290,9 +275,14 @@ export default function RechercheScreen({ navigation }) {
                         </View>
                     )}
 
-                    {/* Date */}
                     <Text style={styles.fieldLabel}>Date aller</Text>
-                    <TouchableOpacity style={styles.inputContainer} onPress={() => {Keyboard.dismiss(); fermerSuggestions(); setShowDatePicker(true); }}>
+                    <TouchableOpacity
+                        style={styles.inputContainer}
+                        onPress={() => {
+                            Keyboard.dismiss();
+                            fermerSuggestions();
+                            setShowDatePicker(true);
+                        }}>
                         <Ionicons name="calendar-outline" size={18} color="#888" />
                         <Text style={[styles.input, !dateDepart && styles.placeholder]}>
                             {dateDepart ? formatDateAffichage(dateDepart) : 'Choisir une date'}
@@ -362,14 +352,18 @@ export default function RechercheScreen({ navigation }) {
                                     <Text style={styles.rechercheDate}>{item.date}</Text>
                                 </View>
                                 <View style={styles.rechercheActions}>
-                                    <TouchableOpacity onPress={() => toggleFavori(item.depart, item.arrivee)} style={styles.actionBtn}>
+                                    <TouchableOpacity
+                                        onPress={() => toggleFavori(item.depart, item.arrivee)}
+                                        style={styles.actionBtn}>
                                         <Ionicons
                                             name={estFavori(item.depart, item.arrivee) ? "heart" : "heart-outline"}
                                             size={16}
                                             color={estFavori(item.depart, item.arrivee) ? "#e74c3c" : "#666"}
                                         />
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => supprimerHistorique(item.id)} style={styles.actionBtn}>
+                                    <TouchableOpacity
+                                        onPress={() => supprimerHistorique(item.id)}
+                                        style={styles.actionBtn}>
                                         <Ionicons name="close" size={16} color="#666" />
                                     </TouchableOpacity>
                                 </View>
@@ -386,25 +380,62 @@ export default function RechercheScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#121212' },
-    header: { backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 40, paddingHorizontal: 24 },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    headerTitle: { fontSize: 36, fontWeight: 'bold', color: '#00b5e2', letterSpacing: 3, textAlign: 'center', flex: 1 },
-    bienvenue: { fontSize: 16, fontWeight: '600', color: '#eee', textAlign: 'center', marginBottom: 8 },
+    header: {
+        backgroundColor: '#1a1a1a',
+        paddingTop: 60,
+        paddingBottom: 40,
+        paddingHorizontal: 24
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12
+    },
+    headerTitle: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: '#00b5e2',
+        letterSpacing: 3,
+        textAlign: 'center',
+        flex: 1
+    },
     cloche: { width: 40, alignItems: 'flex-end', position: 'relative' },
-    badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#e74c3c', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+    badge: {
+        position: 'absolute', top: -4, right: -4,
+        backgroundColor: '#e74c3c', borderRadius: 10,
+        minWidth: 18, height: 18,
+        alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4
+    },
     badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
     headerSubtitle: { fontSize: 14, color: '#aaa', textAlign: 'center', lineHeight: 22 },
-    searchCard: { backgroundColor: '#1e1e1e', marginHorizontal: 16, marginTop: -20, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#2a2a2a' },
-    fieldLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 6, marginTop: 14, textTransform: 'uppercase', letterSpacing: 1 },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#252525', gap: 10 },
+    searchCard: {
+        backgroundColor: '#1e1e1e',
+        marginHorizontal: 16,
+        marginTop: -20,
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#2a2a2a'
+    },
+    fieldLabel: {
+        fontSize: 12, fontWeight: '600', color: '#888',
+        marginBottom: 6, marginTop: 14,
+        textTransform: 'uppercase', letterSpacing: 1
+    },
+    inputContainer: {
+        flexDirection: 'row', alignItems: 'center',
+        borderWidth: 1, borderColor: '#2a2a2a',
+        borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4,
+        backgroundColor: '#252525', gap: 10
+    },
     inputContainerActif: { borderColor: '#00b5e2' },
     input: { flex: 1, padding: 10, fontSize: 15, color: '#eee' },
     placeholder: { color: '#666' },
-
-    // Suggestions
     suggestionsContainer: {
-        backgroundColor: '#252525', borderRadius: 10, borderWidth: 1,
-        borderColor: '#00b5e2', marginTop: 4, overflow: 'hidden',
+        backgroundColor: '#252525', borderRadius: 10,
+        borderWidth: 1, borderColor: '#00b5e2',
+        marginTop: 4, overflow: 'hidden',
     },
     suggestionItem: {
         flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -412,12 +443,22 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     suggestionTexte: { color: '#eee', fontSize: 14 },
-
-    searchButton: { backgroundColor: '#00b5e2', borderRadius: 10, padding: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 },
+    searchButton: {
+        backgroundColor: '#00b5e2', borderRadius: 10, padding: 15,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 8, marginTop: 20
+    },
     searchButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     section: { paddingHorizontal: 16, marginTop: 20 },
-    sectionTitle: { fontSize: 13, fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
-    rechercheItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a' },
+    sectionTitle: {
+        fontSize: 13, fontWeight: '600', color: '#888',
+        textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10
+    },
+    rechercheItem: {
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12,
+        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a'
+    },
     rechercheInfo: { flex: 1 },
     rechercheTexte: { fontSize: 14, color: '#ddd', fontWeight: '500' },
     rechercheDate: { fontSize: 12, color: '#666', marginTop: 2 },

@@ -1,0 +1,87 @@
+.page { background: #f8f9fa; min-height: 100vh; padding: 40px 20px; }
+
+.container { max-width: 800px; margin: 0 auto; }
+
+.hero {
+    text-align: center;
+    padding: 48px 20px;
+    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    border-radius: 20px;
+    margin-bottom: 32px;
+}
+
+.app-icon {
+    font-size: 80px !important;
+    width: 80px !important;
+    height: 80px !important;
+    color: #00b5e2;
+    margin-bottom: 16px;
+    display: block;
+    margin: 0 auto 16px;
+}
+
+.hero h1 { color: white; font-size: 2rem; margin-bottom: 8px; }
+.hero p { color: rgba(255,255,255,0.7); }
+
+.download-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 32px;
+}
+
+.platform { flex: 1; text-align: center; }
+
+.platform h2 { font-size: 1.3rem; font-weight: 600; margin: 12px 0 8px; }
+
+.platform p { color: #666; font-size: 0.9rem; margin-bottom: 20px; }
+
+.btn-download {
+    background: #00b5e2 !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    font-size: 1rem !important;
+    margin-bottom: 12px;
+}
+
+.hint {
+    font-size: 0.8rem !important;
+    color: #999 !important;
+    margin-top: 12px !important;
+}
+
+.divider { width: 1px; height: 160px; background: #eee; }
+
+.steps-install {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.steps-install h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 24px; }
+
+.steps { display: flex; flex-direction: column; gap: 16px; }
+
+.step { display: flex; align-items: center; gap: 16px; }
+
+.step-num {
+    width: 36px; height: 36px;
+    background: #00b5e2;
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step p { color: #444; margin: 0; }
+
+@media (max-width: 600px) {
+    .download-card { flex-direction: column; }
+    .divider { width: 100%; height: 1px; }
+}
