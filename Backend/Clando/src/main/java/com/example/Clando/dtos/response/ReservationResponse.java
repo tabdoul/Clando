@@ -30,6 +30,9 @@ public class ReservationResponse {
     private Double latitudeConducteur;
     private Double longitudeConducteur;
     private LocalDateTime dateConfirmation;
+    private double prix;
+    private String departPassager;
+    private String arriveePassager;
 
     public ReservationResponse() {}
 
@@ -101,9 +104,17 @@ public class ReservationResponse {
 
     public Double getLongitudeConducteur() { return longitudeConducteur; }
     public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
+    public double getPrix() { return prix; }
+    public void setPrix(double v) { this.prix = v; }
 
     public LocalDateTime getDateConfirmation() { return dateConfirmation; }
     public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }
+
+    public String getDepartPassager() { return departPassager; }
+    public void setDepartPassager(String v) { this.departPassager = v; }
+
+    public String getArriveePassager() { return arriveePassager; }
+    public void setArriveePassager(String v) { this.arriveePassager = v; }
 
     public static Builder builder() { return new Builder(); }
 
@@ -133,6 +144,9 @@ public class ReservationResponse {
         public Builder latitudeConducteur(Double val) { r.latitudeConducteur = val; return this; }
         public Builder longitudeConducteur(Double val) { r.longitudeConducteur = val; return this; }
         public Builder dateConfirmation(LocalDateTime val) { r.dateConfirmation = val; return this; }
+        public Builder prix(double val) { r.prix = val; return this; }
+        public Builder departPassager(String val) { r.departPassager = val; return this; }
+        public Builder arriveePassager(String val) { r.arriveePassager = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

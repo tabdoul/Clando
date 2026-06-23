@@ -59,6 +59,12 @@ public class Reservation {
     @Column
     private LocalDateTime dateConfirmation;
 
+    @Column
+    private String departPassager;
+
+    @Column
+    private String arriveePassager;
+
     public enum StatutReservation {
         EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, TERMINEE
     }
@@ -114,6 +120,12 @@ public class Reservation {
 
     public LocalDateTime getDateConfirmation() { return dateConfirmation; }
     public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }
+
+    public String getDepartPassager() { return departPassager; }
+    public void setDepartPassager(String v) { this.departPassager = v; }
+
+    public String getArriveePassager() { return arriveePassager; }
+    public void setArriveePassager(String v) { this.arriveePassager = v; }
 
     public static Builder builder() { return new Builder(); }
 

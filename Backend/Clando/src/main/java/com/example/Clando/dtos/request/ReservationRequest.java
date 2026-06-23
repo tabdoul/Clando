@@ -16,6 +16,12 @@ public class ReservationRequest {
     private Double prixPropose;
     private String numeroTelephone;
 
+    @NotBlank(message = "Le point de depart du passager est obligatoire")
+    private String departPassager;
+
+    @NotBlank(message = "Le point d'arrivee du passager est obligatoire")
+    private String arriveePassager;
+
     public ReservationRequest() {}
 
     public int getNbPlaces() { return nbPlaces; }
@@ -32,4 +38,10 @@ public class ReservationRequest {
 
     public String getNumeroTelephone() { return numeroTelephone; }
     public void setNumeroTelephone(String numeroTelephone) { this.numeroTelephone = numeroTelephone; }
+
+    public String getDepartPassager() { return departPassager; }
+    public void setDepartPassager(String v) { this.departPassager = v; }
+
+    public String getArriveePassager() { return arriveePassager; }
+    public void setArriveePassager(String v) { this.arriveePassager = v; }
 }

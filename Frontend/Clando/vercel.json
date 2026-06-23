@@ -1,5 +1,0 @@
-{
-    "buildCommand": "npx ng build",
-    "outputDirectory": "dist/Clando/browser",
-    "framework": "angular"
-}

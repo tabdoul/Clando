@@ -71,6 +71,8 @@ public class ReservationService {
         reservation.setStatut(Reservation.StatutReservation.EN_ATTENTE);
         reservation.setDateReservation(LocalDate.now());
         reservation.setNbTentatives(0);
+        reservation.setDepartPassager(request.getDepartPassager());
+        reservation.setArriveePassager(request.getArriveePassager());
 
         if (request.getPrixPropose() != null &&
             !request.getPrixPropose().equals(trajet.getPrix())) {
@@ -342,6 +344,11 @@ public ReservationResponse initierPaiement(Long reservationId, String numeroTele
                 .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
                 .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
                 .dateConfirmation(r.getDateConfirmation())
+                .prix(Math.round(r.getTrajet().getPrix() * 1.13))
+                .departPassager(r.getDepartPassager())
+                .arriveePassager(r.getArriveePassager())
+                .departPassager(r.getDepartPassager())
+                .arriveePassager(r.getArriveePassager())
                 .build();
     }
 }

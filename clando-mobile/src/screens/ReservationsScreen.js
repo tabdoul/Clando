@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl, Linking, Modal, Image
+    TextInput, RefreshControl, Linking, Modal, Image, Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
 
-// ✅ Composant compte à rebours
 const CompteARebours = ({ dateConfirmation }) => {
     const [tempsRestant, setTempsRestant] = useState('');
     const [expire, setExpire] = useState(false);
@@ -32,7 +31,6 @@ const CompteARebours = ({ dateConfirmation }) => {
                 setTempsRestant(`${minutes}m ${secondes < 10 ? '0' : ''}${secondes}s`);
             }
         }, 1000);
-
         return () => clearInterval(interval);
     }, [dateConfirmation]);
 
@@ -42,15 +40,8 @@ const CompteARebours = ({ dateConfirmation }) => {
             backgroundColor: expire ? '#3a1a1a' : '#1a2a1a',
             borderRadius: 8, padding: 8, marginBottom: 8
         }}>
-            <Ionicons
-                name="time-outline"
-                size={14}
-                color={expire ? '#e74c3c' : '#2ecc71'}
-            />
-            <Text style={{
-                fontSize: 12, fontWeight: '600',
-                color: expire ? '#e74c3c' : '#2ecc71'
-            }}>
+            <Ionicons name="time-outline" size={14} color={expire ? '#e74c3c' : '#2ecc71'} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: expire ? '#e74c3c' : '#2ecc71' }}>
                 {expire ? 'Delai expire' : `Temps restant pour payer : ${tempsRestant}`}
             </Text>
         </View>
@@ -113,36 +104,35 @@ export default function ReservationsScreen({ navigation }) {
             setLoadingCopassagers(false);
         }
     };
-    const ouvrirModalPaiement = (reservation) => {
-    setReservationAPayer(reservation);
-    setNumeroPaiement('');
-    setShowModalPaiement(true);
-};
 
+    const ouvrirModalPaiement = (reservation) => {
+        setReservationAPayer(reservation);
+        setNumeroPaiement('');
+        setShowModalPaiement(true);
+    };
 
     const initierPaiement = async () => {
-    if (!numeroPaiement || numeroPaiement.trim() === '') {
-        Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
-        return;
-    }
-
-    setLoadingPaiement(true);
-    try {
-        await api.post(
-            `/reservations/${reservationAPayer.id}/payer?numeroTelephone=${numeroPaiement.trim()}`
-        );
-        setShowModalPaiement(false);
-        Alert.alert(
-            'Demande de paiement envoyee !',
-            'Vous allez recevoir une notification Orange Money sur votre telephone. Confirmez le paiement avec votre code PIN.',
-            [{ text: 'OK', onPress: () => chargerReservations() }]
-        );
-    } catch (err) {
-        Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
-    } finally {
-        setLoadingPaiement(false);
-    }
-};
+        if (!numeroPaiement || numeroPaiement.trim() === '') {
+            Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
+            return;
+        }
+        setLoadingPaiement(true);
+        try {
+            await api.post(
+                `/reservations/${reservationAPayer.id}/payer?numeroTelephone=${numeroPaiement.trim()}`
+            );
+            setShowModalPaiement(false);
+            Alert.alert(
+                'Demande de paiement envoyee !',
+                'Vous allez recevoir une notification Orange Money. Confirmez avec votre code PIN.',
+                [{ text: 'OK', onPress: () => chargerReservations() }]
+            );
+        } catch (err) {
+            Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
+        } finally {
+            setLoadingPaiement(false);
+        }
+    };
 
     const reservationsEnCours = reservations.filter(r =>
         ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut)
@@ -231,7 +221,6 @@ export default function ReservationsScreen({ navigation }) {
 
                     <View style={styles.separator} />
 
-                    {/* Compte à rebours si confirmée et non payée */}
                     {doitPayer && item.dateConfirmation && (
                         <CompteARebours dateConfirmation={item.dateConfirmation} />
                     )}
@@ -246,6 +235,17 @@ export default function ReservationsScreen({ navigation }) {
                                 <Ionicons name="person-outline" size={14} color="#666" />
                                 <Text style={styles.detailText}>{item.nbPlaces} place(s)</Text>
                             </View>
+
+                            {/* ✅ Trajet passager */}
+                            {item.departPassager && item.arriveePassager && (
+                                <View style={styles.detailRow}>
+                                    <Ionicons name="location-outline" size={14} color="#f39c12" />
+                                    <Text style={[styles.detailText, { color: '#f39c12' }]}>
+                                        {item.departPassager} → {item.arriveePassager}
+                                    </Text>
+                                </View>
+                            )}
+
                             {item.prixPropose && (
                                 <View style={styles.detailRow}>
                                     <Ionicons name="cash-outline" size={14} color="#00b5e2" />
@@ -289,17 +289,15 @@ export default function ReservationsScreen({ navigation }) {
                                         <Text style={styles.boutonCopassagersText}>Copassagers</Text>
                                     </TouchableOpacity>
 
-                                    {/* Bouton Payer si non payé */}
                                     {doitPayer && (
-    <TouchableOpacity
-        style={styles.boutonPayer}
-        onPress={() => ouvrirModalPaiement(item)}>
-        <Ionicons name="phone-portrait-outline" size={14} color="white" />
-        <Text style={styles.boutonPayerText}>Payer avec OM</Text>
-    </TouchableOpacity>
-)}
+                                        <TouchableOpacity
+                                            style={styles.boutonPayer}
+                                            onPress={() => ouvrirModalPaiement(item)}>
+                                            <Ionicons name="phone-portrait-outline" size={14} color="white" />
+                                            <Text style={styles.boutonPayerText}>Payer avec OM</Text>
+                                        </TouchableOpacity>
+                                    )}
 
-                                    {/* Lien paiement en attente */}
                                     {item.urlPaiement && item.statutPaiement === 'PENDING' && (
                                         <TouchableOpacity
                                             style={styles.boutonPayerLien}
@@ -429,6 +427,7 @@ export default function ReservationsScreen({ navigation }) {
                 <View style={{ height: 30 }} />
             </ScrollView>
 
+            {/* Modal copassagers */}
             <Modal
                 visible={showCopassagers}
                 transparent={true}
@@ -483,77 +482,95 @@ export default function ReservationsScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
+
+            {/* Modal paiement OM */}
             <Modal
-    visible={showModalPaiement}
-    transparent={true}
-    animationType="slide"
-    onRequestClose={() => setShowModalPaiement(false)}>
-    <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-                <View>
-                    <Text style={styles.modalTitle}>Paiement Orange Money</Text>
-                    {reservationAPayer && (
-                        <Text style={styles.modalSubtitle}>
-                            {reservationAPayer.villeDepart} → {reservationAPayer.villeArrivee}
-                        </Text>
-                    )}
+                visible={showModalPaiement}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowModalPaiement(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View style={styles.modalHeader}>
+                            <View>
+                                <Text style={styles.modalTitle}>Paiement Orange Money</Text>
+                                {reservationAPayer && (
+                                    <Text style={styles.modalSubtitle}>
+                                        {reservationAPayer.departPassager || reservationAPayer.villeDepart} → {reservationAPayer.arriveePassager || reservationAPayer.villeArrivee}
+                                    </Text>
+                                )}
+                            </View>
+                            <TouchableOpacity onPress={() => setShowModalPaiement(false)}>
+                                <Ionicons name="close" size={24} color="#eee" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* ✅ Détail du prix */}
+                        <View style={styles.paiementDetail}>
+                            <View style={styles.paiementDetailLigne}>
+                                <Text style={styles.paiementDetailLabel}>Prix trajet</Text>
+                                <Text style={styles.paiementDetailValeur}>
+                                    {reservationAPayer ? Math.round((reservationAPayer.prix || 0) / 1.13).toLocaleString() : 0} GNF
+                                </Text>
+                            </View>
+                            <View style={styles.paiementDetailLigne}>
+                                <Text style={styles.paiementDetailLabel}>Frais de service (13%)</Text>
+                                <Text style={styles.paiementDetailValeur}>
+                                    {reservationAPayer ? Math.round((reservationAPayer.prix || 0) - (reservationAPayer.prix || 0) / 1.13).toLocaleString() : 0} GNF
+                                </Text>
+                            </View>
+                            <View style={styles.paiementDetailSeparator} />
+                            <View style={styles.paiementDetailLigne}>
+                                <Text style={[styles.paiementDetailLabel, { fontWeight: 'bold', color: '#eee' }]}>Total à payer</Text>
+                                <Text style={[styles.paiementDetailValeur, { color: '#00b5e2', fontWeight: 'bold', fontSize: 18 }]}>
+                                    {reservationAPayer?.prix?.toLocaleString() || 0} GNF
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Info */}
+                        <View style={styles.paiementInfo}>
+                            <Ionicons name="information-circle-outline" size={16} color="#f39c12" />
+                            <Text style={styles.paiementInfoTexte}>
+                                Vous recevrez une notification Orange Money. Confirmez avec votre code PIN.
+                            </Text>
+                        </View>
+
+                        {/* Numéro OM */}
+                        <Text style={styles.paiementLabel}>Votre numéro Orange Money</Text>
+                        <View style={styles.paiementInput}>
+                            <Ionicons name="phone-portrait-outline" size={18} color="#f39c12" />
+                            <TextInput
+                                style={styles.paiementInputText}
+                                placeholder="Ex: 620000000"
+                                placeholderTextColor="#666"
+                                value={numeroPaiement}
+                                onChangeText={setNumeroPaiement}
+                                keyboardType="phone-pad"
+                                maxLength={12}
+                                returnKeyType="done"
+                                onSubmitEditing={() => Keyboard.dismiss()}
+                            />
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.boutonConfirmerPaiement, loadingPaiement && { opacity: 0.7 }]}
+                            onPress={initierPaiement}
+                            disabled={loadingPaiement}>
+                            {loadingPaiement ? (
+                                <ActivityIndicator color="white" size={20} />
+                            ) : (
+                                <>
+                                    <Ionicons name="phone-portrait-outline" size={18} color="white" />
+                                    <Text style={styles.boutonConfirmerPaiementText}>
+                                        Confirmer le paiement OM
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <TouchableOpacity onPress={() => setShowModalPaiement(false)}>
-                    <Ionicons name="close" size={24} color="#eee" />
-                </TouchableOpacity>
-            </View>
-
-            {/* Montant */}
-            <View style={styles.paiementMontant}>
-                <Text style={styles.paiementMontantLabel}>Montant à payer</Text>
-                <Text style={styles.paiementMontantValeur}>
-                    {reservationAPayer?.prixPropose?.toLocaleString() || 
-                     'Prix du trajet'} GNF
-                </Text>
-            </View>
-
-            {/* Info */}
-            <View style={styles.paiementInfo}>
-                <Ionicons name="information-circle-outline" size={16} color="#f39c12" />
-                <Text style={styles.paiementInfoTexte}>
-                    Vous recevrez une notification Orange Money pour confirmer le paiement avec votre code PIN.
-                </Text>
-            </View>
-
-            {/* Numéro OM */}
-            <Text style={styles.paiementLabel}>Votre numéro Orange Money</Text>
-            <View style={styles.paiementInput}>
-                <Ionicons name="phone-portrait-outline" size={18} color="#f39c12" />
-                <TextInput
-                    style={styles.paiementInputText}
-                    placeholder="Ex: 620000000"
-                    placeholderTextColor="#666"
-                    value={numeroPaiement}
-                    onChangeText={setNumeroPaiement}
-                    keyboardType="phone-pad"
-                    maxLength={12}
-                />
-            </View>
-
-            <TouchableOpacity
-                style={[styles.boutonConfirmerPaiement, loadingPaiement && { opacity: 0.7 }]}
-                onPress={initierPaiement}
-                disabled={loadingPaiement}>
-                {loadingPaiement ? (
-                    <ActivityIndicator color="white" size={20} />
-                ) : (
-                    <>
-                        <Ionicons name="phone-portrait-outline" size={18} color="white" />
-                        <Text style={styles.boutonConfirmerPaiementText}>
-                            Confirmer le paiement OM
-                        </Text>
-                    </>
-                )}
-            </TouchableOpacity>
-        </View>
-    </View>
-</Modal>
+            </Modal>
         </View>
     );
 }
@@ -598,7 +615,7 @@ const styles = StyleSheet.create({
     boutonAvisText: { color: '#f39c12', fontSize: 13, fontWeight: '600' },
     boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 16 },
     boutonAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
-    boutonPayer: { backgroundColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    boutonPayer: { backgroundColor: '#f39c12', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
     boutonPayerText: { color: 'white', fontSize: 13, fontWeight: '600' },
     boutonPayerLien: { borderWidth: 1, borderColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
     boutonPayerLienText: { color: '#00b5e2', fontSize: 13, fontWeight: '600' },
@@ -610,7 +627,7 @@ const styles = StyleSheet.create({
     boutonProposer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
     boutonProposerText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-    modalCard: { backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '75%', borderTopWidth: 1, borderColor: '#2a2a2a' },
+    modalCard: { backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%', borderTopWidth: 1, borderColor: '#2a2a2a' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
     modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
     modalSubtitle: { fontSize: 13, color: '#888', marginTop: 4 },
@@ -622,32 +639,16 @@ const styles = StyleSheet.create({
     passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
-    paiementMontant: {
-    backgroundColor: '#252525', borderRadius: 12,
-    padding: 16, marginBottom: 16, alignItems: 'center'
-},
-paiementMontantLabel: { fontSize: 13, color: '#888', marginBottom: 4 },
-paiementMontantValeur: { fontSize: 24, fontWeight: 'bold', color: '#00b5e2' },
-paiementInfo: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: '#2a2a1a', borderRadius: 10, padding: 12, marginBottom: 16,
-},
-paiementInfoTexte: { fontSize: 13, color: '#f39c12', flex: 1, lineHeight: 20 },
-paiementLabel: {
-    fontSize: 12, fontWeight: '600', color: '#888',
-    marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1
-},
-paiementInput: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#252525', borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#f39c12', marginBottom: 20,
-},
-paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
-boutonConfirmerPaiement: {
-    backgroundColor: '#f39c12', borderRadius: 12,
-    padding: 16, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center', gap: 8,
-},
-boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    paiementDetail: { backgroundColor: '#252525', borderRadius: 12, padding: 16, marginBottom: 16 },
+    paiementDetailLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+    paiementDetailLabel: { fontSize: 13, color: '#888' },
+    paiementDetailValeur: { fontSize: 13, color: '#ddd', textAlign: 'right', flex: 1, marginLeft: 8 },
+    paiementDetailSeparator: { height: 1, backgroundColor: '#333', marginVertical: 6 },
+    paiementInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#2a2a1a', borderRadius: 10, padding: 12, marginBottom: 16 },
+    paiementInfoTexte: { fontSize: 13, color: '#f39c12', flex: 1, lineHeight: 20 },
+    paiementLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+    paiementInput: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#252525', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4, borderWidth: 1, borderColor: '#f39c12', marginBottom: 20 },
+    paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
+    boutonConfirmerPaiement: { backgroundColor: '#f39c12', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 });

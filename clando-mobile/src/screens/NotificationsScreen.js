@@ -41,7 +41,7 @@ export default function NotificationsScreen({ navigation }) {
 
     const accepter = async (id) => {
         try {
-            await api.patch(`/reservations/${id}/statut?statut=CONFIRMEE`);
+            await api.patch(`/reservations/${id}/negociation?accepter=true`);
             chargerNotifications();
         } catch (error) {
             Alert.alert('Erreur', "Impossible d'accepter");
@@ -56,7 +56,7 @@ export default function NotificationsScreen({ navigation }) {
                 style: 'destructive',
                 onPress: async () => {
                     try {
-                        await api.patch(`/reservations/${id}/statut?statut=REFUSEE`);
+                        await api.patch(`/reservations/${id}/negociation?accepter=false`);
                         chargerNotifications();
                     } catch (error) {
                         Alert.alert('Erreur', 'Impossible de refuser');
@@ -64,37 +64,6 @@ export default function NotificationsScreen({ navigation }) {
                 }
             }
         ]);
-    };
-
-    const accepterNegociation = async (id) => {
-        try {
-            await api.patch(`/reservations/${id}/negociation?accepter=true`);
-            chargerNotifications();
-        } catch (error) {
-            Alert.alert('Erreur', "Impossible d'accepter");
-        }
-    };
-
-    const refuserNegociation = async (id) => {
-        Alert.alert(
-            'Refuser le prix',
-            "Le passager pourra faire une 2ème proposition si c'est son 1er refus.",
-            [
-                { text: 'Annuler', style: 'cancel' },
-                {
-                    text: 'Refuser',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await api.patch(`/reservations/${id}/negociation?accepter=false`);
-                            chargerNotifications();
-                        } catch (error) {
-                            Alert.alert('Erreur', 'Impossible de refuser');
-                        }
-                    }
-                }
-            ]
-        );
     };
 
     const formatDate = (dateString) => {
@@ -156,7 +125,7 @@ export default function NotificationsScreen({ navigation }) {
                                 <View style={styles.avatarContainer}>
                                     {item.passagerPhoto ? (
                                         <Image
-                                            source={{ uri: `https://clando-production.up.railway.app:8080/${item.passagerPhoto.replace(/\\/g, '/')}` }}
+                                            source={{ uri: item.passagerPhoto }}
                                             style={styles.avatarImage}
                                         />
                                     ) : (
@@ -169,7 +138,7 @@ export default function NotificationsScreen({ navigation }) {
                                 </View>
                                 <View style={styles.passagerInfo}>
                                     <Text style={styles.passagerNom}>
-                                        {item.passagerNom} {item.passagerPrenom}
+                                        {item.passagerPrenom} {item.passagerNom}
                                     </Text>
                                     <Text style={styles.passagerSubtitle}>
                                         veut réserver votre trajet
@@ -179,12 +148,23 @@ export default function NotificationsScreen({ navigation }) {
 
                             <View style={styles.separator} />
 
+                            {/* Trajet du conducteur */}
                             <View style={styles.trajetRow}>
                                 <Ionicons name="car-outline" size={16} color="#00b5e2" />
                                 <Text style={styles.trajetText}>
                                     {item.villeDepart} → {item.villeArrivee}
                                 </Text>
                             </View>
+
+                            {/* ✅ Trajet du passager */}
+                            {item.departPassager && item.arriveePassager && (
+                                <View style={styles.trajetPassagerContainer}>
+                                    <Ionicons name="person-outline" size={14} color="#f39c12" />
+                                    <Text style={styles.trajetPassagerTexte}>
+                                        Passager : {item.departPassager} → {item.arriveePassager}
+                                    </Text>
+                                </View>
+                            )}
 
                             <View style={styles.detailRow}>
                                 <Ionicons name="calendar-outline" size={14} color="#666" />
@@ -212,37 +192,20 @@ export default function NotificationsScreen({ navigation }) {
                             <View style={styles.separator} />
 
                             <View style={styles.boutons}>
-                                {item.prixPropose ? (
-                                    <>
-                                        <TouchableOpacity
-                                            style={styles.boutonAccepter}
-                                            onPress={() => accepterNegociation(item.id)}>
-                                            <Ionicons name="checkmark" size={16} color="white" />
-                                            <Text style={styles.boutonAccepterText}>Accepter le prix</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.boutonRefuser}
-                                            onPress={() => refuserNegociation(item.id)}>
-                                            <Ionicons name="close" size={16} color="#e74c3c" />
-                                            <Text style={styles.boutonRefuserText}>Refuser</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                ) : (
-                                    <>
-                                        <TouchableOpacity
-                                            style={styles.boutonAccepter}
-                                            onPress={() => accepter(item.id)}>
-                                            <Ionicons name="checkmark" size={16} color="white" />
-                                            <Text style={styles.boutonAccepterText}>Accepter</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.boutonRefuser}
-                                            onPress={() => refuser(item.id)}>
-                                            <Ionicons name="close" size={16} color="#e74c3c" />
-                                            <Text style={styles.boutonRefuserText}>Refuser</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
+                                <TouchableOpacity
+                                    style={styles.boutonAccepter}
+                                    onPress={() => accepter(item.id)}>
+                                    <Ionicons name="checkmark" size={16} color="white" />
+                                    <Text style={styles.boutonAccepterText}>
+                                        {item.prixPropose ? 'Accepter le prix' : 'Accepter'}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.boutonRefuser}
+                                    onPress={() => refuser(item.id)}>
+                                    <Ionicons name="close" size={16} color="#e74c3c" />
+                                    <Text style={styles.boutonRefuserText}>Refuser</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>
@@ -286,9 +249,7 @@ const styles = StyleSheet.create({
         borderLeftWidth: 3, borderLeftColor: '#00b5e2',
     },
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    avatarContainer: {
-        width: 44, height: 44, borderRadius: 22, overflow: 'hidden',
-    },
+    avatarContainer: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden' },
     avatar: {
         width: 44, height: 44, borderRadius: 22,
         backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
@@ -299,13 +260,15 @@ const styles = StyleSheet.create({
     passagerNom: { fontSize: 15, fontWeight: '600', color: '#eee' },
     passagerSubtitle: { fontSize: 12, color: '#888', marginTop: 2 },
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
-    trajetRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8
-    },
+    trajetRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
     trajetText: { fontSize: 14, fontWeight: '600', color: '#ddd' },
-    detailRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6
+    trajetPassagerContainer: {
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: '#2a2a1a', borderRadius: 8,
+        padding: 8, marginBottom: 8,
     },
+    trajetPassagerTexte: { fontSize: 13, color: '#f39c12', flex: 1 },
+    detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
     detailText: { fontSize: 13, color: '#888' },
     prixNegociation: {
         backgroundColor: '#0a2a35', borderRadius: 10, padding: 12,

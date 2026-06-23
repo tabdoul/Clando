@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
     ScrollView, Alert, Image, ActivityIndicator,
-    Linking, Modal, TextInput, Keyboard,
+    Modal, TextInput, Keyboard,
     KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { QUARTIERS_CONAKRY } from '../constants/QUARTIERS_CONAKRY';
 
 export default function TrajetDetailScreen({ route, navigation }) {
     const { trajet } = route.params;
@@ -20,6 +21,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [passagers, setPassagers] = useState([]);
     const [loadingPassagers, setLoadingPassagers] = useState(false);
+
+    // Champs trajet passager
+    const [departPassager, setDepartPassager] = useState('');
+    const [arriveePassager, setArriveePassager] = useState('');
+    const [suggestionsDepart, setSuggestionsDepart] = useState([]);
+    const [suggestionsArrivee, setSuggestionsArrivee] = useState([]);
+    const [champActif, setChampActif] = useState(null);
 
     useEffect(() => {
         chargerAvis();
@@ -67,27 +75,51 @@ export default function TrajetDetailScreen({ route, navigation }) {
         }
     };
 
+    const filtrerSuggestions = (texte) => {
+        if (!texte || texte.length < 2) return [];
+        const normalise = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return QUARTIERS_CONAKRY.filter(q =>
+            normalise(q).includes(normalise(texte))
+        ).slice(0, 5);
+    };
+
+    const onChangeDepartPassager = (texte) => {
+        setDepartPassager(texte);
+        setChampActif('depart');
+        setSuggestionsDepart(filtrerSuggestions(texte));
+    };
+
+    const onChangeArriveePassager = (texte) => {
+        setArriveePassager(texte);
+        setChampActif('arrivee');
+        setSuggestionsArrivee(filtrerSuggestions(texte));
+    };
+
+    const choisirSuggestion = (quartier) => {
+        if (champActif === 'depart') {
+            setDepartPassager(quartier);
+            setSuggestionsDepart([]);
+        } else {
+            setArriveePassager(quartier);
+            setSuggestionsArrivee([]);
+        }
+        setChampActif(null);
+        Keyboard.dismiss();
+    };
+
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit', minute: '2-digit', hour12: false
-        });
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', {
-            weekday: 'long', day: 'numeric', month: 'long'
-        });
+        return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     };
 
     const handleReserverPress = () => {
         if (trajet.femmesUniquement && genreUtilisateur === 'HOMME') {
-            Alert.alert(
-                'Acces refuse',
-                'Ce trajet est reserve aux femmes uniquement.',
-                [{ text: 'Compris', style: 'default' }]
-            );
+            Alert.alert('Acces refuse', 'Ce trajet est reserve aux femmes uniquement.');
             return;
         }
         setShowConfirmModal(true);
@@ -98,6 +130,11 @@ export default function TrajetDetailScreen({ route, navigation }) {
         const userId = await getUserId();
         if (!userId) {
             Alert.alert('Erreur', 'Veuillez vous reconnecter');
+            return;
+        }
+
+        if (!departPassager.trim() || !arriveePassager.trim()) {
+            Alert.alert('Erreur', "Veuillez indiquer votre point de depart et d'arrivee");
             return;
         }
 
@@ -114,12 +151,14 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 passagerId: userId,
                 trajetId: trajet.id,
                 prixPropose: prixFinal !== trajet.prix ? prixFinal : null,
+                departPassager: departPassager.trim(),
+                arriveePassager: arriveePassager.trim(),
             });
 
             setShowConfirmModal(false);
             Alert.alert(
                 'Demande envoyee !',
-                'Votre demande de reservation a ete envoyee au conducteur. Vous serez notifie des qu\'il confirme.',
+                'Le conducteur va examiner votre demande. Vous serez notifie des qu\'il confirme.',
                 [{
                     text: 'Voir mes reservations',
                     onPress: () => navigation.navigate('Main', { screen: 'Reservations' })
@@ -135,12 +174,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
     const renderEtoiles = (note) => {
         return [1, 2, 3, 4, 5].map((i) => (
-            <Ionicons
-                key={i}
-                name={i <= note ? 'star' : 'star-outline'}
-                size={14}
-                color="#f39c12"
-            />
+            <Ionicons key={i} name={i <= note ? 'star' : 'star-outline'} size={14} color="#f39c12" />
         ));
     };
 
@@ -160,7 +194,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-
                 <View style={styles.dateContainer}>
                     <Text style={styles.dateText}>{formatDate(trajet.dateHeureDepart)}</Text>
                     {trajet.femmesUniquement && (
@@ -201,23 +234,17 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     <View style={styles.card}>
                         <View style={styles.infoRow}>
                             <Ionicons name="people-outline" size={18} color="#00b5e2" />
-                            <Text style={styles.infoText}>
-                                {trajet.placesDisponibles} place(s) disponible(s)
-                            </Text>
+                            <Text style={styles.infoText}>{trajet.placesDisponibles} place(s) disponible(s)</Text>
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <Ionicons name="car-outline" size={18} color="#00b5e2" />
-                            <Text style={styles.infoText}>
-                                {trajet.vehiculeMarque} {trajet.vehiculeModele}
-                            </Text>
+                            <Text style={styles.infoText}>{trajet.vehiculeMarque} {trajet.vehiculeModele}</Text>
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <Ionicons name="information-circle-outline" size={18} color="#888" />
-                            <Text style={styles.infoText}>
-                                Paiement requis apres confirmation du conducteur
-                            </Text>
+                            <Text style={styles.infoText}>Paiement apres confirmation du conducteur</Text>
                         </View>
                     </View>
                 </View>
@@ -244,9 +271,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                             </View>
                                         )}
                                         <View style={styles.passagerInfos}>
-                                            <Text style={styles.passagerNom}>
-                                                {item.passagerPrenom} {item.passagerNom}
-                                            </Text>
+                                            <Text style={styles.passagerNom}>{item.passagerPrenom} {item.passagerNom}</Text>
+                                            {/* ✅ Trajet du passager visible par le conducteur */}
+                                            {estConducteur && item.departPassager && item.arriveePassager && (
+                                                <Text style={styles.passagerTrajet}>
+                                                    {item.departPassager} → {item.arriveePassager}
+                                                </Text>
+                                            )}
                                         </View>
                                         <TouchableOpacity
                                             style={styles.passagerBtnChat}
@@ -273,10 +304,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <View style={styles.conducteurRow}>
                             <View style={styles.conducteurAvatar}>
                                 {trajet.conducteurPhoto ? (
-                                    <Image
-                                        source={{ uri: trajet.conducteurPhoto }}
-                                        style={styles.conducteurAvatarImage}
-                                    />
+                                    <Image source={{ uri: trajet.conducteurPhoto }} style={styles.conducteurAvatarImage} />
                                 ) : (
                                     <Text style={styles.conducteurAvatarText}>
                                         {trajet.conducteurPrenom?.charAt(0)}{trajet.conducteurNom?.charAt(0)}
@@ -284,19 +312,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 )}
                             </View>
                             <View style={styles.conducteurDetails}>
-                                <Text style={styles.conducteurNom}>
-                                    {trajet.conducteurPrenom} {trajet.conducteurNom}
-                                </Text>
+                                <Text style={styles.conducteurNom}>{trajet.conducteurPrenom} {trajet.conducteurNom}</Text>
                                 <View style={styles.conducteurStats}>
                                     <Ionicons name="star" size={14} color="#f39c12" />
                                     <Text style={styles.conducteurNote}>
-                                        {trajet.noteMoyenneConducteur > 0
-                                            ? trajet.noteMoyenneConducteur.toFixed(1)
-                                            : 'Nouveau'}
+                                        {trajet.noteMoyenneConducteur > 0 ? trajet.noteMoyenneConducteur.toFixed(1) : 'Nouveau'}
                                     </Text>
-                                    <Text style={styles.conducteurNbAvis}>
-                                        • {avis.length} avis
-                                    </Text>
+                                    <Text style={styles.conducteurNbAvis}>• {avis.length} avis</Text>
                                 </View>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color="#444" />
@@ -324,19 +346,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 trajetId: trajet.id
                             })}>
                             <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
-                            <Text style={styles.boutonContacterText}>
-                                Contacter {trajet.conducteurPrenom}
-                            </Text>
+                            <Text style={styles.boutonContacterText}>Contacter {trajet.conducteurPrenom}</Text>
                         </TouchableOpacity>
 
                         {aReservationConfirmee && trajet.conducteurTelephone ? (
-                            <Text style={styles.conducteurTel}>
-                                {trajet.conducteurTelephone}
-                            </Text>
+                            <Text style={styles.conducteurTel}>{trajet.conducteurTelephone}</Text>
                         ) : !estConducteur ? (
-                            <Text style={styles.infoSecurite}>
-                                Le numero sera visible apres confirmation
-                            </Text>
+                            <Text style={styles.infoSecurite}>Le numero sera visible apres confirmation</Text>
                         ) : null}
                     </View>
                 </View>
@@ -353,16 +369,10 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         avis.slice(0, 5).map((a) => (
                             <View key={a.id.toString()} style={styles.avisItem}>
                                 <View style={styles.avisHeader}>
-                                    <Text style={styles.avisAuteur}>
-                                        {a.auteurPrenom} {a.auteurNom}
-                                    </Text>
-                                    <View style={styles.avisEtoiles}>
-                                        {renderEtoiles(a.note)}
-                                    </View>
+                                    <Text style={styles.avisAuteur}>{a.auteurPrenom} {a.auteurNom}</Text>
+                                    <View style={styles.avisEtoiles}>{renderEtoiles(a.note)}</View>
                                 </View>
-                                {a.commentaire ? (
-                                    <Text style={styles.avisCommentaire}>{a.commentaire}</Text>
-                                ) : null}
+                                {a.commentaire ? <Text style={styles.avisCommentaire}>{a.commentaire}</Text> : null}
                             </View>
                         ))
                     )}
@@ -371,23 +381,16 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 <View style={{ height: 100 }} />
             </ScrollView>
 
-            {trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && (
+            {trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && !estConducteur && (
                 <View style={styles.bottomBar}>
                     <View style={styles.bottomPrix}>
                         <Text style={styles.bottomPrixLabel}>Prix</Text>
                         <Text style={styles.bottomPrixValeur}>{trajet.prix?.toLocaleString()} GNF</Text>
                     </View>
                     <TouchableOpacity
-                        style={[
-                            styles.boutonReserver,
-                            estBloqueParGenre && styles.boutonReserverBloque
-                        ]}
+                        style={[styles.boutonReserver, estBloqueParGenre && styles.boutonReserverBloque]}
                         onPress={handleReserverPress}>
-                        <Ionicons
-                            name={estBloqueParGenre ? 'lock-closed-outline' : 'calendar-outline'}
-                            size={18}
-                            color="white"
-                        />
+                        <Ionicons name={estBloqueParGenre ? 'lock-closed-outline' : 'calendar-outline'} size={18} color="white" />
                         <Text style={styles.boutonReserverText}>
                             {estBloqueParGenre ? 'Femmes uniquement' : 'Demande de reservation'}
                         </Text>
@@ -395,7 +398,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 </View>
             )}
 
-            {/* Modal confirmation sans paiement */}
             <Modal
                 visible={showConfirmModal}
                 transparent={true}
@@ -406,57 +408,122 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{ width: '100%' }}>
                         <View style={styles.modalCard}>
-                            <Text style={styles.modalTitle}>Demande de reservation</Text>
-                            <Text style={styles.modalSubtitle}>
-                                {trajet.villeDepart} → {trajet.villeArrivee}
-                            </Text>
+                            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                                <Text style={styles.modalTitle}>Demande de reservation</Text>
+                                <Text style={styles.modalSubtitle}>{trajet.villeDepart} → {trajet.villeArrivee}</Text>
 
-                            <View style={styles.modalInfo}>
-                                <Ionicons name="information-circle-outline" size={16} color="#00b5e2" />
-                                <Text style={styles.modalInfoText}>
-                                    Le conducteur doit confirmer votre reservation. Vous aurez ensuite 30 minutes pour payer.
-                                </Text>
-                            </View>
-
-                            <View style={styles.modalPrixOriginal}>
-                                <Text style={styles.modalPrixLabel}>Prix affiche</Text>
-                                <Text style={styles.modalPrixValeur}>
-                                    {trajet.prix?.toLocaleString()} GNF
-                                </Text>
-                            </View>
-
-                            <Text style={styles.modalLabel}>Votre proposition (optionnel)</Text>
-                            <View style={styles.modalInput}>
-                                <TextInput
-                                    style={styles.modalInputText}
-                                    value={prixPropose}
-                                    onChangeText={setPrixPropose}
-                                    keyboardType="numeric"
-                                    placeholderTextColor="#666"
-                                    returnKeyType="done"
-                                    onSubmitEditing={() => Keyboard.dismiss()}
-                                />
-                                <Text style={styles.modalDevise}>GNF</Text>
-                            </View>
-
-                            <View style={styles.modalBoutons}>
-                                <TouchableOpacity
-                                    style={styles.modalBoutonAnnuler}
-                                    onPress={() => {
-                                        Keyboard.dismiss();
-                                        setShowConfirmModal(false);
-                                    }}>
-                                    <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.modalBoutonConfirmer, loading && { opacity: 0.7 }]}
-                                    onPress={reserver}
-                                    disabled={loading}>
-                                    <Text style={styles.modalBoutonConfirmerText}>
-                                        {loading ? 'Envoi...' : 'Envoyer la demande'}
+                                <View style={styles.modalInfo}>
+                                    <Ionicons name="information-circle-outline" size={16} color="#00b5e2" />
+                                    <Text style={styles.modalInfoText}>
+                                        Indiquez votre point de depart et d'arrivee. Le conducteur confirmera et vous aurez 30 min pour payer.
                                     </Text>
-                                </TouchableOpacity>
-                            </View>
+                                </View>
+
+                                {/* Depart passager */}
+                                <Text style={styles.modalLabel}>Votre point de depart</Text>
+                                <View style={[styles.modalInput, champActif === 'depart' && { borderColor: '#00b5e2' }]}>
+                                    <Ionicons name="location-outline" size={18} color="#00b5e2" />
+                                    <TextInput
+                                        style={styles.modalInputText}
+                                        placeholder="Ex: Kissosso"
+                                        placeholderTextColor="#666"
+                                        value={departPassager}
+                                        onChangeText={onChangeDepartPassager}
+                                        onFocus={() => {
+                                            setChampActif('depart');
+                                            setSuggestionsDepart(filtrerSuggestions(departPassager));
+                                        }}
+                                        autoCapitalize="words"
+                                        returnKeyType="next"
+                                    />
+                                    {departPassager.length > 0 && (
+                                        <TouchableOpacity onPress={() => { setDepartPassager(''); setSuggestionsDepart([]); }}>
+                                            <Ionicons name="close-circle" size={16} color="#666" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                {champActif === 'depart' && suggestionsDepart.length > 0 && (
+                                    <View style={styles.suggestionsContainer}>
+                                        {suggestionsDepart.map((q) => (
+                                            <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
+                                                <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                                <Text style={styles.suggestionTexte}>{q}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
+
+                                {/* Arrivee passager */}
+                                <Text style={[styles.modalLabel, { marginTop: 12 }]}>Votre point d'arrivee</Text>
+                                <View style={[styles.modalInput, champActif === 'arrivee' && { borderColor: '#00b5e2' }]}>
+                                    <Ionicons name="location" size={18} color="#2ecc71" />
+                                    <TextInput
+                                        style={styles.modalInputText}
+                                        placeholder="Ex: Kaloum"
+                                        placeholderTextColor="#666"
+                                        value={arriveePassager}
+                                        onChangeText={onChangeArriveePassager}
+                                        onFocus={() => {
+                                            setChampActif('arrivee');
+                                            setSuggestionsArrivee(filtrerSuggestions(arriveePassager));
+                                        }}
+                                        autoCapitalize="words"
+                                        returnKeyType="next"
+                                    />
+                                    {arriveePassager.length > 0 && (
+                                        <TouchableOpacity onPress={() => { setArriveePassager(''); setSuggestionsArrivee([]); }}>
+                                            <Ionicons name="close-circle" size={16} color="#666" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                {champActif === 'arrivee' && suggestionsArrivee.length > 0 && (
+                                    <View style={styles.suggestionsContainer}>
+                                        {suggestionsArrivee.map((q) => (
+                                            <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
+                                                <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                                <Text style={styles.suggestionTexte}>{q}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
+
+                                {/* Prix */}
+                                <View style={[styles.modalPrixOriginal, { marginTop: 16 }]}>
+                                    <Text style={styles.modalPrixLabel}>Prix affiche</Text>
+                                    <Text style={styles.modalPrixValeur}>{trajet.prix?.toLocaleString()} GNF</Text>
+                                </View>
+
+                                <Text style={[styles.modalLabel, { marginTop: 12 }]}>Votre proposition (optionnel)</Text>
+                                <View style={styles.modalInput}>
+                                    <Ionicons name="cash-outline" size={18} color="#888" />
+                                    <TextInput
+                                        style={styles.modalInputText}
+                                        value={prixPropose}
+                                        onChangeText={setPrixPropose}
+                                        keyboardType="numeric"
+                                        placeholderTextColor="#666"
+                                        returnKeyType="done"
+                                        onSubmitEditing={() => Keyboard.dismiss()}
+                                    />
+                                    <Text style={styles.modalDevise}>GNF</Text>
+                                </View>
+
+                                <View style={[styles.modalBoutons, { marginTop: 20 }]}>
+                                    <TouchableOpacity
+                                        style={styles.modalBoutonAnnuler}
+                                        onPress={() => { Keyboard.dismiss(); setShowConfirmModal(false); }}>
+                                        <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.modalBoutonConfirmer, loading && { opacity: 0.7 }]}
+                                        onPress={reserver}
+                                        disabled={loading}>
+                                        <Text style={styles.modalBoutonConfirmerText}>
+                                            {loading ? 'Envoi...' : 'Envoyer la demande'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
                         </View>
                     </KeyboardAvoidingView>
                 </View>
@@ -468,8 +535,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#121212' },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
@@ -485,18 +551,12 @@ const styles = StyleSheet.create({
     femmesUniquementText: { color: '#9b59b6', fontSize: 13, fontWeight: '700' },
     section: { paddingHorizontal: 16, marginTop: 12 },
     sectionTitle: { fontSize: 16, fontWeight: '600', color: '#eee', marginBottom: 10 },
-    card: {
-        backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        borderWidth: 1, borderColor: '#2a2a2a',
-    },
+    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
     timeline: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
     timelineRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
     timelineHeure: { fontSize: 16, fontWeight: 'bold', color: '#eee', width: 52 },
     timelineCenter: { alignItems: 'center', marginHorizontal: 12, width: 16 },
-    timelineDot: {
-        width: 12, height: 12, borderRadius: 6,
-        backgroundColor: '#00b5e2', borderWidth: 2, borderColor: '#1e1e1e',
-    },
+    timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#00b5e2', borderWidth: 2, borderColor: '#1e1e1e' },
     timelineDotArrivee: { backgroundColor: '#2ecc71' },
     timelineLine: { width: 2, height: 40, backgroundColor: '#333', marginTop: 4 },
     timelineInfo: { flex: 1 },
@@ -511,22 +571,15 @@ const styles = StyleSheet.create({
         marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a', gap: 12,
     },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
-    passagerAvatarPlaceholder: {
-        width: 44, height: 44, borderRadius: 22,
-        backgroundColor: '#00b5e233',
-        alignItems: 'center', justifyContent: 'center',
-    },
+    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#00b5e233', alignItems: 'center', justifyContent: 'center' },
     passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
+    passagerTrajet: { color: '#f39c12', fontSize: 12, marginTop: 2 },
     passagerBtnChat: { padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20 },
     conducteurTel: { fontSize: 14, color: '#00b5e2', fontWeight: '600', marginTop: 8 },
     conducteurRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
-    conducteurAvatar: {
-        width: 52, height: 52, borderRadius: 26,
-        backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
-    },
+    conducteurAvatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
     conducteurAvatarImage: { width: 52, height: 52, borderRadius: 26 },
     conducteurAvatarText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     conducteurDetails: { flex: 1 },
@@ -537,10 +590,7 @@ const styles = StyleSheet.create({
     boutonContacter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
     boutonContacterText: { color: '#00b5e2', fontSize: 15, fontWeight: '600' },
     infoSecurite: { fontSize: 11, color: '#555', fontStyle: 'italic', marginTop: 4 },
-    avisItem: {
-        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12,
-        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a',
-    },
+    avisItem: { backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a' },
     avisHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
     avisAuteur: { fontSize: 13, fontWeight: '600', color: '#ddd' },
     avisEtoiles: { flexDirection: 'row', gap: 2 },
@@ -559,16 +609,14 @@ const styles = StyleSheet.create({
     bottomPrixValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
     boutonReserver: {
         flex: 2, backgroundColor: '#00b5e2', borderRadius: 12,
-        padding: 14, flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'center', gap: 8,
+        padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     },
     boutonReserverBloque: { backgroundColor: '#5a3a6a' },
     boutonReserverText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: {
-        backgroundColor: '#1e1e1e',
-        borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        padding: 24, borderTopWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: 24, maxHeight: '90%', borderTopWidth: 1, borderColor: '#2a2a2a',
     },
     modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#eee', marginBottom: 4 },
     modalSubtitle: { fontSize: 14, color: '#888', marginBottom: 16 },
@@ -577,23 +625,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#0a2a35', borderRadius: 10, padding: 12, marginBottom: 16,
     },
     modalInfoText: { fontSize: 13, color: '#00b5e2', flex: 1, lineHeight: 20 },
-    modalPrixOriginal: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 16,
-    },
-    modalPrixLabel: { fontSize: 14, color: '#888' },
-    modalPrixValeur: { fontSize: 16, fontWeight: 'bold', color: '#00b5e2' },
     modalLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
     modalInput: {
         flexDirection: 'row', alignItems: 'center',
         borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
-        paddingHorizontal: 12, backgroundColor: '#252525', marginBottom: 20,
+        paddingHorizontal: 12, backgroundColor: '#252525', marginBottom: 4,
     },
-    modalInputText: { flex: 1, padding: 12, fontSize: 16, color: '#eee' },
+    modalInputText: { flex: 1, padding: 12, fontSize: 15, color: '#eee' },
     modalDevise: { color: '#888', fontSize: 14 },
+    modalPrixOriginal: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 4,
+    },
+    modalPrixLabel: { fontSize: 14, color: '#888' },
+    modalPrixValeur: { fontSize: 16, fontWeight: 'bold', color: '#00b5e2' },
     modalBoutons: { flexDirection: 'row', gap: 12 },
     modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#444', borderRadius: 10, padding: 14, alignItems: 'center' },
     modalBoutonAnnulerText: { color: '#888', fontSize: 15, fontWeight: '600' },
     modalBoutonConfirmer: { flex: 1, backgroundColor: '#00b5e2', borderRadius: 10, padding: 14, alignItems: 'center' },
     modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+    suggestionsContainer: {
+        backgroundColor: '#252525', borderRadius: 10,
+        borderWidth: 1, borderColor: '#00b5e2',
+        marginBottom: 4, overflow: 'hidden',
+    },
+    suggestionItem: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        paddingVertical: 10, paddingHorizontal: 14,
+        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+    },
+    suggestionTexte: { color: '#eee', fontSize: 14 },
 });
