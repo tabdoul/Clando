@@ -14,13 +14,12 @@ import { QUARTIERS_CONAKRY } from '../constants/QUARTIERS_CONAKRY';
 export default function RechercheScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');
     const [villeArrivee, setVilleArrivee] = useState('');
-    const [dateDepart, setDateDepart] = useState(null);
+    const [dateDepart, setDateDepart] = useState(new Date()); // ✅ date du jour par défaut
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
     const [nbNotifications, setNbNotifications] = useState(0);
     const [historique, setHistorique] = useState([]);
     const [favoris, setFavoris] = useState([]);
-
     const [champActif, setChampActif] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
 
@@ -55,12 +54,7 @@ export default function RechercheScreen({ navigation }) {
 
     const sauvegarderHistorique = async (depart, arrivee) => {
         try {
-            const nouvelleRecherche = {
-                id: Date.now(),
-                depart,
-                arrivee,
-                date: new Date().toLocaleDateString('fr-FR')
-            };
+            const nouvelleRecherche = { id: Date.now(), depart, arrivee, date: new Date().toLocaleDateString('fr-FR') };
             const nouvelleListe = [
                 nouvelleRecherche,
                 ...historique.filter(h => !(h.depart === depart && h.arrivee === arrivee))
@@ -70,10 +64,23 @@ export default function RechercheScreen({ navigation }) {
         } catch (error) {}
     };
 
+    const effacerHistorique = async () => {
+        Alert.alert('Effacer', 'Supprimer tout l\'historique ?', [
+            { text: 'Non', style: 'cancel' },
+            {
+                text: 'Oui', style: 'destructive',
+                onPress: async () => {
+                    setHistorique([]);
+                    await AsyncStorage.removeItem('clando_historique');
+                }
+            }
+        ]);
+    };
+
     const toggleFavori = async (depart, arrivee) => {
         try {
             const existe = favoris.find(f => f.depart === depart && f.arrivee === arrivee);
-            let nouvelleListe = existe
+            const nouvelleListe = existe
                 ? favoris.filter(f => !(f.depart === depart && f.arrivee === arrivee))
                 : [...favoris, { id: Date.now(), depart, arrivee }];
             setFavoris(nouvelleListe);
@@ -81,8 +88,7 @@ export default function RechercheScreen({ navigation }) {
         } catch (error) {}
     };
 
-    const estFavori = (depart, arrivee) =>
-        favoris.some(f => f.depart === depart && f.arrivee === arrivee);
+    const estFavori = (depart, arrivee) => favoris.some(f => f.depart === depart && f.arrivee === arrivee);
 
     const utiliserRecherche = (depart, arrivee) => {
         setVilleDepart(depart);
@@ -97,17 +103,20 @@ export default function RechercheScreen({ navigation }) {
         await AsyncStorage.setItem('clando_historique', JSON.stringify(nouvelleListe));
     };
 
+    // ✅ Inverser départ et arrivée
+    const inverserVilles = () => {
+        const temp = villeDepart;
+        setVilleDepart(villeArrivee);
+        setVilleArrivee(temp);
+        setSuggestions([]);
+        setChampActif(null);
+    };
+
     const filtrerSuggestions = (texte) => {
-        if (!texte || texte.length < 2) {
-            setSuggestions([]);
-            return;
-        }
+        if (!texte || texte.length < 2) { setSuggestions([]); return; }
         const normalise = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         const texteNorm = normalise(texte);
-        const resultats = QUARTIERS_CONAKRY.filter(q =>
-            normalise(q).includes(texteNorm)
-        ).slice(0, 6);
-        setSuggestions(resultats);
+        setSuggestions(QUARTIERS_CONAKRY.filter(q => normalise(q).includes(texteNorm)).slice(0, 6));
     };
 
     const onChangeDepart = (texte) => {
@@ -136,18 +145,25 @@ export default function RechercheScreen({ navigation }) {
     };
 
     const formatDateAffichage = (date) => {
-        if (!date) return null;
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit', month: 'long', year: 'numeric'
-        });
+        if (!date) return 'Choisir une date';
+        const aujourd = new Date();
+        const demain = new Date();
+        demain.setDate(aujourd.getDate() + 1);
+
+        if (date.toDateString() === aujourd.toDateString()) return "Aujourd'hui";
+        if (date.toDateString() === demain.toDateString()) return 'Demain';
+        return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     };
 
-    const normaliser = (str) =>
-        str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normaliser = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     const rechercher = async () => {
         if (!villeDepart || !villeArrivee) {
-            Alert.alert('Erreur', 'Veuillez remplir les deux villes');
+            Alert.alert('Champs manquants', 'Veuillez saisir un point de depart et une destination.');
+            return;
+        }
+        if (normaliser(villeDepart.trim()) === normaliser(villeArrivee.trim())) {
+            Alert.alert('Erreur', 'Le depart et l\'arrivee ne peuvent pas etre identiques.');
             return;
         }
         fermerSuggestions();
@@ -165,7 +181,10 @@ export default function RechercheScreen({ navigation }) {
             await sauvegarderHistorique(villeDepart.trim(), villeArrivee.trim());
 
             if (response.data.content.length === 0) {
-                Alert.alert('Aucun trajet trouve', 'Aucun trajet disponible pour cette destination.');
+                Alert.alert(
+                    'Aucun trajet trouve',
+                    `Aucun trajet disponible de ${villeDepart} vers ${villeArrivee} pour le moment.`
+                );
             } else {
                 navigation.navigate('Resultats', {
                     trajets: response.data.content,
@@ -174,7 +193,7 @@ export default function RechercheScreen({ navigation }) {
                 });
             }
         } catch (error) {
-            Alert.alert('Erreur', 'Erreur lors de la recherche');
+            Alert.alert('Erreur de connexion', 'Impossible de se connecter au serveur. Verifiez votre connexion internet.');
         } finally {
             setLoading(false);
         }
@@ -186,6 +205,7 @@ export default function RechercheScreen({ navigation }) {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled">
 
+                {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <View style={{ width: 40 }} />
@@ -201,15 +221,18 @@ export default function RechercheScreen({ navigation }) {
                             )}
                         </TouchableOpacity>
                     </View>
-
                     <Text style={styles.headerSubtitle}>
-                        Trouvez votre covoiturage, partagez les frais et profitez du trajet en bonne compagnie
+                        Ou souhaitez-vous aller aujourd'hui ?
                     </Text>
                 </View>
 
+                {/* Carte de recherche */}
                 <View style={styles.searchCard}>
 
-                    <Text style={styles.fieldLabel}>Depart</Text>
+                    {/* Départ */}
+                    <Text style={styles.fieldLabel}>
+                        <Ionicons name="radio-button-on" size={12} color="#00b5e2" /> Depart
+                    </Text>
                     <View style={[styles.inputContainer, champActif === 'depart' && styles.inputContainerActif]}>
                         <Ionicons name="location-outline" size={18} color="#888" />
                         <TextInput
@@ -227,14 +250,10 @@ export default function RechercheScreen({ navigation }) {
                             </TouchableOpacity>
                         )}
                     </View>
-
                     {champActif === 'depart' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
-                                <TouchableOpacity
-                                    key={q}
-                                    style={styles.suggestionItem}
-                                    onPress={() => choisirSuggestion(q)}>
+                                <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
                                     <Ionicons name="location-outline" size={14} color="#00b5e2" />
                                     <Text style={styles.suggestionTexte}>{q}</Text>
                                 </TouchableOpacity>
@@ -242,7 +261,19 @@ export default function RechercheScreen({ navigation }) {
                         </View>
                     )}
 
-                    <Text style={styles.fieldLabel}>Arrivee</Text>
+                    {/* ✅ Bouton inverser */}
+                    <TouchableOpacity style={styles.inverserBtn} onPress={inverserVilles}>
+                        <View style={styles.inverserLigne} />
+                        <View style={styles.inverserIcone}>
+                            <Ionicons name="swap-vertical" size={18} color="#00b5e2" />
+                        </View>
+                        <View style={styles.inverserLigne} />
+                    </TouchableOpacity>
+
+                    {/* Arrivée */}
+                    <Text style={styles.fieldLabel}>
+                        <Ionicons name="radio-button-on" size={12} color="#2ecc71" /> Arrivee
+                    </Text>
                     <View style={[styles.inputContainer, champActif === 'arrivee' && styles.inputContainerActif]}>
                         <Ionicons name="location" size={18} color="#888" />
                         <TextInput
@@ -260,14 +291,10 @@ export default function RechercheScreen({ navigation }) {
                             </TouchableOpacity>
                         )}
                     </View>
-
                     {champActif === 'arrivee' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
-                                <TouchableOpacity
-                                    key={q}
-                                    style={styles.suggestionItem}
-                                    onPress={() => choisirSuggestion(q)}>
+                                <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
                                     <Ionicons name="location-outline" size={14} color="#00b5e2" />
                                     <Text style={styles.suggestionTexte}>{q}</Text>
                                 </TouchableOpacity>
@@ -275,7 +302,10 @@ export default function RechercheScreen({ navigation }) {
                         </View>
                     )}
 
-                    <Text style={styles.fieldLabel}>Date aller</Text>
+                    {/* Date */}
+                    <Text style={styles.fieldLabel}>
+                        <Ionicons name="calendar-outline" size={12} color="#888" /> Date du trajet
+                    </Text>
                     <TouchableOpacity
                         style={styles.inputContainer}
                         onPress={() => {
@@ -284,8 +314,8 @@ export default function RechercheScreen({ navigation }) {
                             setShowDatePicker(true);
                         }}>
                         <Ionicons name="calendar-outline" size={18} color="#888" />
-                        <Text style={[styles.input, !dateDepart && styles.placeholder]}>
-                            {dateDepart ? formatDateAffichage(dateDepart) : 'Choisir une date'}
+                        <Text style={[styles.input, { color: '#eee' }]}>
+                            {formatDateAffichage(dateDepart)}
                         </Text>
                         <Ionicons name="chevron-down" size={16} color="#888" />
                     </TouchableOpacity>
@@ -304,6 +334,7 @@ export default function RechercheScreen({ navigation }) {
                         />
                     )}
 
+                    {/* Bouton rechercher */}
                     <TouchableOpacity
                         style={[styles.searchButton, loading && { opacity: 0.7 }]}
                         onPress={rechercher}
@@ -318,9 +349,10 @@ export default function RechercheScreen({ navigation }) {
                     </TouchableOpacity>
                 </View>
 
+                {/* Favoris */}
                 {favoris.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Favoris</Text>
+                        <Text style={styles.sectionTitle}>Mes favoris</Text>
                         {favoris.map((item) => (
                             <TouchableOpacity
                                 key={item.id}
@@ -330,7 +362,7 @@ export default function RechercheScreen({ navigation }) {
                                 <View style={styles.rechercheInfo}>
                                     <Text style={styles.rechercheTexte}>{item.depart} → {item.arrivee}</Text>
                                 </View>
-                                <TouchableOpacity onPress={() => toggleFavori(item.depart, item.arrivee)}>
+                                <TouchableOpacity onPress={() => toggleFavori(item.depart, item.arrivee)} style={styles.actionBtn}>
                                     <Ionicons name="close" size={16} color="#666" />
                                 </TouchableOpacity>
                             </TouchableOpacity>
@@ -338,9 +370,15 @@ export default function RechercheScreen({ navigation }) {
                     </View>
                 )}
 
+                {/* Historique */}
                 {historique.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Recherches recentes</Text>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>Recherches recentes</Text>
+                            <TouchableOpacity onPress={effacerHistorique}>
+                                <Text style={styles.effacerText}>Tout effacer</Text>
+                            </TouchableOpacity>
+                        </View>
                         {historique.map((item) => (
                             <TouchableOpacity
                                 key={item.id}
@@ -361,9 +399,7 @@ export default function RechercheScreen({ navigation }) {
                                             color={estFavori(item.depart, item.arrivee) ? "#e74c3c" : "#666"}
                                         />
                                     </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => supprimerHistorique(item.id)}
-                                        style={styles.actionBtn}>
+                                    <TouchableOpacity onPress={() => supprimerHistorique(item.id)} style={styles.actionBtn}>
                                         <Ionicons name="close" size={16} color="#666" />
                                     </TouchableOpacity>
                                 </View>
@@ -382,23 +418,15 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#121212' },
     header: {
         backgroundColor: '#1a1a1a',
-        paddingTop: 60,
-        paddingBottom: 40,
-        paddingHorizontal: 24
+        paddingTop: 60, paddingBottom: 40, paddingHorizontal: 24
     },
     headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: 12
     },
     headerTitle: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#00b5e2',
-        letterSpacing: 3,
-        textAlign: 'center',
-        flex: 1
+        fontSize: 36, fontWeight: 'bold', color: '#00b5e2',
+        letterSpacing: 3, textAlign: 'center', flex: 1
     },
     cloche: { width: 40, alignItems: 'flex-end', position: 'relative' },
     badge: {
@@ -408,15 +436,13 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4
     },
     badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-    headerSubtitle: { fontSize: 14, color: '#aaa', textAlign: 'center', lineHeight: 22 },
+    headerSubtitle: { fontSize: 15, color: '#aaa', textAlign: 'center', lineHeight: 22 },
+
     searchCard: {
         backgroundColor: '#1e1e1e',
-        marginHorizontal: 16,
-        marginTop: -20,
-        borderRadius: 16,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#2a2a2a'
+        marginHorizontal: 16, marginTop: -20,
+        borderRadius: 16, padding: 20,
+        borderWidth: 1, borderColor: '#2a2a2a'
     },
     fieldLabel: {
         fontSize: 12, fontWeight: '600', color: '#888',
@@ -432,6 +458,19 @@ const styles = StyleSheet.create({
     inputContainerActif: { borderColor: '#00b5e2' },
     input: { flex: 1, padding: 10, fontSize: 15, color: '#eee' },
     placeholder: { color: '#666' },
+
+    // ✅ Bouton inverser
+    inverserBtn: {
+        flexDirection: 'row', alignItems: 'center',
+        marginVertical: 8, paddingHorizontal: 4
+    },
+    inverserLigne: { flex: 1, height: 1, backgroundColor: '#2a2a2a' },
+    inverserIcone: {
+        backgroundColor: '#252525', borderRadius: 20,
+        width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: '#00b5e2', marginHorizontal: 10
+    },
+
     suggestionsContainer: {
         backgroundColor: '#252525', borderRadius: 10,
         borderWidth: 1, borderColor: '#00b5e2',
@@ -443,17 +482,22 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     suggestionTexte: { color: '#eee', fontSize: 14 },
+
     searchButton: {
         backgroundColor: '#00b5e2', borderRadius: 10, padding: 15,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
         gap: 8, marginTop: 20
     },
     searchButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
     section: { paddingHorizontal: 16, marginTop: 20 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
     sectionTitle: {
         fontSize: 13, fontWeight: '600', color: '#888',
-        textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10
+        textTransform: 'uppercase', letterSpacing: 1,
     },
+    effacerText: { fontSize: 13, color: '#e74c3c', fontWeight: '600' },
+
     rechercheItem: {
         flexDirection: 'row', alignItems: 'center', gap: 12,
         backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12,

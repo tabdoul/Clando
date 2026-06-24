@@ -497,7 +497,7 @@ export default function ReservationsScreen({ navigation }) {
                                 </Text>
                             </View>
                             <View style={styles.paiementDetailLigne}>
-                                <Text style={styles.paiementDetailLabel}>Frais de service (13%)</Text>
+                                <Text style={styles.paiementDetailLabel}>Frais de service</Text>
                                 <Text style={styles.paiementDetailValeur}>
                                     {reservationAPayer ? Math.round((reservationAPayer.prix || 0) - (reservationAPayer.prix || 0) / 1.13).toLocaleString() : 0} GNF
                                 </Text>
