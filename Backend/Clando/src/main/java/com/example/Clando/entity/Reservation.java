@@ -136,11 +136,11 @@ public class Reservation {
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
-        private final Reservation r = new Reservation();
-        public Builder nbPlaces(int val) { r.nbPlaces = val; return this; }
-        public Builder statut(StatutReservation val) { r.statut = val; return this; }
-        public Builder passager(Utilisateur val) { r.passager = val; return this; }
-        public Builder trajet(Trajet val) { r.trajet = val; return this; }
-        public Reservation build() { return r; }
-    }
+    private final Reservation r = new Reservation();
+    public Builder nbPlaces(int val) { r.nbPlaces = val; return this; }
+    public Builder statut(Reservation.StatutReservation val) { r.statut = val; return this; }
+    public Builder passager(Utilisateur val) { r.passager = val; return this; }
+    public Builder trajet(Trajet val) { r.trajet = val; return this; }
+    public Reservation build() { return r; }
+}
 }
