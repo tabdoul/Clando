@@ -20,7 +20,6 @@ const CompteARebours = ({ dateConfirmation }) => {
             const expiration = new Date(confirmation.getTime() + 30 * 60 * 1000);
             const maintenant = new Date();
             const diff = expiration - maintenant;
-
             if (diff <= 0) {
                 setExpire(true);
                 setTempsRestant('Expire');
@@ -35,14 +34,10 @@ const CompteARebours = ({ dateConfirmation }) => {
     }, [dateConfirmation]);
 
     return (
-        <View style={{
-            flexDirection: 'row', alignItems: 'center', gap: 6,
-            backgroundColor: expire ? '#3a1a1a' : '#1a2a1a',
-            borderRadius: 8, padding: 8, marginBottom: 8
-        }}>
-            <Ionicons name="time-outline" size={14} color={expire ? '#e74c3c' : '#2ecc71'} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: expire ? '#e74c3c' : '#2ecc71' }}>
-                {expire ? 'Delai expire' : `Temps restant pour payer : ${tempsRestant}`}
+        <View style={styles.rebours}>
+            <Ionicons name="time-outline" size={13} color={expire ? '#e74c3c' : '#2ecc71'} />
+            <Text style={[styles.reboursText, { color: expire ? '#e74c3c' : '#2ecc71' }]}>
+                {expire ? 'Delai expire — reservation annulee' : `Payer dans : ${tempsRestant}`}
             </Text>
         </View>
     );
@@ -90,6 +85,33 @@ export default function ReservationsScreen({ navigation }) {
         setRefreshing(false);
     };
 
+    const ouvrirModalPaiement = (reservation) => {
+        setReservationAPayer(reservation);
+        setNumeroPaiement('');
+        setShowModalPaiement(true);
+    };
+
+    const initierPaiement = async () => {
+        if (!numeroPaiement || numeroPaiement.trim() === '') {
+            Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
+            return;
+        }
+        setLoadingPaiement(true);
+        try {
+            await api.post(`/reservations/${reservationAPayer.id}/payer?numeroTelephone=${numeroPaiement.trim()}`);
+            setShowModalPaiement(false);
+            Alert.alert(
+                'Demande envoyee !',
+                'Vous allez recevoir une notification Orange Money. Confirmez avec votre code PIN.',
+                [{ text: 'OK', onPress: () => chargerReservations() }]
+            );
+        } catch (err) {
+            Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
+        } finally {
+            setLoadingPaiement(false);
+        }
+    };
+
     const voirCopassagers = async (reservation) => {
         setReservationSelectionnee(reservation);
         setShowCopassagers(true);
@@ -105,59 +127,21 @@ export default function ReservationsScreen({ navigation }) {
         }
     };
 
-    const ouvrirModalPaiement = (reservation) => {
-        setReservationAPayer(reservation);
-        setNumeroPaiement('');
-        setShowModalPaiement(true);
-    };
-
-    const initierPaiement = async () => {
-        if (!numeroPaiement || numeroPaiement.trim() === '') {
-            Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
-            return;
-        }
-        setLoadingPaiement(true);
-        try {
-            await api.post(
-                `/reservations/${reservationAPayer.id}/payer?numeroTelephone=${numeroPaiement.trim()}`
-            );
-            setShowModalPaiement(false);
-            Alert.alert(
-                'Demande de paiement envoyee !',
-                'Vous allez recevoir une notification Orange Money. Confirmez avec votre code PIN.',
-                [{ text: 'OK', onPress: () => chargerReservations() }]
-            );
-        } catch (err) {
-            Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
-        } finally {
-            setLoadingPaiement(false);
-        }
-    };
-
-    const reservationsEnCours = reservations.filter(r =>
-        ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut)
-    );
-
-    const reservationsHistorique = reservations.filter(r =>
-        ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut)
-    );
-
     const annuler = async (reservation) => {
-        const estConfirmee = reservation.statut === 'CONFIRMEE';
         Alert.alert(
             'Annuler la reservation',
-            estConfirmee
-                ? "Votre reservation est confirmee. Des frais d'annulation de 10% peuvent s'appliquer si le depart est dans moins de 2h."
-                : 'Etes-vous sur de vouloir annuler cette reservation ?',
+            reservation.statut === 'CONFIRMEE'
+                ? "Des frais de 10% peuvent s'appliquer si le depart est dans moins de 2h."
+                : 'Etes-vous sur de vouloir annuler ?',
             [
                 { text: 'Non', style: 'cancel' },
                 {
-                    text: 'Annuler la reservation', style: 'destructive',
+                    text: 'Annuler', style: 'destructive',
                     onPress: async () => {
                         try {
                             const response = await api.patch(`/reservations/${reservation.id}/annuler`);
                             chargerReservations();
-                            Alert.alert('Reservation annulee', response.data.message || 'Votre reservation a ete annulee.');
+                            Alert.alert('Annulee', response.data.message || 'Reservation annulee.');
                         } catch (error) {
                             Alert.alert('Erreur', error.response?.data?.erreur || "Impossible d'annuler");
                         }
@@ -194,24 +178,23 @@ export default function ReservationsScreen({ navigation }) {
     const formatDate = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
     };
 
     const renderReservation = (item) => {
         const statut = getStatutStyle(item.statut);
         const doitPayer = item.statut === 'CONFIRMEE' && item.statutPaiement !== 'SUCCESS';
+        const aPaye = item.statutPaiement === 'SUCCESS';
 
         return (
             <View key={item.id.toString()} style={styles.cardWrapper}>
                 <View style={styles.card}>
-                    <View style={styles.cardTop}>
-                        <View style={styles.trajetInfo}>
+
+                    {/* En-tête carte */}
+                    <View style={styles.cardHeader}>
+                        <View style={styles.trajetRow}>
                             <Text style={styles.ville}>{item.villeDepart}</Text>
-                            <View style={styles.ligne}>
-                                <View style={styles.ligneBar} />
-                                <Ionicons name="car-outline" size={16} color="#00b5e2" />
-                                <View style={styles.ligneBar} />
-                            </View>
+                            <Ionicons name="arrow-forward" size={14} color="#00b5e2" />
                             <Text style={styles.ville}>{item.villeArrivee}</Text>
                         </View>
                         <View style={[styles.statutBadge, { backgroundColor: statut.bg }]}>
@@ -219,145 +202,152 @@ export default function ReservationsScreen({ navigation }) {
                         </View>
                     </View>
 
-                    <View style={styles.separator} />
+                    {/* Trajet passager */}
+                    {item.departPassager && item.arriveePassager && (
+                        <View style={styles.trajetPassager}>
+                            <Ionicons name="location-outline" size={13} color="#f39c12" />
+                            <Text style={styles.trajetPassagerText}>
+                                {item.departPassager} → {item.arriveePassager}
+                            </Text>
+                        </View>
+                    )}
 
+                    {/* Méta */}
+                    <View style={styles.metaRow}>
+                        <Ionicons name="calendar-outline" size={13} color="#555" />
+                        <Text style={styles.metaText}>{formatDate(item.dateReservation)}</Text>
+                        <Text style={styles.metaDot}>·</Text>
+                        <Ionicons name="person-outline" size={13} color="#555" />
+                        <Text style={styles.metaText}>{item.nbPlaces} place(s)</Text>
+                        {item.prixPropose && (
+                            <>
+                                <Text style={styles.metaDot}>·</Text>
+                                <Text style={[styles.metaText, { color: '#00b5e2' }]}>
+                                    {item.prixPropose.toLocaleString()} GNF proposé
+                                </Text>
+                            </>
+                        )}
+                    </View>
+
+                    {/* Compte à rebours */}
                     {doitPayer && item.dateConfirmation && (
                         <CompteARebours dateConfirmation={item.dateConfirmation} />
                     )}
 
-                    <View style={styles.cardBottom}>
-                        <View style={styles.details}>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="calendar-outline" size={14} color="#666" />
-                                <Text style={styles.detailText}>Reserve le {formatDate(item.dateReservation)}</Text>
-                            </View>
-                            <View style={styles.detailRow}>
-                                <Ionicons name="person-outline" size={14} color="#666" />
-                                <Text style={styles.detailText}>{item.nbPlaces} place(s)</Text>
-                            </View>
-
-                            {/* ✅ Trajet passager */}
-                            {item.departPassager && item.arriveePassager && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="location-outline" size={14} color="#f39c12" />
-                                    <Text style={[styles.detailText, { color: '#f39c12' }]}>
-                                        {item.departPassager} → {item.arriveePassager}
-                                    </Text>
-                                </View>
-                            )}
-
-                            {item.prixPropose && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="cash-outline" size={14} color="#00b5e2" />
-                                    <Text style={[styles.detailText, { color: '#00b5e2' }]}>
-                                        Prix propose : {item.prixPropose?.toLocaleString()} GNF
-                                    </Text>
-                                </View>
-                            )}
-                            {item.statutPaiement === 'SUCCESS' && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
-                                    <Text style={[styles.detailText, { color: '#2ecc71' }]}>Paiement confirme</Text>
-                                </View>
-                            )}
-                            {item.statutPaiement === 'PENDING' && (
-                                <View style={styles.detailRow}>
-                                    <Ionicons name="time-outline" size={14} color="#f39c12" />
-                                    <Text style={[styles.detailText, { color: '#f39c12' }]}>Paiement en attente</Text>
-                                </View>
-                            )}
+                    {/* Paiement confirmé */}
+                    {aPaye && (
+                        <View style={styles.paiementOk}>
+                            <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
+                            <Text style={styles.paiementOkText}>
+                                Paiement confirmé · {item.prix?.toLocaleString()} GNF
+                            </Text>
                         </View>
+                    )}
 
-                        <View style={styles.boutonsContainer}>
-                            {item.statut === 'CONFIRMEE' && (
-                                <>
-                                    <TouchableOpacity
-                                        style={styles.boutonContacter}
-                                        onPress={() => navigation.navigate('Chat', {
-                                            reservationId: item.id,
-                                            interlocuteur: { id: item.conducteurId, nom: item.conducteurNom, prenom: item.conducteurPrenom },
-                                            userId: null
-                                        })}>
-                                        <Ionicons name="chatbubble-outline" size={14} color="#00b5e2" />
-                                        <Text style={styles.boutonContacterText}>Contacter</Text>
-                                    </TouchableOpacity>
+                    {/* ACTIONS selon statut */}
 
-                                    <TouchableOpacity
-                                        style={styles.boutonCopassagers}
-                                        onPress={() => voirCopassagers(item)}>
-                                        <Ionicons name="people-outline" size={14} color="#9b59b6" />
-                                        <Text style={styles.boutonCopassagersText}>Copassagers</Text>
-                                    </TouchableOpacity>
+                    {/* EN_ATTENTE — juste annuler */}
+                    {item.statut === 'EN_ATTENTE' && (
+                        <View style={styles.actions}>
+                            <TouchableOpacity style={styles.btnAnnuler} onPress={() => annuler(item)}>
+                                <Text style={styles.btnAnnulerText}>Annuler la demande</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
-                                    {doitPayer && (
-                                        <TouchableOpacity
-                                            style={styles.boutonPayer}
-                                            onPress={() => ouvrirModalPaiement(item)}>
-                                            <Ionicons name="phone-portrait-outline" size={14} color="white" />
-                                            <Text style={styles.boutonPayerText}>Payer avec OM</Text>
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {item.urlPaiement && item.statutPaiement === 'PENDING' && (
-                                        <TouchableOpacity
-                                            style={styles.boutonPayerLien}
-                                            onPress={() => Linking.openURL(item.urlPaiement)}>
-                                            <Ionicons name="open-outline" size={14} color="#00b5e2" />
-                                            <Text style={styles.boutonPayerLienText}>Reprendre le paiement</Text>
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {item.trajetDemarre && item.latitudeConducteur && (
-                                        <TouchableOpacity
-                                            style={styles.boutonSuivre}
-                                            onPress={() => {
-                                                const lien = `https://www.google.com/maps?q=${item.latitudeConducteur},${item.longitudeConducteur}`;
-                                                Linking.openURL(lien);
-                                            }}>
-                                            <Ionicons name="navigate-outline" size={14} color="white" />
-                                            <Text style={styles.boutonSuivreText}>Voir position</Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </>
-                            )}
-
-                            {item.statut === 'TERMINEE' && (
+                    {/* CONFIRMEE non payée — payer en priorité */}
+                    {item.statut === 'CONFIRMEE' && doitPayer && (
+                        <View style={styles.actions}>
+                            <TouchableOpacity
+                                style={styles.btnPayer}
+                                onPress={() => ouvrirModalPaiement(item)}>
+                                <Ionicons name="phone-portrait-outline" size={16} color="white" />
+                                <Text style={styles.btnPayerText}>Payer avec Orange Money</Text>
+                            </TouchableOpacity>
+                            <View style={styles.actionsSecondaires}>
                                 <TouchableOpacity
-                                    style={styles.boutonAvis}
-                                    onPress={() => navigation.navigate('Avis', {
-                                        conducteurId: item.conducteurId,
-                                        conducteurNom: item.conducteurNom,
-                                        conducteurPrenom: item.conducteurPrenom,
-                                        trajetId: item.trajetId
+                                    style={styles.btnSm}
+                                    onPress={() => navigation.navigate('Chat', {
+                                        reservationId: item.id,
+                                        interlocuteur: { id: item.conducteurId, nom: item.conducteurNom, prenom: item.conducteurPrenom },
+                                        userId: null
                                     })}>
-                                    <Ionicons name="star-outline" size={14} color="#f39c12" />
-                                    <Text style={styles.boutonAvisText}>Laisser un avis</Text>
+                                    <Ionicons name="chatbubble-outline" size={13} color="#00b5e2" />
+                                    <Text style={[styles.btnSmText, { color: '#00b5e2' }]}>Contacter</Text>
                                 </TouchableOpacity>
-                            )}
-
-                            {(item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE') && (
-                                <TouchableOpacity style={styles.boutonAnnuler} onPress={() => annuler(item)}>
-                                    <Text style={styles.boutonAnnulerText}>Annuler</Text>
+                                <TouchableOpacity style={[styles.btnSm, styles.btnSmDanger]} onPress={() => annuler(item)}>
+                                    <Ionicons name="close" size={13} color="#e74c3c" />
+                                    <Text style={[styles.btnSmText, { color: '#e74c3c' }]}>Annuler</Text>
                                 </TouchableOpacity>
-                            )}
+                            </View>
                         </View>
-                    </View>
+                    )}
 
+                    {/* CONFIRMEE payée */}
+                    {item.statut === 'CONFIRMEE' && aPaye && (
+                        <View style={styles.actions}>
+                            <View style={styles.actionsSecondaires}>
+                                <TouchableOpacity
+                                    style={[styles.btnSm, { flex: 1 }]}
+                                    onPress={() => navigation.navigate('Chat', {
+                                        reservationId: item.id,
+                                        interlocuteur: { id: item.conducteurId, nom: item.conducteurNom, prenom: item.conducteurPrenom },
+                                        userId: null
+                                    })}>
+                                    <Ionicons name="chatbubble-outline" size={13} color="#00b5e2" />
+                                    <Text style={[styles.btnSmText, { color: '#00b5e2' }]}>Contacter</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.btnSm, { flex: 1 }]}
+                                    onPress={() => voirCopassagers(item)}>
+                                    <Ionicons name="people-outline" size={13} color="#9b59b6" />
+                                    <Text style={[styles.btnSmText, { color: '#9b59b6' }]}>Copassagers</Text>
+                                </TouchableOpacity>
+                                {item.trajetDemarre && item.latitudeConducteur && (
+                                    <TouchableOpacity
+                                        style={[styles.btnSm, styles.btnSmVert, { flex: 1 }]}
+                                        onPress={() => Linking.openURL(`https://www.google.com/maps?q=${item.latitudeConducteur},${item.longitudeConducteur}`)}>
+                                        <Ionicons name="navigate-outline" size={13} color="white" />
+                                        <Text style={[styles.btnSmText, { color: 'white' }]}>Position</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* TERMINEE */}
+                    {item.statut === 'TERMINEE' && (
+                        <View style={styles.actions}>
+                            <TouchableOpacity
+                                style={styles.btnAvis}
+                                onPress={() => navigation.navigate('Avis', {
+                                    conducteurId: item.conducteurId,
+                                    conducteurNom: item.conducteurNom,
+                                    conducteurPrenom: item.conducteurPrenom,
+                                    trajetId: item.trajetId
+                                })}>
+                                <Ionicons name="star-outline" size={15} color="#f39c12" />
+                                <Text style={styles.btnAvisText}>Laisser un avis</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* PRIX_REFUSE */}
                     {item.statut === 'PRIX_REFUSE' && (
                         <View style={styles.prixRefuseContainer}>
-                            <Text style={styles.prixRefuseTexte}>Prix refuse — Faites une nouvelle proposition</Text>
+                            <Text style={styles.prixRefuseTexte}>Prix refuse</Text>
                             <Text style={styles.tentativesRestantes}>{2 - item.nbTentatives} tentative(s) restante(s)</Text>
                             <View style={styles.nouvellePropositionRow}>
                                 <TextInput
                                     style={styles.propositionInput}
-                                    placeholder="Nouveau prix..."
+                                    placeholder="Nouveau prix en GNF..."
                                     placeholderTextColor="#666"
                                     keyboardType="numeric"
                                     onChangeText={(v) => setPrixNouveau({ ...prixNouveau, [item.id]: v })}
                                     value={prixNouveau[item.id] || ''}
                                 />
                                 <TouchableOpacity style={styles.boutonProposer} onPress={() => nouvelleProposition(item.id)}>
-                                    <Text style={styles.boutonProposerText}>Proposer</Text>
+                                    <Text style={styles.boutonProposerText}>Envoyer</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -375,6 +365,12 @@ export default function ReservationsScreen({ navigation }) {
         );
     }
 
+    const reservationsEnCours = reservations.filter(r =>
+        ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut)
+    );
+    const reservationsHistorique = reservations.filter(r =>
+        ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut)
+    );
     const listeActive = ongletActif === 'encours' ? reservationsEnCours : reservationsHistorique;
 
     return (
@@ -394,7 +390,6 @@ export default function ReservationsScreen({ navigation }) {
                         </View>
                     )}
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     style={[styles.onglet, ongletActif === 'historique' && styles.ongletActif]}
                     onPress={() => setOngletActif('historique')}>
@@ -428,16 +423,12 @@ export default function ReservationsScreen({ navigation }) {
             </ScrollView>
 
             {/* Modal copassagers */}
-            <Modal
-                visible={showCopassagers}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowCopassagers(false)}>
+            <Modal visible={showCopassagers} transparent animationType="slide" onRequestClose={() => setShowCopassagers(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
                         <View style={styles.modalHeader}>
                             <View>
-                                <Text style={styles.modalTitle}>Vos copassagers</Text>
+                                <Text style={styles.modalTitle}>Copassagers</Text>
                                 {reservationSelectionnee && (
                                     <Text style={styles.modalSubtitle}>
                                         {reservationSelectionnee.villeDepart} → {reservationSelectionnee.villeArrivee}
@@ -448,7 +439,6 @@ export default function ReservationsScreen({ navigation }) {
                                 <Ionicons name="close" size={24} color="#eee" />
                             </TouchableOpacity>
                         </View>
-
                         {loadingCopassagers ? (
                             <ActivityIndicator color="#00b5e2" style={{ marginTop: 20 }} />
                         ) : copassagers.length === 0 ? (
@@ -470,9 +460,7 @@ export default function ReservationsScreen({ navigation }) {
                                                 </View>
                                             )}
                                             <View style={styles.passagerInfos}>
-                                                <Text style={styles.passagerNom}>
-                                                    {p.passagerPrenom} {p.passagerNom}
-                                                </Text>
+                                                <Text style={styles.passagerNom}>{p.passagerPrenom} {p.passagerNom}</Text>
                                             </View>
                                         </View>
                                     );
@@ -484,11 +472,7 @@ export default function ReservationsScreen({ navigation }) {
             </Modal>
 
             {/* Modal paiement OM */}
-            <Modal
-                visible={showModalPaiement}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowModalPaiement(false)}>
+            <Modal visible={showModalPaiement} transparent animationType="slide" onRequestClose={() => setShowModalPaiement(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
                         <View style={styles.modalHeader}>
@@ -505,7 +489,6 @@ export default function ReservationsScreen({ navigation }) {
                             </TouchableOpacity>
                         </View>
 
-                        {/* ✅ Détail du prix */}
                         <View style={styles.paiementDetail}>
                             <View style={styles.paiementDetailLigne}>
                                 <Text style={styles.paiementDetailLabel}>Prix trajet</Text>
@@ -521,14 +504,13 @@ export default function ReservationsScreen({ navigation }) {
                             </View>
                             <View style={styles.paiementDetailSeparator} />
                             <View style={styles.paiementDetailLigne}>
-                                <Text style={[styles.paiementDetailLabel, { fontWeight: 'bold', color: '#eee' }]}>Total à payer</Text>
+                                <Text style={[styles.paiementDetailLabel, { fontWeight: 'bold', color: '#eee' }]}>Total</Text>
                                 <Text style={[styles.paiementDetailValeur, { color: '#00b5e2', fontWeight: 'bold', fontSize: 18 }]}>
                                     {reservationAPayer?.prix?.toLocaleString() || 0} GNF
                                 </Text>
                             </View>
                         </View>
 
-                        {/* Info */}
                         <View style={styles.paiementInfo}>
                             <Ionicons name="information-circle-outline" size={16} color="#f39c12" />
                             <Text style={styles.paiementInfoTexte}>
@@ -536,8 +518,7 @@ export default function ReservationsScreen({ navigation }) {
                             </Text>
                         </View>
 
-                        {/* Numéro OM */}
-                        <Text style={styles.paiementLabel}>Votre numéro Orange Money</Text>
+                        <Text style={styles.paiementLabel}>Numéro Orange Money</Text>
                         <View style={styles.paiementInput}>
                             <Ionicons name="phone-portrait-outline" size={18} color="#f39c12" />
                             <TextInput
@@ -562,9 +543,7 @@ export default function ReservationsScreen({ navigation }) {
                             ) : (
                                 <>
                                     <Ionicons name="phone-portrait-outline" size={18} color="white" />
-                                    <Text style={styles.boutonConfirmerPaiementText}>
-                                        Confirmer le paiement OM
-                                    </Text>
+                                    <Text style={styles.boutonConfirmerPaiementText}>Confirmer le paiement</Text>
                                 </>
                             )}
                         </TouchableOpacity>
@@ -590,42 +569,69 @@ const styles = StyleSheet.create({
     emptyContainer: { alignItems: 'center', marginTop: 80 },
     emptyText: { fontSize: 18, color: '#666', marginTop: 16 },
     emptySubtext: { fontSize: 14, color: '#444', marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
+
     cardWrapper: { paddingHorizontal: 16, marginTop: 12 },
-    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
-    cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    trajetInfo: { flex: 1, alignItems: 'center', marginRight: 12 },
+    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#2a2a2a' },
+
+    cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    trajetRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
     ville: { fontSize: 15, fontWeight: '600', color: '#ddd' },
-    ligne: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5 },
-    ligneBar: { flex: 1, height: 1, backgroundColor: '#333' },
-    statutBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
-    statutText: { fontSize: 12, fontWeight: '600' },
-    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
-    cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    details: { gap: 6, flex: 1 },
-    detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    detailText: { fontSize: 13, color: '#888' },
-    boutonsContainer: { flexDirection: 'column', gap: 8, alignItems: 'flex-end' },
-    boutonContacter: { borderWidth: 1, borderColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonContacterText: { color: '#00b5e2', fontSize: 13, fontWeight: '600' },
-    boutonCopassagers: { borderWidth: 1, borderColor: '#9b59b6', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonCopassagersText: { color: '#9b59b6', fontSize: 13, fontWeight: '600' },
-    boutonSuivre: { backgroundColor: '#2ecc71', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonSuivreText: { color: 'white', fontSize: 13, fontWeight: '600' },
-    boutonAvis: { borderWidth: 1, borderColor: '#f39c12', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonAvisText: { color: '#f39c12', fontSize: 13, fontWeight: '600' },
-    boutonAnnuler: { borderWidth: 1, borderColor: '#e74c3c', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 16 },
-    boutonAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
-    boutonPayer: { backgroundColor: '#f39c12', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonPayerText: { color: 'white', fontSize: 13, fontWeight: '600' },
-    boutonPayerLien: { borderWidth: 1, borderColor: '#00b5e2', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    boutonPayerLienText: { color: '#00b5e2', fontSize: 13, fontWeight: '600' },
-    prixRefuseContainer: { backgroundColor: '#2a1a1a', borderRadius: 10, padding: 12, marginTop: 12, borderWidth: 1, borderColor: '#e74c3c' },
+    statutBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20 },
+    statutText: { fontSize: 11, fontWeight: '600' },
+
+    trajetPassager: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+    trajetPassagerText: { fontSize: 12, color: '#f39c12' },
+
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8, flexWrap: 'wrap' },
+    metaText: { fontSize: 12, color: '#666' },
+    metaDot: { color: '#444', fontSize: 12 },
+
+    rebours: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1a2a1a', borderRadius: 8, padding: 8, marginBottom: 10 },
+    reboursText: { fontSize: 12, fontWeight: '600' },
+
+    paiementOk: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1a3a2a', borderRadius: 8, padding: 8, marginBottom: 10 },
+    paiementOkText: { fontSize: 12, color: '#2ecc71', fontWeight: '600' },
+
+    actions: { marginTop: 4 },
+
+    btnPayer: {
+        backgroundColor: '#f39c12', borderRadius: 10, padding: 12,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        marginBottom: 8,
+    },
+    btnPayerText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
+
+    actionsSecondaires: { flexDirection: 'row', gap: 8 },
+
+    btnSm: {
+        flex: 1, borderWidth: 1, borderColor: '#00b5e2', borderRadius: 8,
+        paddingVertical: 8, flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'center', gap: 4,
+    },
+    btnSmDanger: { borderColor: '#e74c3c' },
+    btnSmVert: { backgroundColor: '#2ecc71', borderColor: '#2ecc71' },
+    btnSmText: { fontSize: 12, fontWeight: '600' },
+
+    btnAnnuler: {
+        borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
+        padding: 10, alignItems: 'center',
+    },
+    btnAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
+
+    btnAvis: {
+        borderWidth: 1, borderColor: '#f39c12', borderRadius: 10,
+        padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    },
+    btnAvisText: { color: '#f39c12', fontSize: 13, fontWeight: '600' },
+
+    prixRefuseContainer: { backgroundColor: '#2a1a1a', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#e74c3c' },
     prixRefuseTexte: { fontSize: 13, color: '#e74c3c', fontWeight: '600' },
-    tentativesRestantes: { fontSize: 12, color: '#888', marginTop: 4, marginBottom: 8 },
+    tentativesRestantes: { fontSize: 12, color: '#888', marginTop: 2, marginBottom: 8 },
     nouvellePropositionRow: { flexDirection: 'row', gap: 8 },
     propositionInput: { flex: 1, backgroundColor: '#252525', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#333' },
     boutonProposer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
     boutonProposerText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
+
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: { backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%', borderTopWidth: 1, borderColor: '#2a2a2a' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
@@ -639,10 +645,11 @@ const styles = StyleSheet.create({
     passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
+
     paiementDetail: { backgroundColor: '#252525', borderRadius: 12, padding: 16, marginBottom: 16 },
     paiementDetailLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
     paiementDetailLabel: { fontSize: 13, color: '#888' },
-    paiementDetailValeur: { fontSize: 13, color: '#ddd', textAlign: 'right', flex: 1, marginLeft: 8 },
+    paiementDetailValeur: { fontSize: 13, color: '#ddd', textAlign: 'right' },
     paiementDetailSeparator: { height: 1, backgroundColor: '#333', marginVertical: 6 },
     paiementInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#2a2a1a', borderRadius: 10, padding: 12, marginBottom: 16 },
     paiementInfoTexte: { fontSize: 13, color: '#f39c12', flex: 1, lineHeight: 20 },
@@ -651,4 +658,6 @@ const styles = StyleSheet.create({
     paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
     boutonConfirmerPaiement: { backgroundColor: '#f39c12', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
+    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 10 },
 });
