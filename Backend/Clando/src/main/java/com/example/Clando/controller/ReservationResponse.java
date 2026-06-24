@@ -1,3 +1,4 @@
+
 package com.example.Clando.dtos.response;
 
 import java.time.LocalDate;
@@ -139,7 +140,7 @@ public class ReservationResponse {
         public Builder villeDepart(String val) { r.villeDepart = val; return this; }
         public Builder villeArrivee(String val) { r.villeArrivee = val; return this; }
         public Builder prixPropose(Double val) { r.prixPropose = val; return this; }
-        public Builder prixConducteur(Double val) { r.prixConducteur = val; return this; } // ✅
+        public Builder prixConducteur(Double val) { r.prixConducteur = val; return this; } // 
         public Builder nbTentatives(int val) { r.nbTentatives = val; return this; }
         public Builder passagerPhoto(String val) { r.passagerPhoto = val; return this; }
         public Builder djomyTransactionId(String val) { r.djomyTransactionId = val; return this; }
