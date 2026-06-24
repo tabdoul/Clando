@@ -1,5 +1,3 @@
-// src/app/shared/models/reservation.model.ts
-
 export type StatutReservation =
     | 'EN_ATTENTE'
     | 'CONFIRMEE'
@@ -14,28 +12,38 @@ export interface Reservation {
     nbPlaces: number;
     statut: StatutReservation;
 
-    // Passager (champs à plat — format renvoyé par ReservationResponse)
     passagerId?: number;
     passagerNom?: string;
     passagerPrenom?: string;
     passagerPhoto?: string;
 
-    // Conducteur
     conducteurId?: number;
     conducteurNom?: string;
     conducteurPrenom?: string;
 
-    // Trajet (champs à plat)
     trajetId?: number;
     villeDepart?: string;
     villeArrivee?: string;
 
-    // Négociation
     prixPropose?: number;
     nbTentatives?: number;
 
-    // Paiement Djomy
     djomyTransactionId?: string;
     statutPaiement?: string;
     urlPaiement?: string;
+
+    // ✅ Trajet passager
+    departPassager?: string;
+    arriveePassager?: string;
+}
+
+// ✅ Interface dédiée pour la création
+export interface ReservationRequest {
+    nbPlaces: number;
+    passagerId: number;
+    trajetId: number;
+    prixPropose?: number;
+    numeroTelephone?: string;
+    departPassager?: string;
+    arriveePassager?: string;
 }

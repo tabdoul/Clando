@@ -50,6 +50,9 @@ public class Reservation {
     @Column
     private Double prixPropose;
 
+    @Column
+    private Double prixConducteur;
+
     @Column(nullable = false)
     private int nbTentatives = 0;
 
@@ -66,7 +69,7 @@ public class Reservation {
     private String arriveePassager;
 
     public enum StatutReservation {
-        EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, TERMINEE
+        EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, CONTRE_OFFRE, TERMINEE
     }
 
     @PrePersist
@@ -99,6 +102,9 @@ public class Reservation {
 
     public Double getPrixPropose() { return prixPropose; }
     public void setPrixPropose(Double prixPropose) { this.prixPropose = prixPropose; }
+
+    public Double getPrixConducteur() { return prixConducteur; }
+    public void setPrixConducteur(Double prixConducteur) { this.prixConducteur = prixConducteur; }
 
     public int getNbTentatives() { return nbTentatives; }
     public void setNbTentatives(int nbTentatives) { this.nbTentatives = nbTentatives; }

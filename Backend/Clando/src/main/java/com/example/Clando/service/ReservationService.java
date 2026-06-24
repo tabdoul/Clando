@@ -205,43 +205,57 @@ public ReservationResponse initierPaiement(Long reservationId, String numeroTele
     }
 
     @Transactional
-    public ReservationResponse repondreNegociation(Long reservationId, boolean accepter) {
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
+public ReservationResponse repondreNegociation(Long reservationId, boolean accepter, Double prixConducteur) {
+    Reservation reservation = reservationRepository.findById(reservationId)
+            .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
 
-        if (accepter) {
-            reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
-            // ✅ Enregistrer la date de confirmation
-            reservation.setDateConfirmation(
-                ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
+    if (accepter) {
+        //  Conducteur accepte — confirmation normale
+        reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
+        reservation.setDateConfirmation(
+            ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
+        );
+        String token = reservation.getPassager().getExpoPushToken();
+        if (token != null && !token.isBlank()) {
+            notificationService.envoyerNotification(
+                token,
+                "Reservation confirmee !",
+                "Votre trajet " + reservation.getTrajet().getVilleDepart() +
+                " -> " + reservation.getTrajet().getVilleArrivee() +
+                " est confirme. Vous avez 30 minutes pour effectuer le paiement."
             );
-            // ✅ Notifier le passager
-            String token = reservation.getPassager().getExpoPushToken();
-            if (token != null && !token.isBlank()) {
-                notificationService.envoyerNotification(
-                    token,
-                    "Reservation confirmee !",
-                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
-                    " -> " + reservation.getTrajet().getVilleArrivee() +
-                    " est confirme. Vous avez 30 minutes pour effectuer le paiement."
-                );
-            }
-        } else {
-            if (reservation.getNbTentatives() >= 1) {
-                reservation.setStatut(Reservation.StatutReservation.REFUSEE);
-                Trajet trajet = reservation.getTrajet();
-                trajet.setPlacesDisponibles(
-                    trajet.getPlacesDisponibles() + reservation.getNbPlaces()
-                );
-                trajetRepository.save(trajet);
-            } else {
-                reservation.setStatut(Reservation.StatutReservation.PRIX_REFUSE);
-                reservation.setNbTentatives(reservation.getNbTentatives() + 1);
-            }
         }
+    } else if (prixConducteur != null) {
+        //  Conducteur propose un contre-prix
+        reservation.setStatut(Reservation.StatutReservation.CONTRE_OFFRE);
+        reservation.setPrixConducteur(prixConducteur);
 
-        return toResponse(reservationRepository.save(reservation));
+        String token = reservation.getPassager().getExpoPushToken();
+        if (token != null && !token.isBlank()) {
+            notificationService.envoyerNotification(
+                token,
+                "Contre-offre recue !",
+                "Le conducteur propose " + prixConducteur.longValue() +
+                " GNF pour votre trajet. Acceptez ou refusez dans l'application."
+            );
+        }
+    } else {
+        //  Refus simple sans contre-offre
+        if (reservation.getNbTentatives() >= 1) {
+            reservation.setStatut(Reservation.StatutReservation.REFUSEE);
+            Trajet trajet = reservation.getTrajet();
+            trajet.setPlacesDisponibles(
+                trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+            );
+            trajetRepository.save(trajet);
+        } else {
+            reservation.setStatut(Reservation.StatutReservation.PRIX_REFUSE);
+            reservation.setNbTentatives(reservation.getNbTentatives() + 1);
+        }
     }
+
+    return toResponse(reservationRepository.save(reservation));
+}
 
     @Transactional
     public ReservationResponse nouvelleProposition(Long reservationId, Double nouveauPrix) {

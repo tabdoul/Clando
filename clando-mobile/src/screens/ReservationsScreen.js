@@ -33,11 +33,14 @@ const CompteARebours = ({ dateConfirmation }) => {
         return () => clearInterval(interval);
     }, [dateConfirmation]);
 
+    // ✅ On n'affiche plus rien si expiré
+    if (expire) return null;
+
     return (
         <View style={styles.rebours}>
-            <Ionicons name="time-outline" size={13} color={expire ? '#e74c3c' : '#2ecc71'} />
-            <Text style={[styles.reboursText, { color: expire ? '#e74c3c' : '#2ecc71' }]}>
-                {expire ? 'Delai expire — reservation annulee' : `Payer dans : ${tempsRestant}`}
+            <Ionicons name="time-outline" size={13} color="#888" />
+            <Text style={styles.reboursText}>
+                Temps restant pour payer : {tempsRestant}
             </Text>
         </View>
     );
@@ -165,13 +168,26 @@ export default function ReservationsScreen({ navigation }) {
 
     const getStatutStyle = (statut) => {
         switch (statut) {
-            case 'CONFIRMEE': return { bg: '#1a3a2a', text: '#2ecc71', label: 'Confirmee' };
-            case 'EN_ATTENTE': return { bg: '#3a2a1a', text: '#f39c12', label: 'En attente' };
-            case 'ANNULEE': return { bg: '#3a1a1a', text: '#e74c3c', label: 'Annulee' };
-            case 'REFUSEE': return { bg: '#3a1a1a', text: '#e74c3c', label: 'Refusee' };
-            case 'PRIX_REFUSE': return { bg: '#2a1a2a', text: '#9b59b6', label: 'Prix refuse' };
-            case 'TERMINEE': return { bg: '#1a2a3a', text: '#00b5e2', label: 'Terminee' };
-            default: return { bg: '#2a2a2a', text: '#888', label: statut };
+            case 'CONFIRMEE': return { bg: '#252525', text: '#eee', label: 'Confirmee' };
+            case 'EN_ATTENTE': return { bg: '#252525', text: '#888', label: 'En attente' };
+            case 'ANNULEE': return { bg: '#252525', text: '#666', label: 'Annulee' };
+            case 'REFUSEE': return { bg: '#252525', text: '#666', label: 'Refusee' };
+            case 'PRIX_REFUSE': return { bg: '#252525', text: '#888', label: 'Prix refuse' };
+            case 'TERMINEE': return { bg: '#252525', text: '#666', label: 'Terminee' };
+            default: return { bg: '#252525', text: '#666', label: statut };
+        }
+    };
+
+    // ✅ Indicateur coloré minimaliste selon statut
+    const getStatutIndicateur = (statut) => {
+        switch (statut) {
+            case 'CONFIRMEE': return '#00b5e2';
+            case 'EN_ATTENTE': return '#555';
+            case 'ANNULEE': return '#333';
+            case 'REFUSEE': return '#333';
+            case 'PRIX_REFUSE': return '#555';
+            case 'TERMINEE': return '#333';
+            default: return '#333';
         }
     };
 
@@ -183,18 +199,19 @@ export default function ReservationsScreen({ navigation }) {
 
     const renderReservation = (item) => {
         const statut = getStatutStyle(item.statut);
+        const indicateur = getStatutIndicateur(item.statut);
         const doitPayer = item.statut === 'CONFIRMEE' && item.statutPaiement !== 'SUCCESS';
         const aPaye = item.statutPaiement === 'SUCCESS';
 
         return (
             <View key={item.id.toString()} style={styles.cardWrapper}>
-                <View style={styles.card}>
+                <View style={[styles.card, { borderLeftColor: indicateur }]}>
 
-                    {/* En-tête carte */}
+                    {/* En-tête */}
                     <View style={styles.cardHeader}>
                         <View style={styles.trajetRow}>
                             <Text style={styles.ville}>{item.villeDepart}</Text>
-                            <Ionicons name="arrow-forward" size={14} color="#00b5e2" />
+                            <Ionicons name="arrow-forward" size={13} color="#555" />
                             <Text style={styles.ville}>{item.villeArrivee}</Text>
                         </View>
                         <View style={[styles.statutBadge, { backgroundColor: statut.bg }]}>
@@ -205,7 +222,7 @@ export default function ReservationsScreen({ navigation }) {
                     {/* Trajet passager */}
                     {item.departPassager && item.arriveePassager && (
                         <View style={styles.trajetPassager}>
-                            <Ionicons name="location-outline" size={13} color="#f39c12" />
+                            <Ionicons name="location-outline" size={13} color="#666" />
                             <Text style={styles.trajetPassagerText}>
                                 {item.departPassager} → {item.arriveePassager}
                             </Text>
@@ -214,22 +231,21 @@ export default function ReservationsScreen({ navigation }) {
 
                     {/* Méta */}
                     <View style={styles.metaRow}>
-                        <Ionicons name="calendar-outline" size={13} color="#555" />
+                        <Ionicons name="calendar-outline" size={12} color="#555" />
                         <Text style={styles.metaText}>{formatDate(item.dateReservation)}</Text>
                         <Text style={styles.metaDot}>·</Text>
-                        <Ionicons name="person-outline" size={13} color="#555" />
                         <Text style={styles.metaText}>{item.nbPlaces} place(s)</Text>
                         {item.prixPropose && (
                             <>
                                 <Text style={styles.metaDot}>·</Text>
-                                <Text style={[styles.metaText, { color: '#00b5e2' }]}>
-                                    {item.prixPropose.toLocaleString()} GNF proposé
+                                <Text style={styles.metaText}>
+                                    {item.prixPropose.toLocaleString()} GNF propose
                                 </Text>
                             </>
                         )}
                     </View>
 
-                    {/* Compte à rebours */}
+                    {/* Compte à rebours — sobre, sans rouge */}
                     {doitPayer && item.dateConfirmation && (
                         <CompteARebours dateConfirmation={item.dateConfirmation} />
                     )}
@@ -237,16 +253,14 @@ export default function ReservationsScreen({ navigation }) {
                     {/* Paiement confirmé */}
                     {aPaye && (
                         <View style={styles.paiementOk}>
-                            <Ionicons name="checkmark-circle" size={14} color="#2ecc71" />
+                            <Ionicons name="checkmark-circle" size={14} color="#00b5e2" />
                             <Text style={styles.paiementOkText}>
-                                Paiement confirmé · {item.prix?.toLocaleString()} GNF
+                                Paiement confirme · {item.prix?.toLocaleString()} GNF
                             </Text>
                         </View>
                     )}
 
-                    {/* ACTIONS selon statut */}
-
-                    {/* EN_ATTENTE — juste annuler */}
+                    {/* EN_ATTENTE */}
                     {item.statut === 'EN_ATTENTE' && (
                         <View style={styles.actions}>
                             <TouchableOpacity style={styles.btnAnnuler} onPress={() => annuler(item)}>
@@ -255,7 +269,7 @@ export default function ReservationsScreen({ navigation }) {
                         </View>
                     )}
 
-                    {/* CONFIRMEE non payée — payer en priorité */}
+                    {/* CONFIRMEE non payée */}
                     {item.statut === 'CONFIRMEE' && doitPayer && (
                         <View style={styles.actions}>
                             <TouchableOpacity
@@ -275,7 +289,9 @@ export default function ReservationsScreen({ navigation }) {
                                     <Ionicons name="chatbubble-outline" size={13} color="#00b5e2" />
                                     <Text style={[styles.btnSmText, { color: '#00b5e2' }]}>Contacter</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={[styles.btnSm, styles.btnSmDanger]} onPress={() => annuler(item)}>
+                                <TouchableOpacity
+                                    style={[styles.btnSm, styles.btnSmDanger]}
+                                    onPress={() => annuler(item)}>
                                     <Ionicons name="close" size={13} color="#e74c3c" />
                                     <Text style={[styles.btnSmText, { color: '#e74c3c' }]}>Annuler</Text>
                                 </TouchableOpacity>
@@ -300,12 +316,12 @@ export default function ReservationsScreen({ navigation }) {
                                 <TouchableOpacity
                                     style={[styles.btnSm, { flex: 1 }]}
                                     onPress={() => voirCopassagers(item)}>
-                                    <Ionicons name="people-outline" size={13} color="#9b59b6" />
-                                    <Text style={[styles.btnSmText, { color: '#9b59b6' }]}>Copassagers</Text>
+                                    <Ionicons name="people-outline" size={13} color="#888" />
+                                    <Text style={[styles.btnSmText, { color: '#888' }]}>Copassagers</Text>
                                 </TouchableOpacity>
                                 {item.trajetDemarre && item.latitudeConducteur && (
                                     <TouchableOpacity
-                                        style={[styles.btnSm, styles.btnSmVert, { flex: 1 }]}
+                                        style={[styles.btnSm, styles.btnSmBleu, { flex: 1 }]}
                                         onPress={() => Linking.openURL(`https://www.google.com/maps?q=${item.latitudeConducteur},${item.longitudeConducteur}`)}>
                                         <Ionicons name="navigate-outline" size={13} color="white" />
                                         <Text style={[styles.btnSmText, { color: 'white' }]}>Position</Text>
@@ -326,7 +342,7 @@ export default function ReservationsScreen({ navigation }) {
                                     conducteurPrenom: item.conducteurPrenom,
                                     trajetId: item.trajetId
                                 })}>
-                                <Ionicons name="star-outline" size={15} color="#f39c12" />
+                                <Ionicons name="star-outline" size={15} color="#888" />
                                 <Text style={styles.btnAvisText}>Laisser un avis</Text>
                             </TouchableOpacity>
                         </View>
@@ -335,13 +351,14 @@ export default function ReservationsScreen({ navigation }) {
                     {/* PRIX_REFUSE */}
                     {item.statut === 'PRIX_REFUSE' && (
                         <View style={styles.prixRefuseContainer}>
-                            <Text style={styles.prixRefuseTexte}>Prix refuse</Text>
-                            <Text style={styles.tentativesRestantes}>{2 - item.nbTentatives} tentative(s) restante(s)</Text>
+                            <Text style={styles.prixRefuseTexte}>
+                                Le conducteur a refuse votre prix — {2 - item.nbTentatives} tentative(s) restante(s)
+                            </Text>
                             <View style={styles.nouvellePropositionRow}>
                                 <TextInput
                                     style={styles.propositionInput}
                                     placeholder="Nouveau prix en GNF..."
-                                    placeholderTextColor="#666"
+                                    placeholderTextColor="#555"
                                     keyboardType="numeric"
                                     onChangeText={(v) => setPrixNouveau({ ...prixNouveau, [item.id]: v })}
                                     value={prixNouveau[item.id] || ''}
@@ -395,7 +412,7 @@ export default function ReservationsScreen({ navigation }) {
                     onPress={() => setOngletActif('historique')}>
                     <Text style={[styles.ongletText, ongletActif === 'historique' && styles.ongletTextActif]}>Historique</Text>
                     {reservationsHistorique.length > 0 && (
-                        <View style={[styles.ongletBadge, { backgroundColor: '#444' }]}>
+                        <View style={[styles.ongletBadge, { backgroundColor: '#333' }]}>
                             <Text style={styles.ongletBadgeText}>{reservationsHistorique.length}</Text>
                         </View>
                     )}
@@ -408,7 +425,7 @@ export default function ReservationsScreen({ navigation }) {
 
                 {listeActive.length === 0 && (
                     <View style={styles.emptyContainer}>
-                        <Ionicons name={ongletActif === 'encours' ? 'ticket-outline' : 'archive-outline'} size={64} color="#444" />
+                        <Ionicons name={ongletActif === 'encours' ? 'ticket-outline' : 'archive-outline'} size={64} color="#333" />
                         <Text style={styles.emptyText}>
                             {ongletActif === 'encours' ? 'Aucune reservation en cours' : 'Aucun historique'}
                         </Text>
@@ -443,7 +460,7 @@ export default function ReservationsScreen({ navigation }) {
                             <ActivityIndicator color="#00b5e2" style={{ marginTop: 20 }} />
                         ) : copassagers.length === 0 ? (
                             <View style={styles.modalVide}>
-                                <Ionicons name="people-outline" size={48} color="#444" />
+                                <Ionicons name="people-outline" size={48} color="#333" />
                                 <Text style={styles.modalVideText}>Aucun autre passager confirme</Text>
                             </View>
                         ) : (
@@ -477,7 +494,7 @@ export default function ReservationsScreen({ navigation }) {
                     <View style={styles.modalCard}>
                         <View style={styles.modalHeader}>
                             <View>
-                                <Text style={styles.modalTitle}>Paiement Orange Money</Text>
+                                <Text style={styles.modalTitle}>Paiement</Text>
                                 {reservationAPayer && (
                                     <Text style={styles.modalSubtitle}>
                                         {reservationAPayer.departPassager || reservationAPayer.villeDepart} → {reservationAPayer.arriveePassager || reservationAPayer.villeArrivee}
@@ -504,7 +521,7 @@ export default function ReservationsScreen({ navigation }) {
                             </View>
                             <View style={styles.paiementDetailSeparator} />
                             <View style={styles.paiementDetailLigne}>
-                                <Text style={[styles.paiementDetailLabel, { fontWeight: 'bold', color: '#eee' }]}>Total</Text>
+                                <Text style={[styles.paiementDetailLabel, { color: '#eee', fontWeight: 'bold' }]}>Total</Text>
                                 <Text style={[styles.paiementDetailValeur, { color: '#00b5e2', fontWeight: 'bold', fontSize: 18 }]}>
                                     {reservationAPayer?.prix?.toLocaleString() || 0} GNF
                                 </Text>
@@ -512,7 +529,7 @@ export default function ReservationsScreen({ navigation }) {
                         </View>
 
                         <View style={styles.paiementInfo}>
-                            <Ionicons name="information-circle-outline" size={16} color="#f39c12" />
+                            <Ionicons name="information-circle-outline" size={16} color="#888" />
                             <Text style={styles.paiementInfoTexte}>
                                 Vous recevrez une notification Orange Money. Confirmez avec votre code PIN.
                             </Text>
@@ -520,11 +537,11 @@ export default function ReservationsScreen({ navigation }) {
 
                         <Text style={styles.paiementLabel}>Numéro Orange Money</Text>
                         <View style={styles.paiementInput}>
-                            <Ionicons name="phone-portrait-outline" size={18} color="#f39c12" />
+                            <Ionicons name="phone-portrait-outline" size={18} color="#888" />
                             <TextInput
                                 style={styles.paiementInputText}
                                 placeholder="Ex: 620000000"
-                                placeholderTextColor="#666"
+                                placeholderTextColor="#555"
                                 value={numeroPaiement}
                                 onChangeText={setNumeroPaiement}
                                 keyboardType="phone-pad"
@@ -559,19 +576,21 @@ const styles = StyleSheet.create({
     loadingContainer: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
     header: { backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#eee' },
+
     onglets: { flexDirection: 'row', backgroundColor: '#1a1a1a', borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
     onglet: { flex: 1, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
     ongletActif: { borderBottomWidth: 2, borderBottomColor: '#00b5e2' },
-    ongletText: { fontSize: 14, fontWeight: '600', color: '#666' },
+    ongletText: { fontSize: 14, fontWeight: '600', color: '#555' },
     ongletTextActif: { color: '#00b5e2' },
     ongletBadge: { backgroundColor: '#00b5e2', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
     ongletBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+
     emptyContainer: { alignItems: 'center', marginTop: 80 },
-    emptyText: { fontSize: 18, color: '#666', marginTop: 16 },
+    emptyText: { fontSize: 18, color: '#555', marginTop: 16 },
     emptySubtext: { fontSize: 14, color: '#444', marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
 
     cardWrapper: { paddingHorizontal: 16, marginTop: 12 },
-    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#2a2a2a' },
+    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#2a2a2a', borderLeftWidth: 3 },
 
     cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
     trajetRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
@@ -580,55 +599,51 @@ const styles = StyleSheet.create({
     statutText: { fontSize: 11, fontWeight: '600' },
 
     trajetPassager: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-    trajetPassagerText: { fontSize: 12, color: '#f39c12' },
+    trajetPassagerText: { fontSize: 12, color: '#666' },
 
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8, flexWrap: 'wrap' },
-    metaText: { fontSize: 12, color: '#666' },
-    metaDot: { color: '#444', fontSize: 12 },
+    metaText: { fontSize: 12, color: '#555' },
+    metaDot: { color: '#333', fontSize: 12 },
 
-    rebours: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1a2a1a', borderRadius: 8, padding: 8, marginBottom: 10 },
-    reboursText: { fontSize: 12, fontWeight: '600' },
+    rebours: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#252525', borderRadius: 8, padding: 8, marginBottom: 10 },
+    reboursText: { fontSize: 12, color: '#888' },
 
-    paiementOk: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1a3a2a', borderRadius: 8, padding: 8, marginBottom: 10 },
-    paiementOkText: { fontSize: 12, color: '#2ecc71', fontWeight: '600' },
+    paiementOk: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#252525', borderRadius: 8, padding: 8, marginBottom: 10 },
+    paiementOkText: { fontSize: 12, color: '#00b5e2', fontWeight: '600' },
 
     actions: { marginTop: 4 },
 
     btnPayer: {
-        backgroundColor: '#f39c12', borderRadius: 10, padding: 12,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        marginBottom: 8,
+        backgroundColor: '#00b5e2', borderRadius: 10, padding: 12,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8,
     },
     btnPayerText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
 
     actionsSecondaires: { flexDirection: 'row', gap: 8 },
 
     btnSm: {
-        flex: 1, borderWidth: 1, borderColor: '#00b5e2', borderRadius: 8,
-        paddingVertical: 8, flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'center', gap: 4,
+        flex: 1, borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 8,
+        paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
     },
     btnSmDanger: { borderColor: '#e74c3c' },
-    btnSmVert: { backgroundColor: '#2ecc71', borderColor: '#2ecc71' },
+    btnSmBleu: { backgroundColor: '#00b5e2', borderColor: '#00b5e2' },
     btnSmText: { fontSize: 12, fontWeight: '600' },
 
     btnAnnuler: {
-        borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
-        padding: 10, alignItems: 'center',
+        borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10, padding: 10, alignItems: 'center',
     },
     btnAnnulerText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
 
     btnAvis: {
-        borderWidth: 1, borderColor: '#f39c12', borderRadius: 10,
+        borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
         padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     },
-    btnAvisText: { color: '#f39c12', fontSize: 13, fontWeight: '600' },
+    btnAvisText: { color: '#888', fontSize: 13, fontWeight: '600' },
 
-    prixRefuseContainer: { backgroundColor: '#2a1a1a', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#e74c3c' },
-    prixRefuseTexte: { fontSize: 13, color: '#e74c3c', fontWeight: '600' },
-    tentativesRestantes: { fontSize: 12, color: '#888', marginTop: 2, marginBottom: 8 },
+    prixRefuseContainer: { backgroundColor: '#252525', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#2a2a2a' },
+    prixRefuseTexte: { fontSize: 13, color: '#888', marginBottom: 8 },
     nouvellePropositionRow: { flexDirection: 'row', gap: 8 },
-    propositionInput: { flex: 1, backgroundColor: '#252525', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#333' },
+    propositionInput: { flex: 1, backgroundColor: '#1e1e1e', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#333' },
     boutonProposer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
     boutonProposerText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
 
@@ -641,8 +656,8 @@ const styles = StyleSheet.create({
     modalVideText: { color: '#666', fontSize: 15 },
     passagerCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#252525', borderRadius: 12, padding: 12, marginBottom: 8 },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
-    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#00b5e233', alignItems: 'center', justifyContent: 'center' },
-    passagerInitiales: { color: '#00b5e2', fontSize: 16, fontWeight: '700' },
+    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' },
+    passagerInitiales: { color: '#888', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
 
@@ -651,12 +666,12 @@ const styles = StyleSheet.create({
     paiementDetailLabel: { fontSize: 13, color: '#888' },
     paiementDetailValeur: { fontSize: 13, color: '#ddd', textAlign: 'right' },
     paiementDetailSeparator: { height: 1, backgroundColor: '#333', marginVertical: 6 },
-    paiementInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#2a2a1a', borderRadius: 10, padding: 12, marginBottom: 16 },
-    paiementInfoTexte: { fontSize: 13, color: '#f39c12', flex: 1, lineHeight: 20 },
+    paiementInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 16 },
+    paiementInfoTexte: { fontSize: 13, color: '#888', flex: 1, lineHeight: 20 },
     paiementLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-    paiementInput: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#252525', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4, borderWidth: 1, borderColor: '#f39c12', marginBottom: 20 },
+    paiementInput: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#252525', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4, borderWidth: 1, borderColor: '#333', marginBottom: 20 },
     paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
-    boutonConfirmerPaiement: { backgroundColor: '#f39c12', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    boutonConfirmerPaiement: { backgroundColor: '#00b5e2', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 10 },

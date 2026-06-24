@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environments';
 import { Trajet } from '../../shared/models/trajet.model';
 
-
 @Injectable({
     providedIn: 'root'
 })
@@ -21,16 +20,18 @@ export class TrajetService {
     getById(id: number): Observable<Trajet> {
         return this.http.get<Trajet>(`${this.apiUrl}/${id}`);
     }
-rechercher(villeDepart: string, villeArrivee: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/rechercher`, {
-        params: { villeDepart, villeArrivee }
-    });
-}
+
+    rechercher(villeDepart: string, villeArrivee: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/rechercher`, {
+            params: { villeDepart, villeArrivee }
+        });
+    }
 
     getByConducteur(conducteurId: number): Observable<Trajet[]> {
         return this.http.get<Trajet[]>(`${this.apiUrl}/conducteur/${conducteurId}`);
     }
 
+    // ✅ Créer un trajet (publier)
     creer(trajet: any): Observable<Trajet> {
         return this.http.post<Trajet>(this.apiUrl, trajet);
     }

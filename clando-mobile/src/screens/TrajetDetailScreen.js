@@ -268,19 +268,21 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                                 </Text>
                                             )}
                                         </View>
-                                        <TouchableOpacity
-                                            style={styles.passagerBtnChat}
-                                            onPress={() => navigation.navigate('Chat', {
-                                                reservationId: item.id,
-                                                interlocuteur: {
-                                                    id: estConducteur ? item.passagerId : trajet.conducteurId,
-                                                    nom: estConducteur ? item.passagerNom : trajet.conducteurNom,
-                                                    prenom: estConducteur ? item.passagerPrenom : trajet.conducteurPrenom,
-                                                },
-                                                userId: currentUserId,
-                                            })}>
-                                            <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
-                                        </TouchableOpacity>
+    {estConducteur && (
+    <TouchableOpacity
+        style={styles.passagerBtnChat}
+        onPress={() => navigation.navigate('Chat', {
+            reservationId: item.id,
+            interlocuteur: {
+                id: item.passagerId,
+                nom: item.passagerNom,
+                prenom: item.passagerPrenom,
+            },
+            userId: currentUserId,
+        })}>
+        <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
+    </TouchableOpacity>
+)}
                                     </View>
                                 );
                             })

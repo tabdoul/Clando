@@ -222,7 +222,7 @@ export default function RechercheScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
                     <Text style={styles.headerSubtitle}>
-                        Ou souhaitez-vous aller aujourd'hui ?
+                        Où souhaitez-vous aller aujourd'hui ?
                     </Text>
                 </View>
 

@@ -1,338 +1,301 @@
-<div style="max-width: 800px; margin: 30px auto; padding: 0 16px;">
+<div class="page">
+    <div class="container">
 
-    <!-- ─── En-tête profil ─────────────────────────────────────────────── -->
-    <mat-card style="padding: 24px; border-radius: 16px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-
-            <!-- Avatar -->
-            <div style="width: 80px; height: 80px; border-radius: 50%;
-                        background: #00b5e2; display: flex; align-items: center;
-                        justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
-                {{ getInitiales() }}
-            </div>
-
-            <!-- Infos -->
-            <div>
-                <h2 style="margin: 0;">{{ utilisateur?.nom }} {{ utilisateur?.prenom }}</h2>
-                <p style="color: gray; margin: 4px 0;">{{ utilisateur?.email }}</p>
-                <p style="color: gray; margin: 4px 0; font-style: italic;" *ngIf="utilisateur?.miniBio">
-                    {{ utilisateur?.miniBio }}
-                </p>
+        <!-- Header profil -->
+        <div class="profil-header">
+            <div class="avatar">{{ getInitiales() }}</div>
+            <div class="header-info">
+                <h2>{{ utilisateur?.prenom }} {{ utilisateur?.nom }}</h2>
+                <p>{{ utilisateur?.email }}</p>
+                <p class="mini-bio" *ngIf="utilisateur?.miniBio">{{ utilisateur?.miniBio }}</p>
             </div>
         </div>
-    </mat-card>
 
-    <!-- ─── Onglets ────────────────────────────────────────────────────── -->
-    <mat-tab-group animationDuration="0ms">
+        <!-- Onglets -->
+        <mat-tab-group animationDuration="0ms">
 
-        <!-- ══ Onglet 1 : À propos de vous ══ -->
-        <mat-tab label="👤 À propos de vous">
-            <div style="padding: 24px 0; display: flex; flex-direction: column; gap: 16px;">
+            <!-- Onglet 1 : À propos -->
+            <mat-tab label="Profil">
+                <div class="onglet-content">
 
-                <!-- Informations personnelles -->
-                <mat-card style="padding: 20px; border-radius: 12px;">
-                    <h3 style="color: #00b5e2; margin-top: 0;">
-                        <mat-icon style="vertical-align: middle;">edit</mat-icon>
-                        Informations personnelles
-                    </h3>
-                    <form [formGroup]="profilForm" (ngSubmit)="modifierProfil()">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-
-                            <mat-form-field appearance="outline" style="width: 100%;">
-                                <mat-label>Nom</mat-label>
-                                <input matInput formControlName="nom"
-                                       style="color: gray; cursor: not-allowed;">
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline" style="width: 100%;">
-                                <mat-label>Prénom</mat-label>
-                                <input matInput formControlName="prenom"
-                                       style="color: gray; cursor: not-allowed;">
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline" style="width: 100%;">
-                                <mat-label>Email</mat-label>
-                                <input matInput formControlName="email" type="email">
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline" style="width: 100%;">
-                                <mat-label>Téléphone</mat-label>
-                                <input matInput formControlName="telephone">
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline" style="grid-column: span 2; width: 100%;">
-                                <mat-label>Mini bio</mat-label>
-                                <textarea matInput formControlName="miniBio" rows="3"
-                                          placeholder="Parlez un peu de vous..."></textarea>
-                            </mat-form-field>
-
-                        </div>
-                        <button mat-raised-button color="primary" type="submit"
-                                [disabled]="profilForm.invalid" style="margin-top: 8px;">
-                            <mat-icon>save</mat-icon> Enregistrer
-                        </button>
-                    </form>
-                </mat-card>
-
-                <!-- Mes trajets publiés -->
-                <mat-card style="padding: 20px; border-radius: 12px;">
-                    <h3 style="color: #00b5e2; margin-top: 0;">
-                        <mat-icon style="vertical-align: middle;">directions_car</mat-icon>
-                        Mes trajets publiés
-                    </h3>
-
-                    <div *ngIf="trajets.length === 0"
-                         style="text-align: center; padding: 20px; color: gray;">
-                        <mat-icon style="font-size: 48px;">directions_car</mat-icon>
-                        <p>Aucun trajet ouvert</p>
+                    <!-- Informations personnelles -->
+                    <div class="card">
+                        <p class="card-titre">
+                            <mat-icon>person_outline</mat-icon>
+                            Informations personnelles
+                        </p>
+                        <form [formGroup]="profilForm" (ngSubmit)="modifierProfil()">
+                            <div class="form-grid">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Nom</mat-label>
+                                    <input matInput formControlName="nom">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Prénom</mat-label>
+                                    <input matInput formControlName="prenom">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Email</mat-label>
+                                    <input matInput formControlName="email" type="email">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Téléphone</mat-label>
+                                    <input matInput formControlName="telephone">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" class="form-grid-full">
+                                    <mat-label>Mini bio</mat-label>
+                                    <textarea matInput formControlName="miniBio" rows="3"
+                                              placeholder="Parlez un peu de vous..."></textarea>
+                                </mat-form-field>
+                            </div>
+                            <button mat-raised-button class="btn-sauvegarder"
+                                    type="submit" [disabled]="profilForm.invalid">
+                                <mat-icon>save</mat-icon> Enregistrer
+                            </button>
+                        </form>
                     </div>
 
-                    <mat-card *ngFor="let t of trajets"
-                              style="margin-bottom: 12px; padding: 16px; border-radius: 8px;
-                                     border-left: 4px solid #00b5e2;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Mes trajets publiés -->
+                    <div class="card">
+                        <p class="card-titre">
+                            <mat-icon>directions_car</mat-icon>
+                            Mes trajets publiés
+                        </p>
+
+                        <div class="empty-state" *ngIf="trajets.length === 0">
+                            <mat-icon>directions_car</mat-icon>
+                            <p>Aucun trajet ouvert</p>
+                        </div>
+
+                        <div *ngFor="let t of trajets" class="trajet-item">
                             <div>
-                                <div style="font-weight: 600; font-size: 1.1rem;">
-                                    {{ t.villeDepart }} → {{ t.villeArrivee }}
+                                <div class="trajet-villes">{{ t.villeDepart }} → {{ t.villeArrivee }}</div>
+                                <div class="trajet-meta">
+                                    {{ t.dateHeureDepart | date:'dd/MM/yyyy HH:mm' }} ·
+                                    {{ t.placesDisponibles }} place(s) ·
+                                    {{ t.prix | number }} GNF
                                 </div>
-                                <div style="color: gray; font-size: 0.9rem;">
-                                    {{ t.dateHeureDepart | date:'dd/MM/yyyy HH:mm' }}
-                                </div>
-                                <div style="color: gray; font-size: 0.9rem;">
-                                    {{ t.placesDisponibles }} place(s) • {{ t.prix | number }} GNF
-                                </div>
-                                <div *ngIf="t.itineraire" style="color: #00b5e2; font-size: 0.85rem;">
+                                <div *ngIf="t.itineraire" style="color: #00b5e2; font-size: 0.8rem; margin-top: 4px;">
                                     Via {{ t.itineraire }}
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button mat-raised-button color="primary"
-                                        (click)="terminerTrajet(t.id)">
-                                    <mat-icon>check_circle</mat-icon> Terminer
+                            <div class="trajet-actions">
+                                <button mat-raised-button class="btn-terminer" (click)="terminerTrajet(t.id)">
+                                    Terminer
                                 </button>
-                                <button mat-raised-button color="warn"
-                                        (click)="annulerTrajet(t.id)">
-                                    <mat-icon>cancel</mat-icon> Annuler
+                                <button mat-raised-button class="btn-annuler-trajet" (click)="annulerTrajet(t.id)">
+                                    Annuler
                                 </button>
                             </div>
                         </div>
-                    </mat-card>
-                </mat-card>
-
-                <!-- Vérification profil -->
-                <mat-card style="padding: 20px; border-radius: 12px;">
-                    <h3 style="color: #00b5e2; margin-top: 0;">
-                        <mat-icon style="vertical-align: middle;">verified</mat-icon>
-                        Vérifier votre profil
-                    </h3>
-                    <mat-list>
-                        <mat-list-item>
-                            <mat-icon matListItemIcon color="warn">badge</mat-icon>
-                            <div matListItemTitle>Pièce d'identité</div>
-                            <div matListItemLine style="color: gray;">Non vérifiée</div>
-                            <button mat-stroked-button matListItemMeta>Vérifier</button>
-                        </mat-list-item>
-                        <mat-divider></mat-divider>
-                        <mat-list-item>
-                            <mat-icon matListItemIcon color="primary">email</mat-icon>
-                            <div matListItemTitle>Adresse email</div>
-                            <div matListItemLine style="color: gray;">{{ utilisateur?.email }}</div>
-                            <button mat-stroked-button matListItemMeta>Confirmer</button>
-                        </mat-list-item>
-                        <mat-divider></mat-divider>
-                        <mat-list-item>
-                            <mat-icon matListItemIcon color="accent">phone</mat-icon>
-                            <div matListItemTitle>Numéro de téléphone</div>
-                            <div matListItemLine style="color: gray;">
-                                {{ utilisateur?.telephone || 'Non renseigné' }}
-                            </div>
-                            <button mat-stroked-button matListItemMeta>Confirmer</button>
-                        </mat-list-item>
-                    </mat-list>
-                </mat-card>
-
-                <!-- Mes véhicules -->
-                <mat-card style="padding: 20px; border-radius: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;
-                                margin-bottom: 16px;">
-                        <h3 style="color: #00b5e2; margin: 0;">
-                            <mat-icon style="vertical-align: middle;">directions_car</mat-icon>
-                            Mes véhicules
-                        </h3>
-                        <button mat-raised-button color="primary"
-                                (click)="showVehiculeForm = !showVehiculeForm">
-                            <mat-icon>add</mat-icon> Ajouter
-                        </button>
                     </div>
 
-                    <!-- Formulaire ajout -->
-                    <mat-card *ngIf="showVehiculeForm"
-                              style="padding: 16px; margin-bottom: 16px;
-                                     background: #f5f5f5; border-radius: 8px;">
-                        <form [formGroup]="vehiculeForm" (ngSubmit)="ajouterVehicule()">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                <mat-form-field appearance="outline" style="width: 100%;">
-                                    <mat-label>Marque</mat-label>
-                                    <input matInput formControlName="marque" placeholder="Ex: Toyota">
-                                </mat-form-field>
-                                <mat-form-field appearance="outline" style="width: 100%;">
-                                    <mat-label>Modèle</mat-label>
-                                    <input matInput formControlName="modele" placeholder="Ex: Corolla">
-                                </mat-form-field>
-                                <mat-form-field appearance="outline" style="width: 100%;">
-                                    <mat-label>Immatriculation</mat-label>
-                                    <input matInput formControlName="immatriculation"
-                                           placeholder="Ex: GN-1234-A">
-                                </mat-form-field>
-                                <mat-form-field appearance="outline" style="width: 100%;">
-                                    <mat-label>Nombre de places</mat-label>
-                                    <input matInput formControlName="nbPlaces" type="number"
-                                           min="1" max="9">
-                                </mat-form-field>
-                            </div>
-                            <button mat-raised-button color="primary" type="submit"
-                                    [disabled]="vehiculeForm.invalid">
-                                <mat-icon>save</mat-icon> Enregistrer
-                            </button>
-                            <button mat-stroked-button type="button"
-                                    (click)="showVehiculeForm = false" style="margin-left: 8px;">
-                                Annuler
-                            </button>
-                        </form>
-                    </mat-card>
+                    <!-- Vérification profil -->
+                    <div class="card">
+                        <p class="card-titre">
+                            <mat-icon>verified</mat-icon>
+                            Vérification du profil
+                        </p>
 
-                    <!-- Liste vide -->
-                    <div *ngIf="vehicules.length === 0 && !showVehiculeForm"
-                         style="text-align: center; padding: 20px; color: gray;">
-                        <mat-icon style="font-size: 48px;">directions_car</mat-icon>
-                        <p>Aucun véhicule enregistré</p>
+                        <div class="verif-item">
+                            <div class="verif-gauche">
+                                <mat-icon>badge</mat-icon>
+                                <div>
+                                    <div class="verif-label">Pièce d'identité</div>
+                                    <div class="verif-sous-label">Non vérifiée</div>
+                                </div>
+                            </div>
+                            <button mat-raised-button class="btn-verifier">Vérifier</button>
+                        </div>
+
+                        <div class="verif-item">
+                            <div class="verif-gauche">
+                                <mat-icon>email</mat-icon>
+                                <div>
+                                    <div class="verif-label">Email</div>
+                                    <div class="verif-sous-label">{{ utilisateur?.email }}</div>
+                                </div>
+                            </div>
+                            <button mat-raised-button class="btn-verifier">Confirmer</button>
+                        </div>
+
+                        <div class="verif-item">
+                            <div class="verif-gauche">
+                                <mat-icon>phone</mat-icon>
+                                <div>
+                                    <div class="verif-label">Téléphone</div>
+                                    <div class="verif-sous-label">{{ utilisateur?.telephone || 'Non renseigné' }}</div>
+                                </div>
+                            </div>
+                            <button mat-raised-button class="btn-verifier">Confirmer</button>
+                        </div>
                     </div>
 
-                    <!-- Liste véhicules -->
-                    <mat-card *ngFor="let v of vehicules"
-                              style="margin-bottom: 12px; padding: 16px; border-radius: 8px;
-                                     border-left: 4px solid #00b5e2;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Mes véhicules -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <p class="card-titre" style="margin: 0;">
+                                <mat-icon>directions_car</mat-icon>
+                                Mes véhicules
+                            </p>
+                            <button mat-raised-button class="btn-ajouter"
+                                    (click)="showVehiculeForm = !showVehiculeForm">
+                                <mat-icon>add</mat-icon> Ajouter
+                            </button>
+                        </div>
+
+                        <!-- Formulaire ajout -->
+                        <div *ngIf="showVehiculeForm" class="form-vehicule">
+                            <form [formGroup]="vehiculeForm" (ngSubmit)="ajouterVehicule()">
+                                <div class="form-grid">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Marque</mat-label>
+                                        <input matInput formControlName="marque" placeholder="Ex: Toyota">
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Modèle</mat-label>
+                                        <input matInput formControlName="modele" placeholder="Ex: Corolla">
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Immatriculation</mat-label>
+                                        <input matInput formControlName="immatriculation" placeholder="Ex: GN-1234-A">
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Nombre de places</mat-label>
+                                        <input matInput formControlName="nbPlaces" type="number" min="1" max="9">
+                                    </mat-form-field>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button mat-raised-button class="btn-sauvegarder"
+                                            type="submit" [disabled]="vehiculeForm.invalid">
+                                        <mat-icon>save</mat-icon> Enregistrer
+                                    </button>
+                                    <button mat-button type="button"
+                                            (click)="showVehiculeForm = false"
+                                            style="color: #666;">
+                                        Annuler
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="empty-state" *ngIf="vehicules.length === 0 && !showVehiculeForm">
+                            <mat-icon>directions_car</mat-icon>
+                            <p>Aucun véhicule enregistré</p>
+                        </div>
+
+                        <div *ngFor="let v of vehicules" class="vehicule-item">
                             <div>
-                                <div style="font-weight: 600; font-size: 1.1rem;">
-                                    {{ v.marque }} {{ v.modele }}
-                                </div>
-                                <div style="color: gray; font-size: 0.9rem;">
-                                    {{ v.immatriculation }} • {{ v.nbPlaces }} places
-                                </div>
+                                <div class="vehicule-nom">{{ v.marque }} {{ v.modele }}</div>
+                                <div class="vehicule-meta">{{ v.immatriculation }} · {{ v.nbPlaces }} places</div>
                             </div>
-                            <button mat-icon-button color="warn" (click)="supprimerVehicule(v.id)">
-                                <mat-icon>delete</mat-icon>
+                            <button mat-icon-button (click)="supprimerVehicule(v.id)"
+                                    style="color: #e74c3c;">
+                                <mat-icon>delete_outline</mat-icon>
                             </button>
                         </div>
-                    </mat-card>
-                </mat-card>
+                    </div>
 
-            </div>
-        </mat-tab>
-
-        <!-- ══ Onglet 2 : Compte ══ -->
-        <mat-tab label="⚙️ Compte">
-            <div style="padding: 24px 0; display: flex; flex-direction: column; gap: 16px;">
-
-                <!-- Mon activité -->
-                <div>
-                    <h3 style="color: #00b5e2; margin-bottom: 12px;">Mon activité</h3>
-                    <mat-card style="border-radius: 12px;">
-                        <mat-list>
-                            <mat-list-item routerLink="/avis" style="cursor: pointer;">
-                                <mat-icon matListItemIcon>star</mat-icon>
-                                <div matListItemTitle>Avis reçus</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item routerLink="/reservations" style="cursor: pointer;">
-                                <mat-icon matListItemIcon>event_seat</mat-icon>
-                                <div matListItemTitle>Mes trajets</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                        </mat-list>
-                    </mat-card>
                 </div>
+            </mat-tab>
 
-                <!-- Paramètres -->
-                <div>
-                    <h3 style="color: #00b5e2; margin-bottom: 12px;">Paramètres</h3>
-                    <mat-card style="border-radius: 12px;">
-                        <mat-list>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>lock</mat-icon>
-                                <div matListItemTitle>Mot de passe</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item routerLink="/paiements" style="cursor: pointer;">
-                                <mat-icon matListItemIcon>payment</mat-icon>
-                                <div matListItemTitle>Paiements et remboursements</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                        </mat-list>
-                    </mat-card>
+            <!-- Onglet 2 : Compte -->
+            <mat-tab label="Compte">
+                <div class="onglet-content">
+
+                    <!-- Mon activité -->
+                    <div class="card">
+                        <p class="section-titre">Mon activité</p>
+                        <div class="nav-item" routerLink="/avis">
+                            <div class="nav-gauche">
+                                <mat-icon>star_outline</mat-icon>
+                                <span class="nav-label">Avis reçus</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                        <div class="nav-item" routerLink="/mes-reservations">
+                            <div class="nav-gauche">
+                                <mat-icon>event_seat</mat-icon>
+                                <span class="nav-label">Mes réservations</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                    </div>
+
+                    <!-- Paramètres -->
+                    <div class="card">
+                        <p class="section-titre">Paramètres</p>
+                        <div class="nav-item">
+                            <div class="nav-gauche">
+                                <mat-icon>lock_outline</mat-icon>
+                                <span class="nav-label">Mot de passe</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                        <div class="nav-item" routerLink="/paiements">
+                            <div class="nav-gauche">
+                                <mat-icon>payment</mat-icon>
+                                <span class="nav-label">Paiements et remboursements</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                    </div>
+
+                    <!-- Légal & Support -->
+                    <div class="card">
+                        <p class="section-titre">Légal & Support</p>
+                        <div class="nav-item">
+                            <div class="nav-gauche">
+                                <mat-icon>help_outline</mat-icon>
+                                <span class="nav-label">Aide</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                        <div class="nav-item" routerLink="/mentions-legales">
+                            <div class="nav-gauche">
+                                <mat-icon>description</mat-icon>
+                                <span class="nav-label">Conditions générales</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-gauche">
+                                <mat-icon>privacy_tip</mat-icon>
+                                <span class="nav-label">Protection des données</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-gauche">
+                                <mat-icon>report_problem</mat-icon>
+                                <span class="nav-label">Signaler un problème</span>
+                            </div>
+                            <mat-icon class="nav-fleche">chevron_right</mat-icon>
+                        </div>
+                    </div>
+
+                    <!-- Danger zone -->
+                    <div class="card" style="border-left: 3px solid #e74c3c;">
+                        <p class="section-titre" style="color: #e74c3c;">Zone de danger</p>
+                        <div class="danger-item" (click)="logout()">
+                            <div class="danger-gauche">
+                                <mat-icon>logout</mat-icon>
+                                <span class="danger-label">Déconnexion</span>
+                            </div>
+                            <mat-icon style="color: #444;">chevron_right</mat-icon>
+                        </div>
+                        <div class="danger-item" (click)="fermerCompte()">
+                            <div class="danger-gauche">
+                                <mat-icon>delete_forever</mat-icon>
+                                <span class="danger-label">Fermer mon compte</span>
+                            </div>
+                            <mat-icon style="color: #444;">chevron_right</mat-icon>
+                        </div>
+                    </div>
+
                 </div>
+            </mat-tab>
 
-                <!-- Légal & Support -->
-                <div>
-                    <h3 style="color: #00b5e2; margin-bottom: 12px;">Légal & Support</h3>
-                    <mat-card style="border-radius: 12px;">
-                        <mat-list>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>help</mat-icon>
-                                <div matListItemTitle>Aide</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>star_rate</mat-icon>
-                                <div matListItemTitle>Noter l'application</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>description</mat-icon>
-                                <div matListItemTitle>Conditions générales</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>privacy_tip</mat-icon>
-                                <div matListItemTitle>Protection des données</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item style="cursor: pointer;">
-                                <mat-icon matListItemIcon>report_problem</mat-icon>
-                                <div matListItemTitle>Signaler un problème</div>
-                                <mat-icon matListItemMeta>chevron_right</mat-icon>
-                            </mat-list-item>
-                        </mat-list>
-                    </mat-card>
-                </div>
-
-                <!-- Danger zone -->
-                <div>
-                    <h3 style="color: #f44336; margin-bottom: 12px;">Danger zone</h3>
-                    <mat-card style="border-radius: 12px; border-left: 4px solid #f44336;">
-                        <mat-list>
-                            <mat-list-item (click)="logout()" style="cursor: pointer;">
-                                <mat-icon matListItemIcon color="warn">logout</mat-icon>
-                                <div matListItemTitle style="color: #f44336;">Déconnexion</div>
-                            </mat-list-item>
-                            <mat-divider></mat-divider>
-                            <mat-list-item (click)="fermerCompte()" style="cursor: pointer;">
-                                <mat-icon matListItemIcon color="warn">delete_forever</mat-icon>
-                                <div matListItemTitle style="color: #f44336;">Fermer mon compte</div>
-                            </mat-list-item>
-                        </mat-list>
-                    </mat-card>
-                </div>
-
-            </div>
-        </mat-tab>
-
-    </mat-tab-group>
+        </mat-tab-group>
+    </div>
 </div>
