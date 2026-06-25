@@ -20,6 +20,7 @@ public class ReservationResponse {
     private String villeDepart;
     private String villeArrivee;
     private Double prixPropose;
+    private Double prixConducteur; // 
     private int nbTentatives;
     private String passagerPhoto;
     private String djomyTransactionId;
@@ -78,6 +79,9 @@ public class ReservationResponse {
     public Double getPrixPropose() { return prixPropose; }
     public void setPrixPropose(Double prixPropose) { this.prixPropose = prixPropose; }
 
+    public Double getPrixConducteur() { return prixConducteur; } // 
+    public void setPrixConducteur(Double v) { this.prixConducteur = v; } // 
+
     public int getNbTentatives() { return nbTentatives; }
     public void setNbTentatives(int nbTentatives) { this.nbTentatives = nbTentatives; }
 
@@ -104,6 +108,7 @@ public class ReservationResponse {
 
     public Double getLongitudeConducteur() { return longitudeConducteur; }
     public void setLongitudeConducteur(Double v) { this.longitudeConducteur = v; }
+
     public double getPrix() { return prix; }
     public void setPrix(double v) { this.prix = v; }
 
@@ -134,6 +139,7 @@ public class ReservationResponse {
         public Builder villeDepart(String val) { r.villeDepart = val; return this; }
         public Builder villeArrivee(String val) { r.villeArrivee = val; return this; }
         public Builder prixPropose(Double val) { r.prixPropose = val; return this; }
+        public Builder prixConducteur(Double val) { r.prixConducteur = val; return this; } // 
         public Builder nbTentatives(int val) { r.nbTentatives = val; return this; }
         public Builder passagerPhoto(String val) { r.passagerPhoto = val; return this; }
         public Builder djomyTransactionId(String val) { r.djomyTransactionId = val; return this; }
