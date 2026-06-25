@@ -19,8 +19,6 @@ import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
-import com.example.Clando.service.DjomyService;
-import com.example.Clando.service.NotificationService;
 
 @Service
 public class ReservationService {
@@ -82,7 +80,6 @@ public class ReservationService {
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
         trajetRepository.save(trajet);
 
-        // ✅ Notifier le conducteur
         String tokenConducteur = trajet.getConducteur().getExpoPushToken();
         if (tokenConducteur != null && !tokenConducteur.isBlank()) {
             notificationService.envoyerNotification(
@@ -98,47 +95,49 @@ public class ReservationService {
     }
 
     @Transactional
-public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
-    Reservation reservation = findById(reservationId);
+    public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
+        Reservation reservation = findById(reservationId);
 
-    if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
-        throw new IllegalStateException("La reservation doit etre confirmee pour payer");
-    }
-
-    if ("SUCCESS".equals(reservation.getStatutPaiement())) {
-        throw new IllegalStateException("Cette reservation est deja payee");
-    }
-
-    Trajet trajet = reservation.getTrajet();
-    double montant = reservation.getPrixPropose() != null
-        ? reservation.getPrixPropose()
-        : Math.round(trajet.getPrix() * COMMISSION);
-
-    String description = "Reservation Wayvo : " +
-        trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
-
-    String reference = "WAYVO-" + System.currentTimeMillis();
-
-    try {
-        // ✅ Paiement OM direct — pas de redirection
-        Map<String, Object> paiement = djomyService.initierPaiementOM(
-            numeroTelephone, montant, reference, description
-        );
-
-        Map<String, Object> data = (Map<String, Object>) paiement.get("data");
-        if (data != null) {
-            if (data.containsKey("transactionId")) {
-                reservation.setDjomyTransactionId((String) data.get("transactionId"));
-            }
-            reservation.setStatutPaiement("PENDING");
-            reservation.setNumeroTelephone(numeroTelephone);
+        if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
+            throw new IllegalStateException("La reservation doit etre confirmee pour payer");
         }
-    } catch (Exception e) {
-        throw new IllegalStateException("Erreur lors de l'initiation du paiement : " + e.getMessage());
-    }
 
-    return toResponse(reservationRepository.save(reservation));
-}
+        if ("SUCCESS".equals(reservation.getStatutPaiement())) {
+            throw new IllegalStateException("Cette reservation est deja payee");
+        }
+
+        Trajet trajet = reservation.getTrajet();
+
+        double prixBase = reservation.getPrixPropose() != null
+            ? reservation.getPrixPropose()
+            : trajet.getPrix();
+
+        double montant = Math.round(prixBase * COMMISSION);
+
+        String description = "Reservation Wayvo : " +
+            trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
+
+        String reference = "WAYVO-" + System.currentTimeMillis();
+
+        try {
+            Map<String, Object> paiement = djomyService.initierPaiementOM(
+                numeroTelephone, montant, reference, description
+            );
+
+            Map<String, Object> data = (Map<String, Object>) paiement.get("data");
+            if (data != null) {
+                if (data.containsKey("transactionId")) {
+                    reservation.setDjomyTransactionId((String) data.get("transactionId"));
+                }
+                reservation.setStatutPaiement("PENDING");
+                reservation.setNumeroTelephone(numeroTelephone);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Erreur lors de l'initiation du paiement : " + e.getMessage());
+        }
+
+        return toResponse(reservationRepository.save(reservation));
+    }
 
     @Transactional
     public Map<String, Object> annuler(Long id) {
@@ -157,18 +156,19 @@ public ReservationResponse initierPaiement(Long reservationId, String numeroTele
         LocalDateTime heureDepart = trajet.getDateHeureDepart();
 
         boolean apresConfirmation = reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE;
-        boolean apayé = "SUCCESS".equals(reservation.getStatutPaiement());
+        boolean aPaye = "SUCCESS".equals(reservation.getStatutPaiement());
         boolean moinsDe2h = heureDepart.minusHours(2).isBefore(maintenant);
 
-        String typeRemboursement;
-        double montantPaye = reservation.getPrixPropose() != null
+        double prixBase = reservation.getPrixPropose() != null
             ? reservation.getPrixPropose()
-            : Math.round(trajet.getPrix() * COMMISSION);
+            : trajet.getPrix();
 
+        double montantPaye = Math.round(prixBase * COMMISSION);
         double montantRembourse;
         double fraisAnnulation = 0;
+        String typeRemboursement;
 
-        if (!apresConfirmation || !apayé) {
+        if (!apresConfirmation || !aPaye) {
             typeRemboursement = "AUCUN";
             montantRembourse = 0;
         } else if (!moinsDe2h) {
@@ -205,64 +205,62 @@ public ReservationResponse initierPaiement(Long reservationId, String numeroTele
     }
 
     @Transactional
-public ReservationResponse repondreNegociation(Long reservationId, boolean accepter, Double prixConducteur) {
-    Reservation reservation = reservationRepository.findById(reservationId)
-            .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
+    public ReservationResponse repondreNegociation(Long reservationId, boolean accepter, Double prixConducteur) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
 
-    if (accepter) {
-        //  Conducteur accepte — confirmation normale
-        reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
-        reservation.setDateConfirmation(
-            ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
-        );
-        String token = reservation.getPassager().getExpoPushToken();
-        if (token != null && !token.isBlank()) {
-            notificationService.envoyerNotification(
-                token,
-                "Reservation confirmee !",
-                "Votre trajet " + reservation.getTrajet().getVilleDepart() +
-                " -> " + reservation.getTrajet().getVilleArrivee() +
-                " est confirme. Vous avez 30 minutes pour effectuer le paiement."
+        if (accepter) {
+            reservation.setStatut(Reservation.StatutReservation.CONFIRMEE);
+            reservation.setDateConfirmation(
+                ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
             );
-        }
-    } else if (prixConducteur != null) {
-        //  Conducteur propose un contre-prix
-        reservation.setStatut(Reservation.StatutReservation.CONTRE_OFFRE);
-        reservation.setPrixConducteur(prixConducteur);
+            String token = reservation.getPassager().getExpoPushToken();
+            if (token != null && !token.isBlank()) {
+                notificationService.envoyerNotification(
+                    token,
+                    "Reservation confirmee !",
+                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
+                    " -> " + reservation.getTrajet().getVilleArrivee() +
+                    " est confirme. Vous avez 30 minutes pour effectuer le paiement."
+                );
+            }
+        } else if (prixConducteur != null) {
+            reservation.setStatut(Reservation.StatutReservation.CONTRE_OFFRE);
+            reservation.setPrixConducteur(prixConducteur);
 
-        String token = reservation.getPassager().getExpoPushToken();
-        if (token != null && !token.isBlank()) {
-            notificationService.envoyerNotification(
-                token,
-                "Contre-offre recue !",
-                "Le conducteur propose " + prixConducteur.longValue() +
-                " GNF pour votre trajet. Acceptez ou refusez dans l'application."
-            );
-        }
-    } else {
-        //  Refus simple sans contre-offre
-        if (reservation.getNbTentatives() >= 1) {
-            reservation.setStatut(Reservation.StatutReservation.REFUSEE);
-            Trajet trajet = reservation.getTrajet();
-            trajet.setPlacesDisponibles(
-                trajet.getPlacesDisponibles() + reservation.getNbPlaces()
-            );
-            trajetRepository.save(trajet);
+            String token = reservation.getPassager().getExpoPushToken();
+            if (token != null && !token.isBlank()) {
+                notificationService.envoyerNotification(
+                    token,
+                    "Contre-offre recue !",
+                    "Le conducteur propose " + prixConducteur.longValue() +
+                    " GNF pour votre trajet. Acceptez ou refusez dans l'application."
+                );
+            }
         } else {
-            reservation.setStatut(Reservation.StatutReservation.PRIX_REFUSE);
-            reservation.setNbTentatives(reservation.getNbTentatives() + 1);
+            if (reservation.getNbTentatives() >= 1) {
+                reservation.setStatut(Reservation.StatutReservation.REFUSEE);
+                Trajet trajet = reservation.getTrajet();
+                trajet.setPlacesDisponibles(
+                    trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+                );
+                trajetRepository.save(trajet);
+            } else {
+                reservation.setStatut(Reservation.StatutReservation.PRIX_REFUSE);
+                reservation.setNbTentatives(reservation.getNbTentatives() + 1);
+            }
         }
-    }
 
-    return toResponse(reservationRepository.save(reservation));
-}
+        return toResponse(reservationRepository.save(reservation));
+    }
 
     @Transactional
     public ReservationResponse nouvelleProposition(Long reservationId, Double nouveauPrix) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
 
-        if (reservation.getStatut() != Reservation.StatutReservation.PRIX_REFUSE) {
+        if (reservation.getStatut() != Reservation.StatutReservation.PRIX_REFUSE
+            && reservation.getStatut() != Reservation.StatutReservation.CONTRE_OFFRE) {
             throw new IllegalStateException("Impossible de faire une nouvelle proposition");
         }
 
@@ -333,6 +331,10 @@ public ReservationResponse repondreNegociation(Long reservationId, boolean accep
     }
 
     public ReservationResponse toResponse(Reservation r) {
+        double prixBase = r.getPrixPropose() != null
+            ? r.getPrixPropose()
+            : r.getTrajet().getPrix();
+
         return ReservationResponse.builder()
                 .id(r.getId())
                 .dateReservation(r.getDateReservation())
@@ -350,6 +352,7 @@ public ReservationResponse repondreNegociation(Long reservationId, boolean accep
                 .villeDepart(r.getTrajet().getVilleDepart())
                 .villeArrivee(r.getTrajet().getVilleArrivee())
                 .prixPropose(r.getPrixPropose())
+                .prixConducteur(r.getPrixConducteur())
                 .nbTentatives(r.getNbTentatives())
                 .djomyTransactionId(r.getDjomyTransactionId())
                 .statutPaiement(r.getStatutPaiement())
@@ -358,9 +361,7 @@ public ReservationResponse repondreNegociation(Long reservationId, boolean accep
                 .latitudeConducteur(r.getTrajet().getLatitudeConducteur())
                 .longitudeConducteur(r.getTrajet().getLongitudeConducteur())
                 .dateConfirmation(r.getDateConfirmation())
-                .prix(Math.round(r.getTrajet().getPrix() * 1.13))
-                .departPassager(r.getDepartPassager())
-                .arriveePassager(r.getArriveePassager())
+                .prix(Math.round(prixBase * COMMISSION))
                 .departPassager(r.getDepartPassager())
                 .arriveePassager(r.getArriveePassager())
                 .build();

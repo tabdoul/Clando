@@ -33,7 +33,6 @@ const CompteARebours = ({ dateConfirmation }) => {
         return () => clearInterval(interval);
     }, [dateConfirmation]);
 
-    // ✅ On n'affiche plus rien si expiré
     if (expire) return null;
 
     return (
@@ -166,6 +165,50 @@ export default function ReservationsScreen({ navigation }) {
         }
     };
 
+    const accepterContreOffre = async (reservation) => {
+        Alert.alert(
+            'Accepter le prix',
+            `Accepter ${reservation.prixConducteur?.toLocaleString()} GNF propose par le conducteur ?`,
+            [
+                { text: 'Non', style: 'cancel' },
+                {
+                    text: 'Oui, accepter',
+                    onPress: async () => {
+                        try {
+                            await api.patch(`/reservations/${reservation.id}/nouvelle-proposition?nouveauPrix=${reservation.prixConducteur}`);
+                            await api.patch(`/reservations/${reservation.id}/negociation?accepter=true`);
+                            chargerReservations();
+                            Alert.alert('Prix accepte !', 'Vous avez 30 minutes pour effectuer le paiement.');
+                        } catch (error) {
+                            Alert.alert('Erreur', error.response?.data?.erreur || "Impossible d'accepter");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const refuserContreOffre = async (reservation) => {
+        Alert.alert(
+            'Refuser le prix',
+            'Refuser la contre-offre du conducteur ? La reservation sera annulee.',
+            [
+                { text: 'Non', style: 'cancel' },
+                {
+                    text: 'Oui, refuser', style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await api.patch(`/reservations/${reservation.id}/annuler`);
+                            chargerReservations();
+                        } catch (error) {
+                            Alert.alert('Erreur', error.response?.data?.erreur || 'Impossible de refuser');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const getStatutStyle = (statut) => {
         switch (statut) {
             case 'CONFIRMEE': return { bg: '#252525', text: '#eee', label: 'Confirmee' };
@@ -173,16 +216,17 @@ export default function ReservationsScreen({ navigation }) {
             case 'ANNULEE': return { bg: '#252525', text: '#666', label: 'Annulee' };
             case 'REFUSEE': return { bg: '#252525', text: '#666', label: 'Refusee' };
             case 'PRIX_REFUSE': return { bg: '#252525', text: '#888', label: 'Prix refuse' };
+            case 'CONTRE_OFFRE': return { bg: '#252525', text: '#888', label: 'Contre-offre' };
             case 'TERMINEE': return { bg: '#252525', text: '#666', label: 'Terminee' };
             default: return { bg: '#252525', text: '#666', label: statut };
         }
     };
 
-    // ✅ Indicateur coloré minimaliste selon statut
     const getStatutIndicateur = (statut) => {
         switch (statut) {
             case 'CONFIRMEE': return '#00b5e2';
             case 'EN_ATTENTE': return '#555';
+            case 'CONTRE_OFFRE': return '#555';
             case 'ANNULEE': return '#333';
             case 'REFUSEE': return '#333';
             case 'PRIX_REFUSE': return '#555';
@@ -245,7 +289,7 @@ export default function ReservationsScreen({ navigation }) {
                         )}
                     </View>
 
-                    {/* Compte à rebours — sobre, sans rouge */}
+                    {/* Compte à rebours */}
                     {doitPayer && item.dateConfirmation && (
                         <CompteARebours dateConfirmation={item.dateConfirmation} />
                     )}
@@ -369,6 +413,49 @@ export default function ReservationsScreen({ navigation }) {
                             </View>
                         </View>
                     )}
+
+                    {/* CONTRE_OFFRE */}
+                    {item.statut === 'CONTRE_OFFRE' && (
+                        <View style={styles.contreOffreContainer}>
+                            <View style={styles.contreOffreHeader}>
+                                <Ionicons name="swap-horizontal-outline" size={14} color="#888" />
+                                <Text style={styles.contreOffreTexte}>
+                                    Le conducteur propose un nouveau prix
+                                </Text>
+                            </View>
+                            <View style={styles.contreOffrePrix}>
+                                {item.prixPropose && (
+                                    <View style={styles.contreOffrePrixItem}>
+                                        <Text style={styles.contreOffrePrixLabel}>Votre prix</Text>
+                                        <Text style={styles.contreOffrePrixValeurBarre}>
+                                            {item.prixPropose.toLocaleString()} GNF
+                                        </Text>
+                                    </View>
+                                )}
+                                <Ionicons name="arrow-forward" size={14} color="#555" />
+                                <View style={styles.contreOffrePrixItem}>
+                                    <Text style={styles.contreOffrePrixLabel}>Prix conducteur</Text>
+                                    <Text style={styles.contreOffrePrixValeur}>
+                                        {item.prixConducteur?.toLocaleString()} GNF
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={styles.contreOffreBoutons}>
+                                <TouchableOpacity
+                                    style={styles.btnAccepterContreOffre}
+                                    onPress={() => accepterContreOffre(item)}>
+                                    <Ionicons name="checkmark-circle-outline" size={14} color="white" />
+                                    <Text style={styles.btnAccepterContreOffreText}>Accepter</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.btnRefuserContreOffre}
+                                    onPress={() => refuserContreOffre(item)}>
+                                    <Ionicons name="close-circle-outline" size={14} color="#e74c3c" />
+                                    <Text style={styles.btnRefuserContreOffreText}>Refuser</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
                 </View>
             </View>
         );
@@ -383,7 +470,7 @@ export default function ReservationsScreen({ navigation }) {
     }
 
     const reservationsEnCours = reservations.filter(r =>
-        ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut)
+        ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE', 'CONTRE_OFFRE'].includes(r.statut)
     );
     const reservationsHistorique = reservations.filter(r =>
         ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut)
@@ -646,6 +733,26 @@ const styles = StyleSheet.create({
     propositionInput: { flex: 1, backgroundColor: '#1e1e1e', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#333' },
     boutonProposer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
     boutonProposerText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
+
+    contreOffreContainer: { backgroundColor: '#252525', borderRadius: 10, padding: 12, marginTop: 8, borderWidth: 1, borderColor: '#333' },
+    contreOffreHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
+    contreOffreTexte: { fontSize: 13, color: '#888' },
+    contreOffrePrix: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginBottom: 12 },
+    contreOffrePrixItem: { alignItems: 'center', gap: 4 },
+    contreOffrePrixLabel: { fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: 1 },
+    contreOffrePrixValeurBarre: { fontSize: 13, color: '#444', textDecorationLine: 'line-through' },
+    contreOffrePrixValeur: { fontSize: 16, fontWeight: 'bold', color: '#eee' },
+    contreOffreBoutons: { flexDirection: 'row', gap: 8 },
+    btnAccepterContreOffre: {
+        flex: 1, backgroundColor: '#00b5e2', borderRadius: 8,
+        paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    },
+    btnAccepterContreOffreText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
+    btnRefuserContreOffre: {
+        flex: 1, borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8,
+        paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    },
+    btnRefuserContreOffreText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
     modalCard: { backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%', borderTopWidth: 1, borderColor: '#2a2a2a' },
