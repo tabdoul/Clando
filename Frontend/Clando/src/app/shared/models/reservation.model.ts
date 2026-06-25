@@ -4,11 +4,13 @@ export type StatutReservation =
     | 'ANNULEE'
     | 'REFUSEE'
     | 'PRIX_REFUSE'
+    | 'CONTRE_OFFRE'
     | 'TERMINEE';
 
 export interface Reservation {
     id?: number;
     dateReservation?: string;
+    dateConfirmation?: string;
     nbPlaces: number;
     statut: StatutReservation;
 
@@ -16,6 +18,7 @@ export interface Reservation {
     passagerNom?: string;
     passagerPrenom?: string;
     passagerPhoto?: string;
+    passagerTelephone?: string;
 
     conducteurId?: number;
     conducteurNom?: string;
@@ -25,19 +28,23 @@ export interface Reservation {
     villeDepart?: string;
     villeArrivee?: string;
 
-    prixPropose?: number;
+    prix?: number;           // prix total avec commission (passager paie)
+    prixPropose?: number;    // prix proposé par le passager
+    prixConducteur?: number; // contre-offre du conducteur
     nbTentatives?: number;
 
     djomyTransactionId?: string;
     statutPaiement?: string;
     urlPaiement?: string;
 
-    // ✅ Trajet passager
+    trajetDemarre?: boolean;
+    latitudeConducteur?: number;
+    longitudeConducteur?: number;
+
     departPassager?: string;
     arriveePassager?: string;
 }
 
-// ✅ Interface dédiée pour la création
 export interface ReservationRequest {
     nbPlaces: number;
     passagerId: number;

@@ -21,6 +21,10 @@ export class ReservationService {
         return this.http.get<Reservation>(`${this.apiUrl}/${id}`);
     }
 
+    getAll(): Observable<Reservation[]> {
+        return this.http.get<Reservation[]>(this.apiUrl);
+    }
+
     getByPassager(passagerId: number): Observable<Reservation[]> {
         return this.http.get<Reservation[]>(`${this.apiUrl}/passager/${passagerId}`);
     }
@@ -48,14 +52,29 @@ export class ReservationService {
         return this.http.patch<any>(`${this.apiUrl}/${id}/annuler`, null);
     }
 
+    // Accepter ou refuser sans contre-offre
     repondreNegociation(id: number, accepter: boolean): Observable<Reservation> {
         const params = new HttpParams().set('accepter', String(accepter));
+        return this.http.patch<Reservation>(`${this.apiUrl}/${id}/negociation`, null, { params });
+    }
+
+    // Conducteur envoie une contre-offre avec son prix
+    repondreNegociationAvecPrix(id: number, prixConducteur: number): Observable<Reservation> {
+        const params = new HttpParams()
+            .set('accepter', 'false')
+            .set('prixConducteur', String(prixConducteur));
         return this.http.patch<Reservation>(`${this.apiUrl}/${id}/negociation`, null, { params });
     }
 
     nouvelleProposition(id: number, nouveauPrix: number): Observable<Reservation> {
         const params = new HttpParams().set('nouveauPrix', String(nouveauPrix));
         return this.http.patch<Reservation>(`${this.apiUrl}/${id}/nouvelle-proposition`, null, { params });
+    }
+
+    // Paiement Orange Money
+    payer(id: number, numeroTelephone: string): Observable<Reservation> {
+        const params = new HttpParams().set('numeroTelephone', numeroTelephone);
+        return this.http.post<Reservation>(`${this.apiUrl}/${id}/payer`, null, { params });
     }
 
     supprimer(id: number): Observable<void> {

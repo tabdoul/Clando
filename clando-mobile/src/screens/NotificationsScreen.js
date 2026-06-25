@@ -79,6 +79,7 @@ export default function NotificationsScreen({ navigation }) {
         setShowContreOffreModal(true);
     };
 
+    // ✅ CORRIGÉ — prixConducteur passé dans l'URL
     const envoyerContreOffre = async () => {
         const prix = parseFloat(contreOffre);
         if (isNaN(prix) || prix <= 0) {
@@ -87,7 +88,9 @@ export default function NotificationsScreen({ navigation }) {
         }
         setLoadingAction(true);
         try {
-            await api.patch(`/reservations/${reservationSelectionnee.id}/negociation?accepter=false`);
+            await api.patch(
+                `/reservations/${reservationSelectionnee.id}/negociation?accepter=false&prixConducteur=${prix}`
+            );
             setShowContreOffreModal(false);
             chargerNotifications();
             Alert.alert(
@@ -112,6 +115,7 @@ export default function NotificationsScreen({ navigation }) {
                     onPress: async () => {
                         setLoadingAction(true);
                         try {
+                            // ✅ Pas de prixConducteur = refus simple
                             await api.patch(`/reservations/${item.id}/negociation?accepter=false`);
                             chargerNotifications();
                         } catch (error) {
@@ -156,7 +160,12 @@ export default function NotificationsScreen({ navigation }) {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00b5e2" colors={["#00b5e2"]} />
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#00b5e2"
+                        colors={["#00b5e2"]}
+                    />
                 }>
 
                 {reservations.length === 0 && (
@@ -181,20 +190,20 @@ export default function NotificationsScreen({ navigation }) {
                                     ) : (
                                         <View style={styles.avatar}>
                                             <Text style={styles.avatarText}>
-                                                {item.passagerPrenom?.charAt(0)}{item.passagerNom?.charAt(0)}
+                                                {`${item.passagerPrenom?.charAt(0)}${item.passagerNom?.charAt(0)}`}
                                             </Text>
                                         </View>
                                     )}
                                 </View>
                                 <View style={styles.passagerInfo}>
                                     <Text style={styles.passagerNom}>
-                                        {item.passagerPrenom} {item.passagerNom}
+                                        {`${item.passagerPrenom} ${item.passagerNom}`}
                                     </Text>
                                     <Text style={styles.passagerSubtitle}>
                                         souhaite rejoindre votre trajet
                                     </Text>
                                     <Text style={styles.demandeDate}>
-                                        Demande le {formatDate(item.dateReservation)}
+                                        {`Demande le ${formatDate(item.dateReservation)}`}
                                     </Text>
                                 </View>
                             </View>
@@ -223,7 +232,10 @@ export default function NotificationsScreen({ navigation }) {
                                 <View style={styles.trajetPassagerContainer}>
                                     <Ionicons name="location-outline" size={14} color="#888" />
                                     <Text style={styles.trajetPassagerTexte}>
-                                        Monte a <Text style={styles.trajetPassagerGras}>{item.departPassager}</Text> — Descend a <Text style={styles.trajetPassagerGras}>{item.arriveePassager}</Text>
+                                        {`Monte a `}
+                                        <Text style={styles.trajetPassagerGras}>{item.departPassager}</Text>
+                                        {` — Descend a `}
+                                        <Text style={styles.trajetPassagerGras}>{item.arriveePassager}</Text>
                                     </Text>
                                 </View>
                             )}
@@ -231,19 +243,16 @@ export default function NotificationsScreen({ navigation }) {
                             {/* Détails */}
                             <View style={styles.detailsBloc}>
                                 <Ionicons name="person-outline" size={13} color="#555" />
-                                <Text style={styles.detailText}>{item.nbPlaces} place(s) demandee(s)</Text>
+                                <Text style={styles.detailText}>
+                                    {`${item.nbPlaces} place(s) demandee(s)`}
+                                </Text>
                             </View>
 
-                            {/* Prix proposé — uniquement si negociation */}
+                            {/* Prix proposé */}
                             {item.prixPropose && (
                                 <View style={styles.prixBloc}>
                                     <View style={styles.prixItem}>
-                                        <Text style={styles.prixItemLabel}>Prix affiche</Text>
-                                        <Text style={styles.prixItemValeurBarre}>— GNF</Text>
-                                    </View>
-                                    <Ionicons name="arrow-forward" size={14} color="#555" />
-                                    <View style={styles.prixItem}>
-                                        <Text style={styles.prixItemLabel}>Prix propose</Text>
+                                        <Text style={styles.prixItemLabel}>Prix passager</Text>
                                         <Text style={styles.prixItemValeur}>
                                             {item.prixPropose?.toLocaleString()} GNF
                                         </Text>
@@ -266,15 +275,13 @@ export default function NotificationsScreen({ navigation }) {
 
                             {/* Boutons secondaires */}
                             <View style={styles.boutonsSecondaires}>
-                                {item.prixPropose && (
-                                    <TouchableOpacity
-                                        style={styles.boutonContreOffre}
-                                        onPress={() => ouvrirContreOffre(item)}
-                                        disabled={loadingAction}>
-                                        <Ionicons name="swap-horizontal-outline" size={14} color="#888" />
-                                        <Text style={styles.boutonContreOffreText}>Proposer mon prix</Text>
-                                    </TouchableOpacity>
-                                )}
+                                <TouchableOpacity
+                                    style={styles.boutonContreOffre}
+                                    onPress={() => ouvrirContreOffre(item)}
+                                    disabled={loadingAction}>
+                                    <Ionicons name="swap-horizontal-outline" size={14} color="#888" />
+                                    <Text style={styles.boutonContreOffreText}>Proposer mon prix</Text>
+                                </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.boutonRefuser}
                                     onPress={() => refuser(item)}
@@ -283,6 +290,7 @@ export default function NotificationsScreen({ navigation }) {
                                     <Text style={styles.boutonRefuserText}>Refuser</Text>
                                 </TouchableOpacity>
                             </View>
+
                         </View>
                     </View>
                 ))}
@@ -307,7 +315,7 @@ export default function NotificationsScreen({ navigation }) {
 
                         {reservationSelectionnee && (
                             <Text style={styles.modalSubtitle}>
-                                Le passager a propose {reservationSelectionnee.prixPropose?.toLocaleString()} GNF
+                                {`Le passager a propose ${reservationSelectionnee.prixPropose?.toLocaleString()} GNF`}
                             </Text>
                         )}
 
@@ -383,7 +391,11 @@ const styles = StyleSheet.create({
 
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
     avatarContainer: { width: 46, height: 46, borderRadius: 23, overflow: 'hidden' },
-    avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#333' },
+    avatar: {
+        width: 46, height: 46, borderRadius: 23,
+        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: '#333',
+    },
     avatarImage: { width: 46, height: 46, borderRadius: 23 },
     avatarText: { color: '#888', fontSize: 15, fontWeight: 'bold' },
     passagerInfo: { flex: 1 },
@@ -398,7 +410,10 @@ const styles = StyleSheet.create({
     trajetDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00b5e2' },
     trajetDotArrivee: { backgroundColor: '#444' },
     trajetVille: { fontSize: 15, fontWeight: '600', color: '#ddd', flex: 1 },
-    trajetConnecteur: { flexDirection: 'row', alignItems: 'center', marginLeft: 3, gap: 4, marginVertical: 4 },
+    trajetConnecteur: {
+        flexDirection: 'row', alignItems: 'center',
+        marginLeft: 3, gap: 4, marginVertical: 4,
+    },
     trajetConnecteurLigne: { flex: 1, height: 1, backgroundColor: '#2a2a2a' },
 
     trajetPassagerContainer: {
@@ -412,29 +427,31 @@ const styles = StyleSheet.create({
     detailText: { fontSize: 13, color: '#666' },
 
     prixBloc: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 4, gap: 8,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 4,
     },
-    prixItem: { flex: 1, alignItems: 'center' },
+    prixItem: { alignItems: 'center' },
     prixItemLabel: { fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: 1 },
-    prixItemValeurBarre: { fontSize: 13, color: '#444', marginTop: 4, textDecorationLine: 'line-through' },
-    prixItemValeur: { fontSize: 16, fontWeight: 'bold', color: '#eee', marginTop: 4 },
+    prixItemValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2', marginTop: 4 },
 
     boutonAccepter: {
         backgroundColor: '#00b5e2', borderRadius: 10, padding: 13,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 8, marginBottom: 8,
     },
     boutonAccepterText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
 
     boutonsSecondaires: { flexDirection: 'row', gap: 8 },
     boutonContreOffre: {
         flex: 1, borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
-        paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        paddingVertical: 10, flexDirection: 'row',
+        alignItems: 'center', justifyContent: 'center', gap: 6,
     },
     boutonContreOffreText: { color: '#888', fontSize: 13, fontWeight: '600' },
     boutonRefuser: {
         flex: 1, borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
-        paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        paddingVertical: 10, flexDirection: 'row',
+        alignItems: 'center', justifyContent: 'center', gap: 6,
     },
     boutonRefuserText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
 
@@ -443,7 +460,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
         padding: 24, borderTopWidth: 1, borderColor: '#2a2a2a',
     },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    modalHeader: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: 8,
+    },
     modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
     modalSubtitle: { fontSize: 13, color: '#888', marginBottom: 16 },
     modalInfo: {
@@ -451,7 +471,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 16,
     },
     modalInfoText: { fontSize: 13, color: '#888', flex: 1, lineHeight: 20 },
-    modalLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+    modalLabel: {
+        fontSize: 12, fontWeight: '600', color: '#888',
+        marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
+    },
     modalInput: {
         flexDirection: 'row', alignItems: 'center', gap: 10,
         backgroundColor: '#252525', borderRadius: 10,
@@ -461,8 +484,14 @@ const styles = StyleSheet.create({
     modalInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
     modalDevise: { color: '#666', fontSize: 14 },
     modalBoutons: { flexDirection: 'row', gap: 12 },
-    modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#333', borderRadius: 10, padding: 14, alignItems: 'center' },
+    modalBoutonAnnuler: {
+        flex: 1, borderWidth: 1, borderColor: '#333',
+        borderRadius: 10, padding: 14, alignItems: 'center',
+    },
     modalBoutonAnnulerText: { color: '#666', fontSize: 15, fontWeight: '600' },
-    modalBoutonConfirmer: { flex: 1, backgroundColor: '#00b5e2', borderRadius: 10, padding: 14, alignItems: 'center' },
+    modalBoutonConfirmer: {
+        flex: 1, backgroundColor: '#00b5e2',
+        borderRadius: 10, padding: 14, alignItems: 'center',
+    },
     modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 });

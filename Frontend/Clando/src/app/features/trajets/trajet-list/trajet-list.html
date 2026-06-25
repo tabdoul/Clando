@@ -123,7 +123,7 @@
                 </div>
 
                 <div class="trajet-prix">
-                    <div class="prix">{{ trajet.prix | number }} GNF</div>
+                    <div class="prix">{{ trajet.prixConducteur | number }} GNF</div>
                     <div class="prix-label">par place</div>
 
                     <span *ngIf="trajet.statut === 'COMPLET'" class="badge-complet">

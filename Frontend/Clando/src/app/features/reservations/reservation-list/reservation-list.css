@@ -241,3 +241,153 @@
     justify-content: center;
     gap: 8px;
 }
+.statut-contre-offre { background: #e8f4fd; color: #1565c0; }
+
+/* Confirmée — paiement */
+.message-confirmee {
+    background: #e8f5e9;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 12px;
+    color: #2e7d32;
+}
+
+.confirmee-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.prix-detail {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+}
+
+.prix-detail-ligne {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #555;
+    padding: 4px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.prix-detail-ligne:last-child { border-bottom: none; }
+
+.prix-total {
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 14px;
+}
+
+.paiement-input-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-payer {
+    background: #00b5e2 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    white-space: nowrap;
+}
+
+.paiement-ok {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+/* Contre-offre */
+.message-contre-offre {
+    background: #e3f2fd;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 12px;
+}
+
+.contre-offre-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1565c0;
+    margin-bottom: 12px;
+}
+
+.contre-offre-prix {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.prix-item {
+    text-align: center;
+}
+
+.prix-label {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.prix-barre {
+    font-size: 14px;
+    color: #bbb;
+    text-decoration: line-through;
+}
+
+.prix-nouveau {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1565c0;
+}
+
+.contre-offre-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-accepter-offre {
+    flex: 1;
+    background: #00b5e2 !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+
+.btn-refuser-offre {
+    flex: 1;
+    border-color: #e53935 !important;
+    color: #e53935 !important;
+    border-radius: 8px !important;
+}
+
+/* Nouvelle proposition */
+.btn-proposer {
+    background: #00b5e2 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    white-space: nowrap;
+}
+
+/* Contre-offre conducteur */
+.btn-contre-offre {
+    border-color: #f39c12 !important;
+    color: #e65100 !important;
+    border-radius: 8px !important;
+    white-space: nowrap;
+}

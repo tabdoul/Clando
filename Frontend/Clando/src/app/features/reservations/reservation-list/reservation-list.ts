@@ -1,13 +1,14 @@
-// src/app/features/reservations/reservation-list/reservation-list.ts
-
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { Reservation } from '../../../shared/models/reservation.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,25 +18,36 @@ import { AuthService } from '../../../core/services/auth.service';
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
         MatSnackBarModule,
         MatTabsModule,
-        MatDividerModule
+        MatDividerModule,
+        MatFormFieldModule,
+        MatInputModule
     ],
     templateUrl: './reservation-list.html',
     styleUrl: './reservation-list.css'
 })
 export class ReservationListComponent implements OnInit {
 
-    // Onglet passager : mes réservations effectuées
     mesReservations: Reservation[] = [];
     loadingPassager = false;
 
-    // Onglet conducteur : toutes les demandes sur mes trajets
     reservationsRecues: Reservation[] = [];
     loadingConducteur = false;
+
+    // Paiement
+    numerosPaiement: Record<number, string> = {};
+    loadingPaiement: Record<number, boolean> = {};
+
+    // Nouvelle proposition passager
+    nouveauxPrix: Record<number, number> = {};
+
+    // Contre-offre conducteur
+    contreOffres: Record<number, number> = {};
 
     constructor(
         private reservationService: ReservationService,
@@ -49,7 +61,7 @@ export class ReservationListComponent implements OnInit {
         this.chargerReservationsRecues();
     }
 
-    // ─── ONGLET PASSAGER ────────────────────────────────────────
+    // ─── PASSAGER ───────────────────────────────────────────────
 
     chargerMesReservations(): void {
         this.loadingPassager = true;
@@ -58,15 +70,10 @@ export class ReservationListComponent implements OnInit {
 
         this.reservationService.getByPassager(userId).subscribe({
             next: (data) => {
-                // Trier : actives en premier, terminées/annulées en bas
                 this.mesReservations = data.sort((a, b) => {
                     const ordre: Record<string, number> = {
-                        'EN_ATTENTE': 0,
-                        'CONFIRMEE': 1,
-                        'PRIX_REFUSE': 2,
-                        'REFUSEE': 3,
-                        'ANNULEE': 4,
-                        'TERMINEE': 5
+                        'EN_ATTENTE': 0, 'CONFIRMEE': 1, 'CONTRE_OFFRE': 2,
+                        'PRIX_REFUSE': 3, 'REFUSEE': 4, 'ANNULEE': 5, 'TERMINEE': 6
                     };
                     return (ordre[a.statut] ?? 9) - (ordre[b.statut] ?? 9);
                 });
@@ -75,45 +82,98 @@ export class ReservationListComponent implements OnInit {
             },
             error: () => {
                 this.loadingPassager = false;
-                this.cdr.detectChanges();
                 this.snackBar.open('Erreur lors du chargement', 'Fermer', { duration: 3000 });
             }
         });
     }
 
-    // Un passager peut annuler uniquement si EN_ATTENTE, CONFIRMEE ou PRIX_REFUSE
     peutAnnuler(r: Reservation): boolean {
-        return r.statut === 'EN_ATTENTE'
-            || r.statut === 'CONFIRMEE'
-            || r.statut === 'PRIX_REFUSE';
+        return ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut);
     }
 
     annulerReservation(r: Reservation): void {
-        if (!r.id) return;
-        if (!confirm('Confirmer l\'annulation de cette réservation ?')) return;
-
-        // On utilise l'endpoint /annuler qui gère le remboursement Djomy
+        if (!r.id || !confirm('Confirmer l\'annulation ?')) return;
         this.reservationService.annuler(r.id).subscribe({
             next: (res) => {
                 this.snackBar.open(res.message, 'Fermer', { duration: 5000 });
                 this.chargerMesReservations();
             },
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    initierPaiement(r: Reservation): void {
+        if (!r.id) return;
+        const numero = this.numerosPaiement[r.id];
+        if (!numero?.trim()) {
+            this.snackBar.open('Veuillez entrer votre numéro Orange Money', 'Fermer', { duration: 3000 });
+            return;
+        }
+        this.loadingPaiement[r.id] = true;
+        this.reservationService.payer(r.id, numero.trim()).subscribe({
+            next: () => {
+                this.loadingPaiement[r.id!] = false;
+                this.snackBar.open('Demande envoyée ! Confirmez sur votre téléphone.', 'Fermer', { duration: 5000 });
+                this.chargerMesReservations();
+            },
             error: (err) => {
-                const message = err.error?.erreur || 'Erreur lors de l\'annulation';
-                this.snackBar.open(message, 'Fermer', { duration: 3000 });
+                this.loadingPaiement[r.id!] = false;
+                this.snackBar.open(err.error?.erreur || 'Erreur paiement', 'Fermer', { duration: 3000 });
             }
         });
     }
 
-    // ─── ONGLET CONDUCTEUR ──────────────────────────────────────
+    accepterContreOffre(r: Reservation): void {
+        if (!r.id || !r.prixConducteur) return;
+        this.reservationService.nouvelleProposition(r.id, r.prixConducteur).subscribe({
+            next: () => {
+                this.reservationService.repondreNegociation(r.id!, true).subscribe({
+                    next: () => {
+                        this.snackBar.open('Prix accepté ! Vous avez 30 min pour payer.', 'Fermer', { duration: 5000 });
+                        this.chargerMesReservations();
+                    },
+                    error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+                });
+            },
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    refuserContreOffre(r: Reservation): void {
+        if (!r.id || !confirm('Refuser la contre-offre ? La réservation sera annulée.')) return;
+        this.reservationService.annuler(r.id).subscribe({
+            next: () => {
+                this.snackBar.open('Contre-offre refusée', 'Fermer', { duration: 3000 });
+                this.chargerMesReservations();
+            },
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    nouvelleProposition(r: Reservation): void {
+        if (!r.id) return;
+        const prix = this.nouveauxPrix[r.id];
+        if (!prix || prix <= 0) {
+            this.snackBar.open('Prix invalide', 'Fermer', { duration: 3000 });
+            return;
+        }
+        this.reservationService.nouvelleProposition(r.id, prix).subscribe({
+            next: () => {
+                this.snackBar.open('Proposition envoyée !', 'Fermer', { duration: 3000 });
+                this.nouveauxPrix[r.id!] = 0;
+                this.chargerMesReservations();
+            },
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    // ─── CONDUCTEUR ─────────────────────────────────────────────
 
     chargerReservationsRecues(): void {
         this.loadingConducteur = true;
         const userId = this.authService.getUserId();
         if (!userId) { this.loadingConducteur = false; return; }
 
-        // On charge toutes les réservations du conducteur (pas seulement EN_ATTENTE)
-        // pour afficher l'historique complet
         this.reservationService.getEnAttenteParConducteur(userId).subscribe({
             next: (data) => {
                 this.reservationsRecues = data;
@@ -122,7 +182,6 @@ export class ReservationListComponent implements OnInit {
             },
             error: () => {
                 this.loadingConducteur = false;
-                this.cdr.detectChanges();
                 this.snackBar.open('Erreur lors du chargement', 'Fermer', { duration: 3000 });
             }
         });
@@ -132,58 +191,61 @@ export class ReservationListComponent implements OnInit {
         if (!r.id) return;
         this.reservationService.changerStatut(r.id, 'CONFIRMEE').subscribe({
             next: () => {
-                this.snackBar.open('✅ Réservation confirmée !', 'Fermer', { duration: 3000 });
+                this.snackBar.open('Réservation confirmée !', 'Fermer', { duration: 3000 });
                 this.chargerReservationsRecues();
             },
-            error: (err) => {
-                const message = err.error?.erreur || 'Erreur';
-                this.snackBar.open(message, 'Fermer', { duration: 3000 });
-            }
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
         });
     }
 
     refuserReservation(r: Reservation): void {
-        if (!r.id) return;
-        if (!confirm('Refuser cette demande de réservation ?')) return;
-
-        // Le backend gère REFUSEE si nbTentatives >= 1, sinon PRIX_REFUSE
-        // Ici le conducteur refuse directement → on passe REFUSEE via repondreNegociation
+        if (!r.id || !confirm('Refuser cette demande ?')) return;
         this.reservationService.repondreNegociation(r.id, false).subscribe({
             next: () => {
                 this.snackBar.open('Réservation refusée', 'Fermer', { duration: 3000 });
                 this.chargerReservationsRecues();
             },
-            error: (err) => {
-                const message = err.error?.erreur || 'Erreur';
-                this.snackBar.open(message, 'Fermer', { duration: 3000 });
-            }
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    envoyerContreOffre(r: Reservation): void {
+        if (!r.id) return;
+        const prix = this.contreOffres[r.id];
+        if (!prix || prix <= 0) {
+            this.snackBar.open('Prix invalide', 'Fermer', { duration: 3000 });
+            return;
+        }
+        this.reservationService.repondreNegociationAvecPrix(r.id, prix).subscribe({
+            next: () => {
+                this.snackBar.open('Contre-offre envoyée au passager !', 'Fermer', { duration: 3000 });
+                this.contreOffres[r.id!] = 0;
+                this.chargerReservationsRecues();
+            },
+            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
         });
     }
 
     // ─── UTILITAIRES ────────────────────────────────────────────
 
-    getStatutLabel(statut: string): string {
-        switch (statut) {
-            case 'EN_ATTENTE':  return '⏳ En attente';
-            case 'CONFIRMEE':   return '✅ Confirmée';
-            case 'ANNULEE':     return '❌ Annulée';
-            case 'REFUSEE':     return ' Refusée';
-            case 'PRIX_REFUSE': return ' Prix refusé';
-            case 'TERMINEE':    return ' Terminée';
-            default:            return statut;
-        }
+    getPrixBase(r: Reservation): number {
+        return r.prixPropose || Math.round((r.prix || 0) / 1.13);
     }
 
-    getStatutStyle(statut: string): string {
-        const base = 'padding:4px 12px;border-radius:20px;font-size:0.8rem;white-space:nowrap;font-weight:500;';
+    getFreais(r: Reservation): number {
+        return Math.round((r.prix || 0) - this.getPrixBase(r));
+    }
+
+    getStatutLabel(statut: string): string {
         switch (statut) {
-            case 'EN_ATTENTE':  return base + 'background:#ff9800;color:white;';
-            case 'CONFIRMEE':   return base + 'background:#4caf50;color:white;';
-            case 'ANNULEE':     return base + 'background:#f44336;color:white;';
-            case 'REFUSEE':     return base + 'background:#9c27b0;color:white;';
-            case 'PRIX_REFUSE': return base + 'background:#2196f3;color:white;';
-            case 'TERMINEE':    return base + 'background:#9e9e9e;color:white;';
-            default:            return base;
+            case 'EN_ATTENTE':   return 'En attente';
+            case 'CONFIRMEE':    return 'Confirmée';
+            case 'ANNULEE':      return 'Annulée';
+            case 'REFUSEE':      return 'Refusée';
+            case 'PRIX_REFUSE':  return 'Prix refusé';
+            case 'CONTRE_OFFRE': return 'Contre-offre';
+            case 'TERMINEE':     return 'Terminée';
+            default:             return statut;
         }
     }
 
