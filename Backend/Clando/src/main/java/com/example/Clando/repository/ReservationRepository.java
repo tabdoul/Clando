@@ -19,12 +19,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByDjomyTransactionId(String djomyTransactionId);
 
     @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
-           "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE")
-    List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+       "AND r.statut IN (" +
+       "com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE, " +
+       "com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE, " +
+       "com.example.Clando.entity.Reservation.StatutReservation.PRIX_REFUSE, " +
+       "com.example.Clando.entity.Reservation.StatutReservation.CONTRE_OFFRE)")
+List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
 
-    @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
-           "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
-    List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
+   @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
+       "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE " +
+       "AND r.statutPaiement = 'SUCCESS'")
+List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
 
     @Query("SELECT r FROM Reservation r " +
            "WHERE r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE " +
