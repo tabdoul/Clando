@@ -103,25 +103,26 @@ export class ReservationListComponent implements OnInit {
     }
 
     initierPaiement(r: Reservation): void {
-        if (!r.id) return;
-        const numero = this.numerosPaiement[r.id];
-        if (!numero?.trim()) {
-            this.snackBar.open('Veuillez entrer votre numéro Orange Money', 'Fermer', { duration: 3000 });
-            return;
-        }
-        this.loadingPaiement[r.id] = true;
-        this.reservationService.payer(r.id, numero.trim()).subscribe({
-            next: () => {
-                this.loadingPaiement[r.id!] = false;
-                this.snackBar.open('Demande envoyée ! Confirmez sur votre téléphone.', 'Fermer', { duration: 5000 });
-                this.chargerMesReservations();
-            },
-            error: (err) => {
-                this.loadingPaiement[r.id!] = false;
-                this.snackBar.open(err.error?.erreur || 'Erreur paiement', 'Fermer', { duration: 3000 });
-            }
-        });
+    if (!r.id) return;
+    const numero = this.numerosPaiement[r.id];
+    if (!numero?.trim()) {
+        this.snackBar.open('Veuillez entrer votre numéro Orange Money', 'Fermer', { duration: 3000 });
+        return;
     }
+    this.loadingPaiement[r.id] = true;
+    //  Mode test — simule le paiement sans Djomy
+    this.reservationService.payerTest(r.id).subscribe({
+        next: () => {
+            this.loadingPaiement[r.id!] = false;
+            this.snackBar.open('Paiement confirmé !', 'Fermer', { duration: 4000 });
+            this.chargerMesReservations();
+        },
+        error: (err) => {
+            this.loadingPaiement[r.id!] = false;
+            this.snackBar.open(err.error?.erreur || 'Erreur paiement', 'Fermer', { duration: 3000 });
+        }
+    });
+}
 
     accepterContreOffre(r: Reservation): void {
         if (!r.id || !r.prixConducteur) return;

@@ -54,10 +54,26 @@
                         </div>
                     </div>
 
-                    <!-- Prix proposé -->
+                    <!-- Prix proposé par le passager -->
                     <div *ngIf="r.prixPropose" class="prix-propose">
                         <mat-icon>payments</mat-icon>
                         <span>Prix proposé : {{ r.prixPropose | number }} GNF</span>
+                    </div>
+
+                    <!-- Champ contre-offre — uniquement si le passager a négocié -->
+                    <div *ngIf="r.prixPropose" class="contre-offre-input">
+                        <mat-form-field appearance="outline" style="flex:1;">
+                            <mat-label>Proposer votre prix</mat-label>
+                            <input matInput
+                                   [(ngModel)]="contreOffres[r.id!]"
+                                   type="number"
+                                   placeholder="Ex: 60000">
+                            <mat-icon matSuffix>payments</mat-icon>
+                        </mat-form-field>
+                        <button mat-stroked-button class="btn-contre-offre"
+                                (click)="envoyerContreOffre(r.id!, contreOffres[r.id!])">
+                            Contre-offre
+                        </button>
                     </div>
 
                 </div>

@@ -94,25 +94,26 @@ export default function ReservationsScreen({ navigation }) {
     };
 
     const initierPaiement = async () => {
-        if (!numeroPaiement || numeroPaiement.trim() === '') {
-            Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
-            return;
-        }
-        setLoadingPaiement(true);
-        try {
-            await api.post(`/reservations/${reservationAPayer.id}/payer?numeroTelephone=${numeroPaiement.trim()}`);
-            setShowModalPaiement(false);
-            Alert.alert(
-                'Demande envoyee !',
-                'Vous allez recevoir une notification Orange Money. Confirmez avec votre code PIN.',
-                [{ text: 'OK', onPress: () => chargerReservations() }]
-            );
-        } catch (err) {
-            Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
-        } finally {
-            setLoadingPaiement(false);
-        }
-    };
+    if (!numeroPaiement || numeroPaiement.trim() === '') {
+        Alert.alert('Erreur', 'Veuillez entrer votre numero Orange Money');
+        return;
+    }
+    setLoadingPaiement(true);
+    try {
+        // ✅ Mode test — simule le paiement sans Djomy
+        await api.post(`/reservations/${reservationAPayer.id}/payer-test`);
+        setShowModalPaiement(false);
+        Alert.alert(
+            'Paiement confirme !',
+            'Votre paiement a ete simule avec succes.',
+            [{ text: 'OK', onPress: () => chargerReservations() }]
+        );
+    } catch (err) {
+        Alert.alert('Erreur', err.response?.data?.erreur || 'Erreur lors du paiement');
+    } finally {
+        setLoadingPaiement(false);
+    }
+};
 
     const voirCopassagers = async (reservation) => {
         setReservationSelectionnee(reservation);

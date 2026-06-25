@@ -71,6 +71,12 @@ export class ReservationService {
         return this.http.patch<Reservation>(`${this.apiUrl}/${id}/nouvelle-proposition`, null, { params });
     }
 
+    //Simulation de paiement
+
+    payerTest(id: number): Observable<Reservation> {
+    return this.http.post<Reservation>(`${this.apiUrl}/${id}/payer-test`, null);
+}
+
     // Paiement Orange Money
     payer(id: number, numeroTelephone: string): Observable<Reservation> {
         const params = new HttpParams().set('numeroTelephone', numeroTelephone);

@@ -1,13 +1,11 @@
-// src/app/features/reservations/notifications/notifications.ts
-
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatBadgeModule } from '@angular/material/badge';
 import { ReservationService } from '../../../core/services/reservation.service';
 import { Reservation } from '../../../shared/models/reservation.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,12 +15,12 @@ import { AuthService } from '../../../core/services/auth.service';
     standalone: true,
     imports: [
         CommonModule,
-        MatCardModule,
-        MatButtonModule,
+        FormsModule,
         MatIconModule,
-        MatSnackBarModule,
-        MatChipsModule,
-        MatBadgeModule
+        MatButtonModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSnackBarModule
     ],
     templateUrl: './notifications.html',
     styleUrl: './notifications.css'
@@ -31,6 +29,7 @@ export class NotificationsComponent implements OnInit {
 
     reservations: Reservation[] = [];
     loading = false;
+    contreOffres: Record<number, number> = {};
 
     constructor(
         private reservationService: ReservationService,
@@ -46,12 +45,8 @@ export class NotificationsComponent implements OnInit {
     chargerReservations(): void {
         this.loading = true;
         const userId = this.authService.getUserId();
-        if (!userId) {
-            this.loading = false;
-            return;
-        }
+        if (!userId) { this.loading = false; return; }
 
-        // GET /reservations/conducteur/{id}/en-attente
         this.reservationService.getEnAttenteParConducteur(userId).subscribe({
             next: (data: Reservation[]) => {
                 this.reservations = data;
@@ -67,10 +62,9 @@ export class NotificationsComponent implements OnInit {
     }
 
     accepter(id: number): void {
-        // PATCH /reservations/{id}/statut?statut=CONFIRMEE
-        this.reservationService.changerStatut(id, 'CONFIRMEE').subscribe({
+        this.reservationService.repondreNegociation(id, true).subscribe({
             next: () => {
-                this.snackBar.open('✅ Réservation confirmée !', 'Fermer', { duration: 3000 });
+                this.snackBar.open('Réservation confirmée !', 'Fermer', { duration: 3000 });
                 this.chargerReservations();
                 this.cdr.detectChanges();
             },
@@ -79,11 +73,25 @@ export class NotificationsComponent implements OnInit {
     }
 
     refuser(id: number): void {
-        // PATCH /reservations/{id}/negociation?accepter=false
-        // Le backend gère la logique REFUSEE / PRIX_REFUSE selon nbTentatives
         this.reservationService.repondreNegociation(id, false).subscribe({
             next: () => {
-                this.snackBar.open('❌ Réservation refusée', 'Fermer', { duration: 3000 });
+                this.snackBar.open('Réservation refusée', 'Fermer', { duration: 3000 });
+                this.chargerReservations();
+                this.cdr.detectChanges();
+            },
+            error: () => this.snackBar.open('Erreur', 'Fermer', { duration: 3000 })
+        });
+    }
+
+    envoyerContreOffre(id: number, prix: number): void {
+        if (!prix || prix <= 0) {
+            this.snackBar.open('Veuillez entrer un prix valide', 'Fermer', { duration: 3000 });
+            return;
+        }
+        this.reservationService.repondreNegociationAvecPrix(id, prix).subscribe({
+            next: () => {
+                this.snackBar.open('Contre-offre envoyée au passager !', 'Fermer', { duration: 3000 });
+                this.contreOffres[id] = 0;
                 this.chargerReservations();
                 this.cdr.detectChanges();
             },

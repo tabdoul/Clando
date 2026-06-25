@@ -19,6 +19,8 @@ import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
+import main.java.com.example.Clando.service.DjomyService;
+import main.java.com.example.Clando.service.NotificationService;
 
 @Service
 public class ReservationService {
@@ -93,6 +95,31 @@ public class ReservationService {
 
         return toResponse(reservationRepository.save(reservation));
     }
+
+    // Test pour simuler à retirer avant mise en prod
+    @Transactional
+public ReservationResponse simulerPaiement(Long id) {
+    Reservation reservation = findById(id);
+    if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
+        throw new IllegalStateException("La reservation doit etre confirmee pour payer");
+    }
+    reservation.setStatutPaiement("SUCCESS");
+
+    // Notification au passager
+    String token = reservation.getPassager().getExpoPushToken();
+    if (token != null && !token.isBlank()) {
+        notificationService.envoyerNotification(
+            token,
+            "Paiement confirme !",
+            "Votre paiement pour le trajet " +
+            reservation.getTrajet().getVilleDepart() + " → " +
+            reservation.getTrajet().getVilleArrivee() +
+            " a bien ete recu."
+        );
+    }
+
+    return toResponse(reservationRepository.save(reservation));
+}
 
     @Transactional
     public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {

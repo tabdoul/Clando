@@ -230,3 +230,18 @@
     color: #e53935 !important;
     border-radius: 20px !important;
 }
+.contre-offre-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-contre-offre {
+    border-color: #f39c12 !important;
+    color: #e65100 !important;
+    border-radius: 8px !important;
+    white-space: nowrap;
+}

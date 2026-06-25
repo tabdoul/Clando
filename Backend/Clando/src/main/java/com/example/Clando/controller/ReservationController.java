@@ -79,7 +79,6 @@ public class ReservationController {
         }
     }
 
-    // ✅ Endpoint negociation avec contre-offre conducteur
     @PatchMapping("/{id}/negociation")
     public ResponseEntity<?> repondreNegociation(
             @PathVariable Long id,
@@ -116,6 +115,17 @@ public class ReservationController {
                     .body(Map.of("erreur", e.getMessage()));
         }
     }
+
+    // Simuler paiement à retirer avant mise en prod
+    @PostMapping("/{id}/payer-test")
+public ResponseEntity<?> simulerPaiement(@PathVariable Long id) {
+    try {
+        return ResponseEntity.ok(reservationService.simulerPaiement(id));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("erreur", e.getMessage()));
+    }
+}
 
     @PostMapping("/{id}/payer")
     public ResponseEntity<?> initierPaiement(

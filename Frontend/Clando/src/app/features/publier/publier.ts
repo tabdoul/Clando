@@ -49,7 +49,7 @@ export class PublierComponent implements OnInit {
 
     heures = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
     minutes = ['00', '15', '30', '45'];
-    itineraires = ['Autoroute', 'Route du Prince', 'Corniche', 'Boulevard Diallo'];
+    itineraires = ['Autoroute', 'Route du Prince', 'Corniche',];
     dateMin = new Date();
 
     constructor(
