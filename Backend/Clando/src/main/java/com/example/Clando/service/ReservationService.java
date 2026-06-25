@@ -291,6 +291,12 @@ public class ReservationService {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
+    public List<ReservationResponse> getAll() {
+    return reservationRepository.findAll()
+            .stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
 
     public ReservationResponse changerStatut(Long id, Reservation.StatutReservation statut) {
         Reservation reservation = findById(id);

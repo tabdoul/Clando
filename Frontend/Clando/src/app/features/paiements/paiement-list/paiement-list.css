@@ -1,0 +1,128 @@
+.page {
+    background: #f5f5f5;
+    min-height: 100vh;
+    padding: 32px 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    color: #888;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Empty state */
+.empty-state {
+    background: white;
+    border-radius: 14px;
+    padding: 48px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.empty-state mat-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+    color: #ddd;
+    display: block;
+    margin: 0 auto 12px;
+}
+
+.empty-state p {
+    color: #bbb;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Table */
+.table-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+.mat-mdc-table {
+    width: 100%;
+    background: white !important;
+}
+
+.mat-mdc-header-row {
+    background: #f9f9f9 !important;
+}
+
+.mat-mdc-header-cell {
+    color: #888 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.mat-mdc-cell {
+    color: #1a1a1a !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid #f5f5f5 !important;
+    padding: 14px 16px !important;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+    background: #f9f9f9 !important;
+}
+
+.mat-mdc-row:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+}
+
+/* Badges statut */
+.statut-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.statut-effectue  { background: #e8f5e9; color: #2e7d32; }
+.statut-attente   { background: #fff3e0; color: #e65100; }
+.statut-echoue    { background: #fce4ec; color: #c62828; }
+.statut-default   { background: #f5f5f5; color: #555; }
+
+/* Montant */
+.montant {
+    font-weight: 600;
+    color: #00b5e2;
+}
+
+@media (max-width: 600px) {
+    .mat-mdc-cell,
+    .mat-mdc-header-cell {
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+    }
+}

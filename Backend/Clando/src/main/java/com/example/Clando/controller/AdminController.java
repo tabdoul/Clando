@@ -1,12 +1,16 @@
 package com.example.Clando.controller;
 
 import com.example.Clando.dtos.response.DocumentResponse;
+import com.example.Clando.dtos.response.ReservationResponse;
 import com.example.Clando.dtos.response.SignalementResponse;
+import com.example.Clando.dtos.response.TrajetResponse;
 import com.example.Clando.dtos.response.UtilisateurResponse;
 import com.example.Clando.entity.Signalement;
 import com.example.Clando.repository.*;
 import com.example.Clando.service.DocumentService;
+import com.example.Clando.service.ReservationService;
 import com.example.Clando.service.SignalementService;
+import com.example.Clando.service.TrajetService;
 import com.example.Clando.service.UtilisateurService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +28,8 @@ public class AdminController {
     private final DocumentService documentService;
     private final SignalementService signalementService;
     private final UtilisateurService utilisateurService;
+    private final TrajetService trajetService;
+    private final ReservationService reservationService;
     private final SignalementRepository signalementRepository;
     private final DocumentRepository documentRepository;
 
@@ -33,6 +39,8 @@ public class AdminController {
                            DocumentService documentService,
                            SignalementService signalementService,
                            UtilisateurService utilisateurService,
+                           TrajetService trajetService,
+                           ReservationService reservationService,
                            SignalementRepository signalementRepository,
                            DocumentRepository documentRepository) {
         this.utilisateurRepository = utilisateurRepository;
@@ -41,6 +49,8 @@ public class AdminController {
         this.documentService = documentService;
         this.signalementService = signalementService;
         this.utilisateurService = utilisateurService;
+        this.trajetService = trajetService;
+        this.reservationService = reservationService;
         this.signalementRepository = signalementRepository;
         this.documentRepository = documentRepository;
     }
@@ -61,6 +71,16 @@ public class AdminController {
     @GetMapping("/utilisateurs")
     public ResponseEntity<List<UtilisateurResponse>> getUtilisateurs() {
         return ResponseEntity.ok(utilisateurService.getAll());
+    }
+
+    @GetMapping("/trajets")
+    public ResponseEntity<List<TrajetResponse>> getTrajets() {
+        return ResponseEntity.ok(trajetService.getAll());
+    }
+
+    @GetMapping("/reservations")
+    public ResponseEntity<List<ReservationResponse>> getReservations() {
+        return ResponseEntity.ok(reservationService.getAll());
     }
 
     @GetMapping("/documents")

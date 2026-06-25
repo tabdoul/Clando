@@ -1,5 +1,5 @@
 .page {
-    background: #0a0a0a;
+    background: #f5f5f5;
     min-height: 100vh;
     padding: 32px 20px;
 }
@@ -11,14 +11,15 @@
 
 /* Header profil */
 .profil-header {
-    background: #1e1e1e;
+    background: white;
     border-radius: 16px;
     padding: 24px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid #e0e0e0;
     display: flex;
     align-items: center;
     gap: 20px;
     margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .avatar {
@@ -37,64 +38,29 @@
 
 .header-info h2 {
     margin: 0 0 4px;
-    color: #eee;
+    color: #1a1a1a;
     font-size: 1.3rem;
 }
 
 .header-info p {
     margin: 0;
-    color: #666;
+    color: #888;
     font-size: 0.9rem;
 }
 
 .header-info .mini-bio {
-    color: #888;
+    color: #aaa;
     font-style: italic;
     margin-top: 4px;
 }
 
-/* Onglets */
-::ng-deep .mat-mdc-tab-group {
-    background: transparent;
-}
-
-::ng-deep .mat-mdc-tab-header {
-    background: #1e1e1e;
-    border-radius: 12px 12px 0 0;
-    border: 1px solid #2a2a2a;
-    border-bottom: none;
-}
-
-::ng-deep .mat-mdc-tab {
-    color: #666 !important;
-}
-
-::ng-deep .mat-mdc-tab.mdc-tab--active {
-    color: #00b5e2 !important;
-}
-
-::ng-deep .mdc-tab-indicator__content--underline {
-    border-color: #00b5e2 !important;
-}
-
-::ng-deep .mat-mdc-tab-body-wrapper {
-    background: transparent;
-}
-
-/* Contenu onglet */
-.onglet-content {
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 /* Cartes */
 .card {
-    background: #1e1e1e;
+    background: white;
     border-radius: 14px;
     padding: 20px;
-    border: 1px solid #2a2a2a;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .card-titre {
@@ -113,6 +79,14 @@
     height: 20px;
 }
 
+/* Onglets */
+.onglet-content {
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 /* Formulaires */
 .form-grid {
     display: grid;
@@ -125,33 +99,7 @@
     grid-column: span 2;
 }
 
-::ng-deep .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__leading,
-::ng-deep .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__notch,
-::ng-deep .mat-mdc-form-field .mdc-text-field--outlined .mdc-notched-outline__trailing {
-    border-color: #2a2a2a !important;
-}
-
-::ng-deep .mat-mdc-form-field:hover .mdc-text-field--outlined .mdc-notched-outline__leading,
-::ng-deep .mat-mdc-form-field:hover .mdc-text-field--outlined .mdc-notched-outline__notch,
-::ng-deep .mat-mdc-form-field:hover .mdc-text-field--outlined .mdc-notched-outline__trailing {
-    border-color: #444 !important;
-}
-
-::ng-deep .mdc-text-field--focused .mdc-notched-outline__leading,
-::ng-deep .mdc-text-field--focused .mdc-notched-outline__notch,
-::ng-deep .mdc-text-field--focused .mdc-notched-outline__trailing {
-    border-color: #00b5e2 !important;
-}
-
-::ng-deep .mat-mdc-input-element {
-    color: #eee !important;
-}
-
-::ng-deep .mat-mdc-form-field-label {
-    color: #666 !important;
-}
-
-/* Bouton sauvegarder */
+/* Boutons */
 .btn-sauvegarder {
     background: #00b5e2 !important;
     color: white !important;
@@ -159,13 +107,44 @@
 }
 
 .btn-sauvegarder:disabled {
-    background: #2a2a2a !important;
-    color: #555 !important;
+    background: #e0e0e0 !important;
+    color: #aaa !important;
+}
+
+.btn-ajouter {
+    background: transparent !important;
+    color: #00b5e2 !important;
+    border: 1px solid #00b5e2 !important;
+    border-radius: 8px !important;
+}
+
+.btn-terminer {
+    background: white !important;
+    color: #00b5e2 !important;
+    border: 1px solid #00b5e2 !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+}
+
+.btn-annuler-trajet {
+    background: transparent !important;
+    color: #e53935 !important;
+    border: 1px solid #e53935 !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
+}
+
+.btn-verifier {
+    background: transparent !important;
+    color: #666 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
 }
 
 /* Trajets publiés */
 .trajet-item {
-    background: #252525;
+    background: #f9f9f9;
     border-radius: 10px;
     padding: 14px 16px;
     border-left: 3px solid #00b5e2;
@@ -178,12 +157,12 @@
 
 .trajet-villes {
     font-weight: 600;
-    color: #ddd;
+    color: #1a1a1a;
     font-size: 1rem;
 }
 
 .trajet-meta {
-    color: #666;
+    color: #888;
     font-size: 0.85rem;
     margin-top: 4px;
 }
@@ -194,56 +173,35 @@
     flex-shrink: 0;
 }
 
-.btn-terminer {
-    background: #252525 !important;
-    color: #00b5e2 !important;
-    border: 1px solid #00b5e2 !important;
-    border-radius: 8px !important;
-    font-size: 0.8rem !important;
-}
-
-.btn-annuler-trajet {
-    background: transparent !important;
-    color: #e74c3c !important;
-    border: 1px solid #e74c3c !important;
-    border-radius: 8px !important;
-    font-size: 0.8rem !important;
-}
-
 /* Véhicules */
 .vehicule-item {
-    background: #252525;
+    background: #f9f9f9;
     border-radius: 10px;
     padding: 14px 16px;
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border: 1px solid #eee;
 }
 
 .vehicule-nom {
     font-weight: 600;
-    color: #ddd;
+    color: #1a1a1a;
 }
 
 .vehicule-meta {
-    color: #666;
+    color: #888;
     font-size: 0.85rem;
     margin-top: 2px;
 }
 
-.btn-ajouter {
-    background: transparent !important;
-    color: #00b5e2 !important;
-    border: 1px solid #00b5e2 !important;
-    border-radius: 8px !important;
-}
-
 .form-vehicule {
-    background: #252525;
+    background: #f5f5f5;
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
 }
 
 /* Vérification */
@@ -252,12 +210,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 0;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.verif-item:last-child {
-    border-bottom: none;
-}
+.verif-item:last-child { border-bottom: none; }
 
 .verif-gauche {
     display: flex;
@@ -265,43 +221,27 @@
     gap: 12px;
 }
 
-.verif-gauche mat-icon {
-    color: #555;
-}
+.verif-gauche mat-icon { color: #bbb; }
 
-.verif-label {
-    font-size: 0.9rem;
-    color: #ddd;
-}
+.verif-label { font-size: 0.9rem; color: #1a1a1a; }
 
-.verif-sous-label {
-    font-size: 0.8rem;
-    color: #555;
-    margin-top: 2px;
-}
+.verif-sous-label { font-size: 0.8rem; color: #aaa; margin-top: 2px; }
 
-.btn-verifier {
-    background: transparent !important;
-    color: #888 !important;
-    border: 1px solid #333 !important;
-    border-radius: 8px !important;
-    font-size: 0.8rem !important;
-}
-
-/* Liste de navigation */
+/* Navigation */
 .nav-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 14px 0;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: background 0.15s;
+    border-radius: 8px;
 }
 
 .nav-item:last-child { border-bottom: none; }
 
-.nav-item:hover { background: #252525; border-radius: 8px; padding: 14px 8px; }
+.nav-item:hover { background: #f9f9f9; padding: 14px 8px; }
 
 .nav-gauche {
     display: flex;
@@ -309,9 +249,9 @@
     gap: 12px;
 }
 
-.nav-gauche mat-icon { color: #555; }
-.nav-label { font-size: 0.95rem; color: #ddd; }
-.nav-fleche { color: #444; }
+.nav-gauche mat-icon { color: #bbb; }
+.nav-label { font-size: 0.95rem; color: #1a1a1a; }
+.nav-fleche { color: #ccc; }
 
 /* Danger zone */
 .danger-item {
@@ -319,7 +259,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 0;
-    border-bottom: 1px solid #2a2a2a;
+    border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
 }
 
@@ -331,14 +271,14 @@
     gap: 12px;
 }
 
-.danger-gauche mat-icon { color: #e74c3c; }
-.danger-label { font-size: 0.95rem; color: #e74c3c; }
+.danger-gauche mat-icon { color: #e53935; }
+.danger-label { font-size: 0.95rem; color: #e53935; }
 
-/* Titre section */
+/* Titres section */
 .section-titre {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #555;
+    color: #aaa;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin: 0 0 10px;
@@ -348,18 +288,18 @@
 .empty-state {
     text-align: center;
     padding: 24px;
-    color: #555;
+    color: #bbb;
 }
 
 .empty-state mat-icon {
     font-size: 40px;
     width: 40px;
     height: 40px;
-    color: #333;
+    color: #ddd;
     margin-bottom: 8px;
 }
 
-.empty-state p { margin: 0; font-size: 0.9rem; }
+.empty-state p { margin: 0; font-size: 0.9rem; color: #bbb; }
 
 @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }

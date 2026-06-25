@@ -1,83 +1,39 @@
-<div>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>⭐ Avis</h2>
-        <button mat-raised-button color="primary" (click)="showForm = !showForm">
-            <mat-icon>add</mat-icon> Donner un avis
-        </button>
-    </div>
+<div class="page">
+    <div class="container">
 
-    <!-- Formulaire ajout -->
-    <mat-card *ngIf="showForm" style="margin-bottom: 20px; padding: 16px;">
-        <mat-card-title>Nouvel avis</mat-card-title>
-        <form [formGroup]="avisForm" (ngSubmit)="ajouterAvis()">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+        <div class="page-header">
+            <h1>Avis reçus</h1>
+        </div>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Note</mat-label>
-                    <mat-select formControlName="note">
-                        <mat-option *ngFor="let n of notes" [value]="n">
-                            {{ getStars(n) }} ({{ n }}/5)
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
+        <div *ngIf="loading" class="loading">
+            <mat-icon>hourglass_empty</mat-icon>
+            Chargement...
+        </div>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>ID Destinataire</mat-label>
-                    <input matInput formControlName="destinataireId" type="number">
-                </mat-form-field>
+        <div *ngIf="!loading && avis.length === 0" class="empty-state">
+            <mat-icon>star_border</mat-icon>
+            <p>Aucun avis pour le moment</p>
+        </div>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>ID Trajet</mat-label>
-                    <input matInput formControlName="trajetId" type="number">
-                </mat-form-field>
+        <div *ngIf="!loading && avis.length > 0" class="avis-grid">
+            <div *ngFor="let a of avis" class="avis-card">
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Commentaire</mat-label>
-                    <textarea matInput formControlName="commentaire" rows="3"></textarea>
-                </mat-form-field>
-            </div>
+                <div class="avis-note">{{ getStars(a.note) }}</div>
 
-            <button mat-raised-button color="primary" type="submit"
-                    [disabled]="avisForm.invalid">
-                <mat-icon>send</mat-icon> Envoyer
-            </button>
-            <button mat-stroked-button type="button" (click)="showForm = false"
-                    style="margin-left: 8px;">
-                Annuler
-            </button>
-        </form>
-    </mat-card>
+                <div class="avis-destinataire">
+                    De : <span>{{ a.auteurPrenom }} {{ a.auteurNom }}</span>
+                </div>
 
-    <!-- Liste des avis -->
-    <p *ngIf="loading">Chargement...</p>
+                <div *ngIf="a.commentaire" class="avis-commentaire">
+                    "{{ a.commentaire }}"
+                </div>
 
-    <mat-card *ngIf="!loading && avis.length === 0"
-              style="text-align: center; padding: 40px;">
-        <mat-icon style="font-size: 48px;">star_border</mat-icon>
-        <p>Aucun avis trouvé</p>
-    </mat-card>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-        <mat-card *ngFor="let a of avis" style="padding: 16px;">
-            <mat-card-header>
-                <mat-card-title>{{ getStars(a.note) }}</mat-card-title>
-                <mat-card-subtitle>
-                    Pour : {{ a.destinataireNom }} {{ a.destinatairePrenom }}
-                </mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content style="margin-top: 16px;">
-                <p>{{ a.commentaire }}</p>
-                <p style="color: gray; font-size: 12px;">
+                <div class="avis-date">
                     {{ a.dateAvis | date:'dd/MM/yyyy' }}
-                </p>
-            </mat-card-content>
+                </div>
 
-            <mat-card-actions>
-                <button mat-icon-button color="warn" (click)="supprimer(a.id!)">
-                    <mat-icon>delete</mat-icon>
-                </button>
-            </mat-card-actions>
-        </mat-card>
+            </div>
+        </div>
+
     </div>
 </div>

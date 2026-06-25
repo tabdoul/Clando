@@ -14,7 +14,7 @@
         <!-- Onglets -->
         <mat-tab-group animationDuration="0ms">
 
-            <!-- Onglet 1 : À propos -->
+            <!-- Onglet Profil -->
             <mat-tab label="Profil">
                 <div class="onglet-content">
 
@@ -105,7 +105,7 @@
                                     <div class="verif-sous-label">Non vérifiée</div>
                                 </div>
                             </div>
-                            <button mat-raised-button class="btn-verifier">Vérifier</button>
+                            <button mat-stroked-button class="btn-verifier">Vérifier</button>
                         </div>
 
                         <div class="verif-item">
@@ -116,7 +116,7 @@
                                     <div class="verif-sous-label">{{ utilisateur?.email }}</div>
                                 </div>
                             </div>
-                            <button mat-raised-button class="btn-verifier">Confirmer</button>
+                            <button mat-stroked-button class="btn-verifier">Confirmer</button>
                         </div>
 
                         <div class="verif-item">
@@ -127,7 +127,7 @@
                                     <div class="verif-sous-label">{{ utilisateur?.telephone || 'Non renseigné' }}</div>
                                 </div>
                             </div>
-                            <button mat-raised-button class="btn-verifier">Confirmer</button>
+                            <button mat-stroked-button class="btn-verifier">Confirmer</button>
                         </div>
                     </div>
 
@@ -138,13 +138,12 @@
                                 <mat-icon>directions_car</mat-icon>
                                 Mes véhicules
                             </p>
-                            <button mat-raised-button class="btn-ajouter"
+                            <button mat-stroked-button class="btn-ajouter"
                                     (click)="showVehiculeForm = !showVehiculeForm">
                                 <mat-icon>add</mat-icon> Ajouter
                             </button>
                         </div>
 
-                        <!-- Formulaire ajout -->
                         <div *ngIf="showVehiculeForm" class="form-vehicule">
                             <form [formGroup]="vehiculeForm" (ngSubmit)="ajouterVehicule()">
                                 <div class="form-grid">
@@ -171,8 +170,7 @@
                                         <mat-icon>save</mat-icon> Enregistrer
                                     </button>
                                     <button mat-button type="button"
-                                            (click)="showVehiculeForm = false"
-                                            style="color: #666;">
+                                            (click)="showVehiculeForm = false">
                                         Annuler
                                     </button>
                                 </div>
@@ -189,8 +187,7 @@
                                 <div class="vehicule-nom">{{ v.marque }} {{ v.modele }}</div>
                                 <div class="vehicule-meta">{{ v.immatriculation }} · {{ v.nbPlaces }} places</div>
                             </div>
-                            <button mat-icon-button (click)="supprimerVehicule(v.id)"
-                                    style="color: #e74c3c;">
+                            <button mat-icon-button color="warn" (click)="supprimerVehicule(v.id)">
                                 <mat-icon>delete_outline</mat-icon>
                             </button>
                         </div>
@@ -199,7 +196,7 @@
                 </div>
             </mat-tab>
 
-            <!-- Onglet 2 : Compte -->
+            <!-- Onglet Compte -->
             <mat-tab label="Compte">
                 <div class="onglet-content">
 
@@ -275,21 +272,21 @@
                     </div>
 
                     <!-- Danger zone -->
-                    <div class="card" style="border-left: 3px solid #e74c3c;">
-                        <p class="section-titre" style="color: #e74c3c;">Zone de danger</p>
+                    <div class="card" style="border-left: 3px solid #e53935;">
+                        <p class="section-titre" style="color: #e53935;">Zone de danger</p>
                         <div class="danger-item" (click)="logout()">
                             <div class="danger-gauche">
                                 <mat-icon>logout</mat-icon>
                                 <span class="danger-label">Déconnexion</span>
                             </div>
-                            <mat-icon style="color: #444;">chevron_right</mat-icon>
+                            <mat-icon style="color: #ddd;">chevron_right</mat-icon>
                         </div>
                         <div class="danger-item" (click)="fermerCompte()">
                             <div class="danger-gauche">
                                 <mat-icon>delete_forever</mat-icon>
                                 <span class="danger-label">Fermer mon compte</span>
                             </div>
-                            <mat-icon style="color: #444;">chevron_right</mat-icon>
+                            <mat-icon style="color: #ddd;">chevron_right</mat-icon>
                         </div>
                     </div>
 

@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environments';
@@ -23,7 +24,8 @@ import { environment } from '../../../../environments/environments';
         MatInputModule,
         MatButtonModule,
         MatIconModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatSelectModule
     ],
     templateUrl: './register.html',
     styleUrl: './register.css'
@@ -41,11 +43,12 @@ export class RegisterComponent {
         private cdr: ChangeDetectorRef
     ) {
         this.registerForm = this.fb.group({
-            nom: ['', Validators.required],
-            prenom: ['', Validators.required],
-            email: ['', [Validators.required, Validators.email]],
+            nom:        ['', Validators.required],
+            prenom:     ['', Validators.required],
+            email:      ['', [Validators.required, Validators.email]],
             motDePasse: ['', [Validators.required, Validators.minLength(6)]],
-            telephone: ['']
+            telephone:  [''],
+            genre:      ['', Validators.required]
         });
     }
 

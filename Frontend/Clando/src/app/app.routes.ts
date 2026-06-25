@@ -13,8 +13,7 @@ export const routes: Routes = [
 
     // Protégées
     { path: 'mes-reservations', loadComponent: () => import('./features/reservations/reservation-list/reservation-list').then(m => m.ReservationListComponent), canActivate: [authGuard] },
-    { path: 'publier', loadComponent: () => import('./features/trajets/trajet-form/trajet-form').then(m => m.TrajetForm), canActivate: [authGuard] },
-    { path: 'vehicules', loadComponent: () => import('./features/vehicules/vehicule-list/vehicule-list').then(m => m.VehiculeListComponent), canActivate: [authGuard] },
+    { path: 'publier', loadComponent: () => import('./features/publier/publier').then(m => m.PublierComponent), canActivate: [authGuard] },
     { path: 'paiements', loadComponent: () => import('./features/paiements/paiement-list/paiement-list').then(m => m.PaiementListComponent), canActivate: [authGuard] },
     { path: 'avis', loadComponent: () => import('./features/avis/avis-list/avis-list').then(m => m.AvisListComponent), canActivate: [authGuard] },
     { path: 'notifications', loadComponent: () => import('./features/reservations/notifications/notifications').then(m => m.NotificationsComponent), canActivate: [authGuard] },
