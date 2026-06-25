@@ -121,6 +121,13 @@ public ReservationResponse simulerPaiement(Long id) {
     return toResponse(reservationRepository.save(reservation));
 }
 
+public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long conducteurId) {
+    return reservationRepository.findReservationsConfirmeesParConducteur(conducteurId)
+            .stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
+
     @Transactional
     public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
         Reservation reservation = findById(reservationId);

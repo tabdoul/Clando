@@ -18,13 +18,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     boolean existsByPassagerIdAndTrajetId(Long passagerId, Long trajetId);
     List<Reservation> findByDjomyTransactionId(String djomyTransactionId);
 
-    @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
-       "AND r.statut IN (" +
-       "com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE, " +
-       "com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE, " +
-       "com.example.Clando.entity.Reservation.StatutReservation.PRIX_REFUSE, " +
-       "com.example.Clando.entity.Reservation.StatutReservation.CONTRE_OFFRE)")
-List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+   @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
+       "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
+List<Reservation> findReservationsConfirmeesParConducteur(@Param("conducteurId") Long conducteurId);
+
 
    @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
        "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE " +
@@ -46,4 +43,10 @@ List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
            "AND r.dateConfirmation IS NOT NULL " +
            "AND r.dateConfirmation < :limite")
     List<Reservation> findReservationsNonPayeesExpired(@Param("limite") LocalDateTime limite);
+    @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
+       "AND r.statut IN (" +
+       "com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE, " +
+       "com.example.Clando.entity.Reservation.StatutReservation.PRIX_REFUSE, " +
+       "com.example.Clando.entity.Reservation.StatutReservation.CONTRE_OFFRE)")
+List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
 }

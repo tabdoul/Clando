@@ -127,6 +127,14 @@ public ResponseEntity<?> simulerPaiement(@PathVariable Long id) {
     }
 }
 
+@GetMapping("/conducteur/{conducteurId}/confirmees")
+public ResponseEntity<List<ReservationResponse>> getConfirmeesParConducteur(
+        @PathVariable Long conducteurId) {
+    return ResponseEntity.ok(
+        reservationService.getReservationsConfirmeesParConducteur(conducteurId)
+    );
+}
+
     @PostMapping("/{id}/payer")
     public ResponseEntity<?> initierPaiement(
             @PathVariable Long id,
