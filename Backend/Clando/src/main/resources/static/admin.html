@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clando Admin</title>
+    <title>Wayvo Admin</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; }
+
         .sidebar {
             position: fixed; left: 0; top: 0; bottom: 0;
             width: 240px; background: #1a1a1a;
@@ -25,63 +27,144 @@
             transition: all 0.2s; border-left: 3px solid transparent;
         }
         .nav-item:hover, .nav-item.active { color: #00b5e2; background: #0a2a35; border-left-color: #00b5e2; }
-        .nav-item svg { width: 20px; height: 20px; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+
         .main { margin-left: 240px; padding: 32px; }
         .page { display: none; }
         .page.active { display: block; }
-        h1 { font-size: 24px; margin-bottom: 24px; color: #eee; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .stat-card { background: #1e1e1e; border-radius: 14px; padding: 20px; border: 1px solid #2a2a2a; border-left: 3px solid #00b5e2; }
+
+        h1 { font-size: 24px; margin-bottom: 8px; color: #eee; }
+        .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1e1e1e; border-radius: 14px; padding: 20px;
+            border: 1px solid #2a2a2a; border-left: 3px solid #00b5e2;
+        }
         .stat-card.rouge { border-left-color: #e74c3c; }
         .stat-card.vert { border-left-color: #2ecc71; }
         .stat-card.orange { border-left-color: #f39c12; }
-        .stat-value { font-size: 36px; font-weight: bold; color: #00b5e2; }
+        .stat-card.violet { border-left-color: #9b59b6; }
+        .stat-value { font-size: 32px; font-weight: bold; color: #00b5e2; }
         .stat-card.rouge .stat-value { color: #e74c3c; }
         .stat-card.vert .stat-value { color: #2ecc71; }
         .stat-card.orange .stat-value { color: #f39c12; }
-        .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
-        .card { background: #1e1e1e; border-radius: 14px; padding: 20px; border: 1px solid #2a2a2a; margin-bottom: 16px; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .card-title { font-size: 16px; font-weight: 600; color: #eee; }
+        .stat-card.violet .stat-value { color: #9b59b6; }
+        .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+        .stat-trend { font-size: 11px; margin-top: 8px; }
+        .stat-trend.hausse { color: #2ecc71; }
+        .stat-trend.baisse { color: #e74c3c; }
+
+        /* Grille graphiques */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px; margin-bottom: 24px;
+        }
+        .charts-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px; margin-bottom: 24px;
+        }
+
+        .card {
+            background: #1e1e1e; border-radius: 14px; padding: 20px;
+            border: 1px solid #2a2a2a; margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 16px;
+        }
+        .card-title { font-size: 15px; font-weight: 600; color: #eee; }
+        .card-subtitle { font-size: 12px; color: #666; margin-top: 2px; }
+
+        canvas { max-height: 220px; }
+
+        /* Activité récente */
+        .activite-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid #2a2a2a;
+        }
+        .activite-item:last-child { border-bottom: none; }
+        .activite-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .activite-dot.bleu { background: #00b5e2; }
+        .activite-dot.vert { background: #2ecc71; }
+        .activite-dot.orange { background: #f39c12; }
+        .activite-dot.rouge { background: #e74c3c; }
+        .activite-texte { flex: 1; font-size: 13px; color: #ddd; }
+        .activite-heure { font-size: 11px; color: #555; }
+
+        /* Tableau */
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 12px; color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; }
-        td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 14px; color: #ddd; }
+        th { text-align: left; padding: 10px 12px; color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; }
+        td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 13px; color: #ddd; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #252525; }
+
         .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .badge-attente { background: #3a2a1a; color: #f39c12; }
         .badge-valide { background: #1a3a2a; color: #2ecc71; }
         .badge-rejete { background: #3a1a1a; color: #e74c3c; }
         .badge-ouvert { background: #3a1a1a; color: #e74c3c; }
         .badge-resolu { background: #1a3a2a; color: #2ecc71; }
+
         .btn { padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity 0.2s; }
         .btn:hover { opacity: 0.8; }
         .btn-primary { background: #00b5e2; color: white; }
         .btn-success { background: #2ecc71; color: white; }
         .btn-danger { background: #e74c3c; color: white; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #00b5e2; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: white; }
+
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #252525; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; color: #888; border: 1px solid #333; }
         .avatar-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; }
         .modal { background: #1e1e1e; border-radius: 16px; padding: 24px; border: 1px solid #2a2a2a; width: 500px; max-width: 90%; }
         .modal h2 { font-size: 18px; margin-bottom: 16px; }
         .modal textarea { width: 100%; background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; color: #eee; font-size: 14px; resize: vertical; min-height: 100px; margin-bottom: 16px; }
         .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+
         .search-input { background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 14px; color: #eee; font-size: 14px; width: 250px; }
         .search-input:focus { outline: none; border-color: #00b5e2; }
+
         .loading { text-align: center; padding: 40px; color: #666; }
         .empty { text-align: center; padding: 40px; color: #666; font-size: 14px; }
+
         .doc-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid #2a2a2a; }
         .verifie { color: #2ecc71; font-size: 12px; }
-        .non-verifie { color: #666; font-size: 12px; }
+        .non-verifie { color: #555; font-size: 12px; }
+
+        /* KPI row */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-top: 16px;
+        }
+        .kpi-item { text-align: center; padding: 12px; background: #252525; border-radius: 10px; }
+        .kpi-value { font-size: 20px; font-weight: bold; color: #eee; }
+        .kpi-label { font-size: 11px; color: #555; margin-top: 4px; }
+
+        @media (max-width: 1200px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .charts-grid-3 { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
 
+<!-- Login -->
 <div id="login-page" style="position: fixed; inset: 0; background: #0f0f0f; display: flex; align-items: center; justify-content: center; z-index: 999;">
     <div style="background: #1e1e1e; border-radius: 16px; padding: 40px; border: 1px solid #2a2a2a; width: 360px; text-align: center;">
-        <div style="font-size: 36px; font-weight: bold; color: #00b5e2; letter-spacing: 3px; margin-bottom: 8px;">CLANDO</div>
+        <div style="font-size: 36px; font-weight: bold; color: #00b5e2; letter-spacing: 3px; margin-bottom: 8px;">WAYVO</div>
         <div style="color: #666; font-size: 13px; margin-bottom: 32px;">Administration</div>
         <input id="login-password" type="password" placeholder="Mot de passe admin"
             style="width: 100%; background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px 16px; color: #eee; font-size: 15px; margin-bottom: 16px;"
@@ -91,31 +174,32 @@
     </div>
 </div>
 
+<!-- Sidebar -->
 <div class="sidebar">
     <div class="logo">WAYVO <span>Administration</span></div>
     <nav class="nav">
-        <div class="nav-item active" onclick="showPage('dashboard')">
+        <div class="nav-item active" onclick="showPage('dashboard', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
             </svg>
             Tableau de bord
         </div>
-        <div class="nav-item" onclick="showPage('documents')">
+        <div class="nav-item" onclick="showPage('documents', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
             </svg>
             Documents
         </div>
-        <div class="nav-item" onclick="showPage('signalements')">
+        <div class="nav-item" onclick="showPage('signalements', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             Signalements
         </div>
-        <div class="nav-item" onclick="showPage('utilisateurs')">
+        <div class="nav-item" onclick="showPage('utilisateurs', this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -126,19 +210,124 @@
     </nav>
 </div>
 
+<!-- Main -->
 <div class="main">
+
+    <!-- Dashboard -->
     <div id="page-dashboard" class="page active">
         <h1>Tableau de bord</h1>
-        <div class="stats-grid" id="stats-grid"><div class="loading">Chargement...</div></div>
+        <p class="subtitle" id="dashboard-date"></p>
+
+        <!-- Stats principales -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="loading">Chargement...</div>
+        </div>
+
+        <!-- Graphiques ligne 1 -->
+        <div class="charts-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Trajets publiés par jour</div>
+                        <div class="card-subtitle">7 derniers jours</div>
+                    </div>
+                </div>
+                <canvas id="chart-trajets"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Réservations</div>
+                        <div class="card-subtitle">Par statut</div>
+                    </div>
+                </div>
+                <canvas id="chart-reservations"></canvas>
+            </div>
+        </div>
+
+        <!-- Graphiques ligne 2 -->
+        <div class="charts-grid-3">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Inscriptions</div>
+                        <div class="card-subtitle">7 derniers jours</div>
+                    </div>
+                </div>
+                <canvas id="chart-inscriptions"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Taux de confirmation</div>
+                        <div class="card-subtitle">Réservations confirmées vs total</div>
+                    </div>
+                </div>
+                <canvas id="chart-taux"></canvas>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Revenus estimés</div>
+                        <div class="card-subtitle">Commission 13%</div>
+                    </div>
+                </div>
+                <div id="revenus-content" style="text-align:center; padding: 20px 0;">
+                    <div style="font-size: 32px; font-weight: bold; color: #00b5e2;" id="revenus-total">—</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">GNF ce mois</div>
+                    <div class="kpi-row" style="margin-top: 16px;">
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="revenus-semaine">—</div>
+                            <div class="kpi-label">Cette semaine</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="revenus-hier">—</div>
+                            <div class="kpi-label">Hier</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-value" id="revenus-aujourd">—</div>
+                            <div class="kpi-label">Aujourd'hui</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activité récente + Top trajets -->
+        <div class="charts-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Activité récente</div>
+                    <button class="btn btn-primary btn-sm" onclick="chargerDashboard()">Actualiser</button>
+                </div>
+                <div id="activite-liste">
+                    <div class="loading">Chargement...</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Trajets populaires</div>
+                </div>
+                <div id="top-trajets">
+                    <div class="loading">Chargement...</div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Documents -->
     <div id="page-documents" class="page">
         <h1>Documents à valider</h1>
         <div class="card"><div id="documents-table"><div class="loading">Chargement...</div></div></div>
     </div>
+
+    <!-- Signalements -->
     <div id="page-signalements" class="page">
         <h1>Signalements</h1>
         <div class="card"><div id="signalements-table"><div class="loading">Chargement...</div></div></div>
     </div>
+
+    <!-- Utilisateurs -->
     <div id="page-utilisateurs" class="page">
         <h1>Utilisateurs</h1>
         <div class="card">
@@ -151,6 +340,7 @@
     </div>
 </div>
 
+<!-- Modal signalement -->
 <div class="modal-overlay" id="modal-signalement">
     <div class="modal">
         <h2>Répondre au signalement</h2>
@@ -162,6 +352,7 @@
     </div>
 </div>
 
+<!-- Modal image -->
 <div class="modal-overlay" id="modal-image">
     <div class="modal" style="text-align:center">
         <img id="modal-img" src="" style="max-width:100%; border-radius:8px; margin-bottom:16px">
@@ -170,18 +361,22 @@
 </div>
 
 <script>
-    // IMPORTANT: API doit être déclaré en premier
     const API = 'https://clando-production.up.railway.app';
     const ADMIN_PASSWORD = 'abdoul';
     let tousUtilisateurs = [];
     let signalementEnCours = null;
+    let chartTrajets = null;
+    let chartReservations = null;
+    let chartInscriptions = null;
+    let chartTaux = null;
 
+    // ── Auth ──────────────────────────────────────────────────────
     function seConnecter() {
         const pwd = document.getElementById('login-password').value;
         if (pwd === ADMIN_PASSWORD) {
             document.getElementById('login-page').style.display = 'none';
             sessionStorage.setItem('admin_auth', 'true');
-            chargerStats();
+            chargerDashboard();
         } else {
             document.getElementById('login-error').style.display = 'block';
             document.getElementById('login-password').value = '';
@@ -190,9 +385,22 @@
 
     if (sessionStorage.getItem('admin_auth') === 'true') {
         document.getElementById('login-page').style.display = 'none';
-        chargerStats();
+        chargerDashboard();
     }
 
+    // ── Navigation ────────────────────────────────────────────────
+    function showPage(page, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        if (el) el.classList.add('active');
+        if (page === 'dashboard') chargerDashboard();
+        if (page === 'documents') chargerDocuments();
+        if (page === 'signalements') chargerSignalements();
+        if (page === 'utilisateurs') chargerUtilisateurs();
+    }
+
+    // ── API ───────────────────────────────────────────────────────
     async function get(url) {
         const r = await fetch(API + url);
         return r.json();
@@ -203,19 +411,100 @@
         return r.json();
     }
 
-    function showPage(page) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('page-' + page).classList.add('active');
-        event.currentTarget.classList.add('active');
-        if (page === 'dashboard') chargerStats();
-        if (page === 'documents') chargerDocuments();
-        if (page === 'signalements') chargerSignalements();
-        if (page === 'utilisateurs') chargerUtilisateurs();
+    // ── Dashboard ─────────────────────────────────────────────────
+    async function chargerDashboard() {
+        // Date
+        document.getElementById('dashboard-date').textContent =
+            new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        try {
+            const [stats, trajets, utilisateurs, reservations] = await Promise.all([
+                get('/api/admin/stats'),
+                get('/api/admin/trajets'),
+                get('/api/admin/utilisateurs'),
+                get('/api/admin/reservations')
+            ]);
+
+            afficherStats(stats, trajets, utilisateurs, reservations);
+            afficherGraphiqueTrajets(trajets);
+            afficherGraphiqueReservations(reservations);
+            afficherGraphiqueInscriptions(utilisateurs);
+            afficherGraphiqueTaux(reservations);
+            afficherRevenus(reservations, trajets);
+            afficherActivite(trajets, reservations, utilisateurs);
+            afficherTopTrajets(trajets);
+
+        } catch (e) {
+            console.error('Erreur dashboard:', e);
+            // Fallback sur les stats simples
+            try {
+                const stats = await get('/api/admin/stats');
+                afficherStatsSimples(stats);
+            } catch (e2) {
+                document.getElementById('stats-grid').innerHTML = '<div class="empty">Erreur de chargement</div>';
+            }
+        }
     }
 
-    async function chargerStats() {
-        const stats = await get('/api/admin/stats');
+    function afficherStats(stats, trajets, utilisateurs, reservations) {
+        const aujourd = new Date().toDateString();
+        const hier = new Date(Date.now() - 86400000).toDateString();
+
+        const trajetsAujourd = trajets.filter(t =>
+            new Date(t.dateHeureDepart).toDateString() === aujourd
+        ).length;
+
+        const inscriptsAujourd = utilisateurs.filter(u =>
+            new Date(u.dateInscription).toDateString() === aujourd
+        ).length;
+
+        const reservAujourd = reservations.filter(r =>
+            new Date(r.dateReservation).toDateString() === aujourd
+        ).length;
+
+        const reservConfirmees = reservations.filter(r =>
+            r.statut === 'CONFIRMEE' || r.statut === 'TERMINEE'
+        ).length;
+
+        const tauxConfirmation = reservations.length > 0
+            ? Math.round((reservConfirmees / reservations.length) * 100)
+            : 0;
+
+        document.getElementById('stats-grid').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-value">${stats.nbUtilisateurs || utilisateurs.length}</div>
+                <div class="stat-label">Utilisateurs inscrits</div>
+                <div class="stat-trend hausse">+${inscriptsAujourd} aujourd'hui</div>
+            </div>
+            <div class="stat-card vert">
+                <div class="stat-value">${trajets.length}</div>
+                <div class="stat-label">Trajets publiés</div>
+                <div class="stat-trend hausse">+${trajetsAujourd} aujourd'hui</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-value">${reservations.length}</div>
+                <div class="stat-label">Réservations totales</div>
+                <div class="stat-trend hausse">+${reservAujourd} aujourd'hui</div>
+            </div>
+            <div class="stat-card violet">
+                <div class="stat-value">${tauxConfirmation}%</div>
+                <div class="stat-label">Taux de confirmation</div>
+                <div class="stat-trend">${reservConfirmees} confirmées</div>
+            </div>
+            <div class="stat-card rouge">
+                <div class="stat-value">${stats.nbDocumentsEnAttente || 0}</div>
+                <div class="stat-label">Documents en attente</div>
+                <div class="stat-trend baisse">À traiter</div>
+            </div>
+            <div class="stat-card rouge">
+                <div class="stat-value">${stats.nbSignalementsOuverts || 0}</div>
+                <div class="stat-label">Signalements ouverts</div>
+                <div class="stat-trend baisse">À traiter</div>
+            </div>
+        `;
+    }
+
+    function afficherStatsSimples(stats) {
         document.getElementById('stats-grid').innerHTML = `
             <div class="stat-card">
                 <div class="stat-value">${stats.nbUtilisateurs}</div>
@@ -240,6 +529,263 @@
         `;
     }
 
+    function getLast7Days() {
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            return d;
+        });
+    }
+
+    function formatJour(date) {
+        return date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+    }
+
+    function afficherGraphiqueTrajets(trajets) {
+        const jours = getLast7Days();
+        const data = jours.map(j =>
+            trajets.filter(t => new Date(t.dateCreation || t.dateHeureDepart).toDateString() === j.toDateString()).length
+        );
+
+        if (chartTrajets) chartTrajets.destroy();
+        const ctx = document.getElementById('chart-trajets').getContext('2d');
+        chartTrajets = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: jours.map(formatJour),
+                datasets: [{
+                    label: 'Trajets',
+                    data,
+                    backgroundColor: 'rgba(0, 181, 226, 0.3)',
+                    borderColor: '#00b5e2',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#2a2a2a' }, ticks: { color: '#666' } },
+                    y: { grid: { color: '#2a2a2a' }, ticks: { color: '#666', stepSize: 1 }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function afficherGraphiqueReservations(reservations) {
+        const statuts = {
+            'EN_ATTENTE': 0, 'CONFIRMEE': 0, 'TERMINEE': 0,
+            'ANNULEE': 0, 'REFUSEE': 0
+        };
+        reservations.forEach(r => {
+            if (statuts[r.statut] !== undefined) statuts[r.statut]++;
+        });
+
+        if (chartReservations) chartReservations.destroy();
+        const ctx = document.getElementById('chart-reservations').getContext('2d');
+        chartReservations = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['En attente', 'Confirmée', 'Terminée', 'Annulée', 'Refusée'],
+                datasets: [{
+                    data: Object.values(statuts),
+                    backgroundColor: ['#f39c12', '#00b5e2', '#2ecc71', '#666', '#e74c3c'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#888', font: { size: 11 }, padding: 12 }
+                    }
+                }
+            }
+        });
+    }
+
+    function afficherGraphiqueInscriptions(utilisateurs) {
+        const jours = getLast7Days();
+        const data = jours.map(j =>
+            utilisateurs.filter(u => new Date(u.dateInscription).toDateString() === j.toDateString()).length
+        );
+
+        if (chartInscriptions) chartInscriptions.destroy();
+        const ctx = document.getElementById('chart-inscriptions').getContext('2d');
+        chartInscriptions = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: jours.map(formatJour),
+                datasets: [{
+                    label: 'Inscriptions',
+                    data,
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#2ecc71',
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#2a2a2a' }, ticks: { color: '#666', font: { size: 10 } } },
+                    y: { grid: { color: '#2a2a2a' }, ticks: { color: '#666', stepSize: 1 }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function afficherGraphiqueTaux(reservations) {
+        const confirmees = reservations.filter(r => r.statut === 'CONFIRMEE' || r.statut === 'TERMINEE').length;
+        const autres = reservations.length - confirmees;
+
+        if (chartTaux) chartTaux.destroy();
+        const ctx = document.getElementById('chart-taux').getContext('2d');
+        chartTaux = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Confirmées', 'Autres'],
+                datasets: [{
+                    data: [confirmees, autres],
+                    backgroundColor: ['#00b5e2', '#252525'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                }
+            },
+            plugins: [{
+                id: 'center',
+                beforeDraw(chart) {
+                    const { width, height, ctx } = chart;
+                    ctx.restore();
+                    const taux = reservations.length > 0
+                        ? Math.round((confirmees / reservations.length) * 100)
+                        : 0;
+                    ctx.font = 'bold 24px Segoe UI';
+                    ctx.fillStyle = '#eee';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(taux + '%', width / 2, height / 2);
+                    ctx.save();
+                }
+            }]
+        });
+    }
+
+    function afficherRevenus(reservations, trajets) {
+        const COMMISSION = 0.13;
+        const maintenant = new Date();
+        const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+        const debutSemaine = new Date(maintenant);
+        debutSemaine.setDate(maintenant.getDate() - 7);
+        const hier = new Date(maintenant);
+        hier.setDate(maintenant.getDate() - 1);
+
+        const reservPagées = reservations.filter(r => r.statutPaiement === 'SUCCESS');
+
+        const calculer = (liste, debut, fin) => {
+            return liste
+                .filter(r => {
+                    const d = new Date(r.dateReservation);
+                    return d >= debut && (!fin || d <= fin);
+                })
+                .reduce((sum, r) => sum + (r.prix || 0) * COMMISSION, 0);
+        };
+
+        const revenusMois = calculer(reservPagées, debutMois);
+        const revenusSemaine = calculer(reservPagées, debutSemaine);
+        const revenusHier = calculer(reservPagées, hier, maintenant);
+        const revenusAujourd = calculer(reservPagées, new Date(maintenant.toDateString()));
+
+        document.getElementById('revenus-total').textContent = Math.round(revenusMois).toLocaleString('fr-FR');
+        document.getElementById('revenus-semaine').textContent = Math.round(revenusSemaine).toLocaleString('fr-FR');
+        document.getElementById('revenus-hier').textContent = Math.round(revenusHier).toLocaleString('fr-FR');
+        document.getElementById('revenus-aujourd').textContent = Math.round(revenusAujourd).toLocaleString('fr-FR');
+    }
+
+    function afficherActivite(trajets, reservations, utilisateurs) {
+        const activites = [];
+
+        // Dernières réservations
+        reservations.slice(-3).reverse().forEach(r => {
+            activites.push({
+                couleur: r.statut === 'CONFIRMEE' ? 'vert' : r.statut === 'ANNULEE' ? 'rouge' : 'orange',
+                texte: `Réservation ${r.statut === 'CONFIRMEE' ? 'confirmée' : r.statut === 'ANNULEE' ? 'annulée' : 'en attente'} — ${r.villeDepart || ''} → ${r.villeArrivee || ''}`,
+                date: new Date(r.dateReservation)
+            });
+        });
+
+        // Derniers trajets
+        trajets.slice(-3).reverse().forEach(t => {
+            activites.push({
+                couleur: 'bleu',
+                texte: `Trajet publié — ${t.villeDepart} → ${t.villeArrivee}`,
+                date: new Date(t.dateHeureDepart)
+            });
+        });
+
+        // Derniers utilisateurs
+        utilisateurs.slice(-2).reverse().forEach(u => {
+            activites.push({
+                couleur: 'vert',
+                texte: `Nouvel utilisateur — ${u.prenom} ${u.nom}`,
+                date: new Date(u.dateInscription)
+            });
+        });
+
+        activites.sort((a, b) => b.date - a.date);
+
+        document.getElementById('activite-liste').innerHTML = activites.slice(0, 8).map(a => `
+            <div class="activite-item">
+                <div class="activite-dot ${a.couleur}"></div>
+                <div class="activite-texte">${a.texte}</div>
+                <div class="activite-heure">${formatDate(a.date)}</div>
+            </div>
+        `).join('') || '<div class="empty">Aucune activité récente</div>';
+    }
+
+    function afficherTopTrajets(trajets) {
+        const compteur = {};
+        trajets.forEach(t => {
+            const key = `${t.villeDepart} → ${t.villeArrivee}`;
+            compteur[key] = (compteur[key] || 0) + 1;
+        });
+
+        const top = Object.entries(compteur)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6);
+
+        if (top.length === 0) {
+            document.getElementById('top-trajets').innerHTML = '<div class="empty">Aucun trajet</div>';
+            return;
+        }
+
+        const max = top[0][1];
+        document.getElementById('top-trajets').innerHTML = top.map(([trajet, nb]) => `
+            <div style="margin-bottom: 12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:13px; color:#ddd;">${trajet}</span>
+                    <span style="font-size:12px; color:#666;">${nb} trajet${nb > 1 ? 's' : ''}</span>
+                </div>
+                <div style="background:#252525; border-radius:4px; height:6px;">
+                    <div style="background:#00b5e2; border-radius:4px; height:6px; width:${Math.round((nb/max)*100)}%; transition: width 0.5s;"></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Documents ─────────────────────────────────────────────────
     async function chargerDocuments() {
         const docs = await get('/api/admin/documents');
         if (docs.length === 0) {
@@ -248,24 +794,13 @@
         }
         document.getElementById('documents-table').innerHTML = `
             <table>
-                <thead>
-                    <tr>
-                        <th>Aperçu</th>
-                        <th>Utilisateur</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th>Aperçu</th><th>Utilisateur</th><th>Type</th><th>Date</th><th>Actions</th>
+                </tr></thead>
                 <tbody>
                     ${docs.map(d => `
                         <tr>
-                            <td>
-                                <img class="doc-preview"
-                                    src="${API}/api/documents/fichier/${d.id}"
-                                    onclick="voirImage('${API}/api/documents/fichier/${d.id}')"
-                                    onerror="this.style.display='none'">
-                            </td>
+                            <td><img class="doc-preview" src="${API}/api/documents/fichier/${d.id}" onclick="voirImage('${API}/api/documents/fichier/${d.id}')" onerror="this.style.display='none'"></td>
                             <td>${d.utilisateurPrenom} ${d.utilisateurNom}</td>
                             <td><span class="badge badge-attente">${formatType(d.type)}</span></td>
                             <td>${formatDate(d.dateUpload)}</td>
@@ -284,9 +819,10 @@
         const commentaire = accepte ? 'Document valide' : prompt('Motif du rejet :') || 'Document invalide';
         await fetch(`${API}/api/admin/documents/${id}/valider?accepte=${accepte}&commentaire=${encodeURIComponent(commentaire)}`, { method: 'PATCH' });
         chargerDocuments();
-        chargerStats();
+        chargerDashboard();
     }
 
+    // ── Signalements ──────────────────────────────────────────────
     async function chargerSignalements() {
         const sigs = await get('/api/admin/signalements');
         if (sigs.length === 0) {
@@ -295,15 +831,9 @@
         }
         document.getElementById('signalements-table').innerHTML = `
             <table>
-                <thead>
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th>Utilisateur</th><th>Type</th><th>Description</th><th>Date</th><th>Actions</th>
+                </tr></thead>
                 <tbody>
                     ${sigs.map(s => `
                         <tr>
@@ -311,9 +841,7 @@
                             <td><span class="badge badge-ouvert">${formatType(s.type)}</span></td>
                             <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.description}</td>
                             <td>${formatDate(s.dateSignalement)}</td>
-                            <td>
-                                <button class="btn btn-primary btn-sm" onclick="ouvrirModal(${s.id})">Répondre</button>
-                            </td>
+                            <td><button class="btn btn-primary btn-sm" onclick="ouvrirModal(${s.id})">Répondre</button></td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -337,9 +865,10 @@
         await fetch(`${API}/api/admin/signalements/${signalementEnCours}/repondre?reponse=${encodeURIComponent(reponse)}`, { method: 'PATCH' });
         fermerModal();
         chargerSignalements();
-        chargerStats();
+        chargerDashboard();
     }
 
+    // ── Utilisateurs ──────────────────────────────────────────────
     async function chargerUtilisateurs() {
         tousUtilisateurs = await get('/api/admin/utilisateurs');
         afficherUtilisateurs(tousUtilisateurs);
@@ -349,32 +878,21 @@
         document.getElementById('nb-utilisateurs').textContent = `${users.length} utilisateur(s)`;
         document.getElementById('utilisateurs-table').innerHTML = `
             <table>
-                <thead>
-                    <tr>
-                        <th>Photo</th>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Téléphone</th>
-                        <th>Inscription</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th>Photo</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Inscription</th><th>Statut</th>
+                </tr></thead>
                 <tbody>
                     ${users.map(u => `
                         <tr>
-                            <td>
-                                ${u.photo
-                                    ? `<img class="avatar-img" src="${API}/api/utilisateurs/photo/${u.photo.split('\\\\').pop().split('/').pop()}">`
-                                    : `<div class="avatar">${(u.prenom||'?')[0]}${(u.nom||'?')[0]}</div>`
-                                }
-                            </td>
+                            <td>${u.photo
+                                ? `<img class="avatar-img" src="${API}/api/utilisateurs/photo/${u.photo.split('\\\\').pop().split('/').pop()}">`
+                                : `<div class="avatar">${(u.prenom||'?')[0]}${(u.nom||'?')[0]}</div>`
+                            }</td>
                             <td>${u.prenom} ${u.nom}</td>
                             <td>${u.email}</td>
                             <td>${u.telephone || '-'}</td>
                             <td>${formatDate(u.dateInscription)}</td>
-                            <td>${u.verifie
-                                ? '<span class="verifie">✓ Vérifié</span>'
-                                : '<span class="non-verifie">Non vérifié</span>'}</td>
+                            <td>${u.verifie ? '<span class="verifie">✓ Vérifié</span>' : '<span class="non-verifie">Non vérifié</span>'}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -389,6 +907,7 @@
         afficherUtilisateurs(filtered);
     }
 
+    // ── Modales ───────────────────────────────────────────────────
     function voirImage(url) {
         document.getElementById('modal-img').src = url;
         document.getElementById('modal-image').classList.add('active');
@@ -398,6 +917,7 @@
         document.getElementById('modal-image').classList.remove('active');
     }
 
+    // ── Utils ─────────────────────────────────────────────────────
     function formatType(type) {
         const types = {
             'CNI': 'CNI', 'PASSEPORT': 'Passeport', 'PERMIS_CONDUIRE': 'Permis',
@@ -413,7 +933,8 @@
         return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    chargerStats();
+    // Chargement initial
+    chargerDashboard();
 </script>
 </body>
 </html>

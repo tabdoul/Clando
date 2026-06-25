@@ -10,16 +10,12 @@ export default function ResultatsScreen({ route, navigation }) {
 
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleTimeString('fr-FR', {
-            hour: '2-digit', minute: '2-digit', hour12: false
-        });
+        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false });
     };
 
     const formatDateTrajet = (dateString) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('fr-FR', {
-            day: '2-digit', month: 'short'
-        });
+        return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
     };
 
     return (
@@ -34,7 +30,7 @@ export default function ResultatsScreen({ route, navigation }) {
                         <Ionicons name="arrow-forward" size={16} color="#00b5e2" />
                         <Text style={styles.villeText}>{villeArrivee}</Text>
                     </View>
-                    <Text style={styles.headerSubtitle}>{trajets.length} trajet(s) disponible(s)</Text>
+                    <Text style={styles.headerSubtitle}>{`${trajets.length} trajet(s) disponible(s)`}</Text>
                 </View>
             </View>
 
@@ -43,7 +39,7 @@ export default function ResultatsScreen({ route, navigation }) {
                     <TouchableOpacity
                         key={item.id.toString()}
                         style={styles.cardWrapper}
-                        onPress={() => navigation.navigate('TrajetDetail', { trajet: item,villeDepart, villeArrivee })}>
+                        onPress={() => navigation.navigate('TrajetDetail', { trajet: item, villeDepart, villeArrivee })}>
                         <View style={styles.card}>
                             <View style={styles.cardTop}>
                                 <View style={styles.heureContainer}>
@@ -60,12 +56,12 @@ export default function ResultatsScreen({ route, navigation }) {
                                     </View>
                                     <Text style={styles.ville}>{item.villeArrivee}</Text>
                                     {item.itineraire ? (
-                                        <Text style={styles.itineraire}>Via {item.itineraire}</Text>
+                                        <Text style={styles.itineraire}>{`Via ${item.itineraire}`}</Text>
                                     ) : null}
                                 </View>
 
                                 <View style={styles.prixContainer}>
-                                    <Text style={styles.prix}>{item.prix.toLocaleString()}</Text>
+                                    <Text style={styles.prix}>{item.prixConducteur?.toLocaleString()}</Text>
                                     <Text style={styles.prixDevise}>GNF</Text>
                                     {item.placesDisponibles <= 2 && item.placesDisponibles > 0 && (
                                         <View style={styles.presqueCompletBadge}>
@@ -77,7 +73,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                             <Text style={styles.comptetBadgeText}>Complet</Text>
                                         </View>
                                     )}
-                                    <Text style={styles.places}>{item.placesDisponibles} place(s)</Text>
+                                    <Text style={styles.places}>{`${item.placesDisponibles} place(s)`}</Text>
                                 </View>
                             </View>
 
@@ -87,19 +83,16 @@ export default function ResultatsScreen({ route, navigation }) {
                                 <View style={styles.conducteurInfo}>
                                     <View style={styles.avatar}>
                                         {item.conducteurPhoto ? (
-                                            <Image
-                                                source={{ uri: item.conducteurPhoto }}
-                                                style={styles.avatarImage}
-                                            />
+                                            <Image source={{ uri: item.conducteurPhoto }} style={styles.avatarImage} />
                                         ) : (
                                             <Text style={styles.avatarText}>
-                                                {item.conducteurPrenom?.charAt(0)}{item.conducteurNom?.charAt(0)}
+                                                {`${item.conducteurPrenom?.charAt(0)}${item.conducteurNom?.charAt(0)}`}
                                             </Text>
                                         )}
                                     </View>
                                     <View>
                                         <Text style={styles.conducteurNom}>
-                                            {item.conducteurNom} {item.conducteurPrenom}
+                                            {`${item.conducteurNom} ${item.conducteurPrenom}`}
                                         </Text>
                                         <View style={styles.conducteurStats}>
                                             <Ionicons name="star" size={12} color="#f39c12" />
@@ -109,11 +102,11 @@ export default function ResultatsScreen({ route, navigation }) {
                                                     : 'Nouveau'}
                                             </Text>
                                             <Text style={styles.conducteurTrajets}>
-                                                • {item.nbTrajetsTerminesConducteur} trajet(s)
+                                                {`• ${item.nbTrajetsTerminesConducteur} trajet(s)`}
                                             </Text>
                                         </View>
                                         <Text style={styles.vehicule}>
-                                            {item.vehiculeMarque} {item.vehiculeModele}
+                                            {`${item.vehiculeMarque} ${item.vehiculeModele}`}
                                         </Text>
                                     </View>
                                 </View>
@@ -121,7 +114,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                 <View style={styles.rightSection}>
                                     {item.femmesUniquement && (
                                         <View style={styles.femmesUniquementBadge}>
-                                            <Text style={styles.femmesUniquementBadgeText}> Femmes uniquement</Text>
+                                            <Text style={styles.femmesUniquementBadgeText}>Femmes uniquement</Text>
                                         </View>
                                     )}
                                     {item.statut === 'OUVERT' && item.placesDisponibles > 0 ? (
@@ -184,9 +177,9 @@ const styles = StyleSheet.create({
     separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
     cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     conducteurInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
     avatarImage: { width: 40, height: 40, borderRadius: 20 },
-    avatarText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
+    avatarText: { color: '#888', fontSize: 14, fontWeight: 'bold' },
     conducteurNom: { fontSize: 13, fontWeight: '600', color: '#ddd' },
     conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
     conducteurNote: { fontSize: 12, color: '#f39c12', fontWeight: '600' },
@@ -205,6 +198,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', gap: 4,
     },
     boutonReserverText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
-    complet: { backgroundColor: '#c0392b', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
-    comptetText: { color: 'white', fontSize: 13 },
+    complet: { backgroundColor: '#333', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
+    comptetText: { color: '#888', fontSize: 13 },
 });

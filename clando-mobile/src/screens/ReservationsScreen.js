@@ -178,7 +178,10 @@ export default function ReservationsScreen({ navigation }) {
                             await api.patch(`/reservations/${reservation.id}/nouvelle-proposition?nouveauPrix=${reservation.prixConducteur}`);
                             await api.patch(`/reservations/${reservation.id}/negociation?accepter=true`);
                             chargerReservations();
-                            Alert.alert('Prix accepte !', 'Vous avez 30 minutes pour effectuer le paiement.');
+                            Alert.alert(
+                                'Prix accepte !',
+                                'Vous avez 30 minutes pour effectuer le paiement.'
+                            );
                         } catch (error) {
                             Alert.alert('Erreur', error.response?.data?.erreur || "Impossible d'accepter");
                         }
@@ -239,6 +242,11 @@ export default function ReservationsScreen({ navigation }) {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    };
+
+    // ✅ Calcul prix de base depuis la réservation
+    const getPrixBase = (reservation) => {
+        return reservation.prixPropose || Math.round((reservation.prix || 0) / 1.13);
     };
 
     const renderReservation = (item) => {
@@ -593,17 +601,22 @@ export default function ReservationsScreen({ navigation }) {
                             </TouchableOpacity>
                         </View>
 
+                        {/* ✅ Détail prix corrigé */}
                         <View style={styles.paiementDetail}>
                             <View style={styles.paiementDetailLigne}>
                                 <Text style={styles.paiementDetailLabel}>Prix trajet</Text>
                                 <Text style={styles.paiementDetailValeur}>
-                                    {reservationAPayer ? Math.round((reservationAPayer.prix || 0) / 1.13).toLocaleString() : 0} GNF
+                                    {reservationAPayer
+                                        ? getPrixBase(reservationAPayer).toLocaleString()
+                                        : 0} GNF
                                 </Text>
                             </View>
                             <View style={styles.paiementDetailLigne}>
                                 <Text style={styles.paiementDetailLabel}>Frais de service</Text>
                                 <Text style={styles.paiementDetailValeur}>
-                                    {reservationAPayer ? Math.round((reservationAPayer.prix || 0) - (reservationAPayer.prix || 0) / 1.13).toLocaleString() : 0} GNF
+                                    {reservationAPayer
+                                        ? Math.round((reservationAPayer.prix || 0) - getPrixBase(reservationAPayer)).toLocaleString()
+                                        : 0} GNF
                                 </Text>
                             </View>
                             <View style={styles.paiementDetailSeparator} />
