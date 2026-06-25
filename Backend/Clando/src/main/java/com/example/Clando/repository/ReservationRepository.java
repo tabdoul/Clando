@@ -23,9 +23,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 List<Reservation> findReservationsConfirmeesParConducteur(@Param("conducteurId") Long conducteurId);
 
 
-   @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
-       "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE " +
-       "AND r.statutPaiement = 'SUCCESS'")
+  @Query("SELECT r FROM Reservation r WHERE r.trajet.id = :trajetId " +
+       "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
 List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
 
     @Query("SELECT r FROM Reservation r " +
