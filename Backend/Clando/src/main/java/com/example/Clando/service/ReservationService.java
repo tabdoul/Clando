@@ -19,8 +19,8 @@ import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
-import main.java.com.example.Clando.service.DjomyService;
-import main.java.com.example.Clando.service.NotificationService;
+import com.example.Clando.service.DjomyService;
+import com.example.Clando.service.NotificationService;
 
 @Service
 public class ReservationService {
