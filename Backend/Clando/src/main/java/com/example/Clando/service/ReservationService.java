@@ -19,8 +19,6 @@ import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
-import com.example.Clando.service.DjomyService;
-import com.example.Clando.service.NotificationService;
 
 @Service
 public class ReservationService {
@@ -82,69 +80,58 @@ public class ReservationService {
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
         trajetRepository.save(trajet);
 
+        // ✅ Notification avec les villes du passager
         String tokenConducteur = trajet.getConducteur().getExpoPushToken();
         if (tokenConducteur != null && !tokenConducteur.isBlank()) {
-<<<<<<< HEAD
-            String departAffiche = request.getDepartPassager() != null 
-    ? request.getDepartPassager() 
-    : trajet.getVilleDepart();
+            String departAffiche = request.getDepartPassager() != null
+                ? request.getDepartPassager()
+                : trajet.getVilleDepart();
+            String arriveeAffichee = request.getArriveePassager() != null
+                ? request.getArriveePassager()
+                : trajet.getVilleArrivee();
 
-String arriveeAffichee = request.getArriveePassager() != null 
-    ? request.getArriveePassager() 
-    : trajet.getVilleArrivee();
-
-notificationService.envoyerNotification(
-    tokenConducteur,
-    "Nouvelle reservation !",
-    passager.getPrenom() + " " + passager.getNom() +
-    " veut reserver de " + departAffiche +
-    " a " + arriveeAffichee
-);
-=======
             notificationService.envoyerNotification(
                 tokenConducteur,
                 "Nouvelle reservation !",
                 passager.getPrenom() + " " + passager.getNom() +
-                " veut reserver votre trajet " + trajet.getVilleDepart() +
-                " -> " + trajet.getVilleArrivee()
+                " veut reserver de " + departAffiche +
+                " a " + arriveeAffichee
             );
->>>>>>> cbff4a2fceee13779af0c1d143993d0f7383b45a
         }
 
         return toResponse(reservationRepository.save(reservation));
     }
 
-    // Test pour simuler à retirer avant mise en prod
+    // ✅ Mode test — à retirer avant mise en prod
     @Transactional
-public ReservationResponse simulerPaiement(Long id) {
-    Reservation reservation = findById(id);
-    if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
-        throw new IllegalStateException("La reservation doit etre confirmee pour payer");
+    public ReservationResponse simulerPaiement(Long id) {
+        Reservation reservation = findById(id);
+        if (reservation.getStatut() != Reservation.StatutReservation.CONFIRMEE) {
+            throw new IllegalStateException("La reservation doit etre confirmee pour payer");
+        }
+        reservation.setStatutPaiement("SUCCESS");
+
+        String token = reservation.getPassager().getExpoPushToken();
+        if (token != null && !token.isBlank()) {
+            notificationService.envoyerNotification(
+                token,
+                "Paiement confirme !",
+                "Votre paiement pour le trajet " +
+                reservation.getTrajet().getVilleDepart() + " -> " +
+                reservation.getTrajet().getVilleArrivee() +
+                " a bien ete recu."
+            );
+        }
+
+        return toResponse(reservationRepository.save(reservation));
     }
-    reservation.setStatutPaiement("SUCCESS");
 
-    // Notification au passager
-    String token = reservation.getPassager().getExpoPushToken();
-    if (token != null && !token.isBlank()) {
-        notificationService.envoyerNotification(
-            token,
-            "Paiement confirme !",
-            "Votre paiement pour le trajet " +
-            reservation.getTrajet().getVilleDepart() + " → " +
-            reservation.getTrajet().getVilleArrivee() +
-            " a bien ete recu."
-        );
+    public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long conducteurId) {
+        return reservationRepository.findReservationsConfirmeesParConducteur(conducteurId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
-
-    return toResponse(reservationRepository.save(reservation));
-}
-
-public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long conducteurId) {
-    return reservationRepository.findReservationsConfirmeesParConducteur(conducteurId)
-            .stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
-}
 
     @Transactional
     public ReservationResponse initierPaiement(Long reservationId, String numeroTelephone) {
@@ -159,23 +146,18 @@ public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long con
         }
 
         Trajet trajet = reservation.getTrajet();
-
         double prixBase = reservation.getPrixPropose() != null
             ? reservation.getPrixPropose()
             : trajet.getPrix();
-
         double montant = Math.round(prixBase * COMMISSION);
-
         String description = "Reservation Wayvo : " +
             trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee();
-
         String reference = "WAYVO-" + System.currentTimeMillis();
 
         try {
             Map<String, Object> paiement = djomyService.initierPaiementOM(
                 numeroTelephone, montant, reference, description
             );
-
             Map<String, Object> data = (Map<String, Object>) paiement.get("data");
             if (data != null) {
                 if (data.containsKey("transactionId")) {
@@ -214,7 +196,6 @@ public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long con
         double prixBase = reservation.getPrixPropose() != null
             ? reservation.getPrixPropose()
             : trajet.getPrix();
-
         double montantPaye = Math.round(prixBase * COMMISSION);
         double montantRembourse;
         double fraisAnnulation = 0;
@@ -343,13 +324,15 @@ public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long con
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
-    public List<ReservationResponse> getAll() {
-    return reservationRepository.findAll()
-            .stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
-}
 
+    public List<ReservationResponse> getAll() {
+        return reservationRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ✅ CORRIGÉ — gère TERMINEE correctement
     public ReservationResponse changerStatut(Long id, Reservation.StatutReservation statut) {
         Reservation reservation = findById(id);
         reservation.setStatut(statut);
@@ -360,6 +343,20 @@ public List<ReservationResponse> getReservationsConfirmeesParConducteur(Long con
                 trajet.getPlacesDisponibles() + reservation.getNbPlaces()
             );
             trajetRepository.save(trajet);
+        }
+
+        // ✅ Notification au passager quand trajet terminé
+        if (statut == Reservation.StatutReservation.TERMINEE) {
+            String token = reservation.getPassager().getExpoPushToken();
+            if (token != null && !token.isBlank()) {
+                notificationService.envoyerNotification(
+                    token,
+                    "Trajet termine !",
+                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
+                    " -> " + reservation.getTrajet().getVilleArrivee() +
+                    " est termine. Merci d'avoir voyage avec Wayvo !"
+                );
+            }
         }
 
         return toResponse(reservationRepository.save(reservation));
