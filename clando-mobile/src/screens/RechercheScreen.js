@@ -170,13 +170,14 @@ export default function RechercheScreen({ navigation }) {
         setLoading(true);
         try {
             const response = await api.get('/trajets/rechercher', {
-                params: {
-                    villeDepart: normaliser(villeDepart.trim()),
-                    villeArrivee: normaliser(villeArrivee.trim()),
-                    page: 0,
-                    size: 10
-                }
-            });
+    params: {
+        villeDepart: normaliser(villeDepart.trim()),
+        villeArrivee: normaliser(villeArrivee.trim()),
+        dateDepart: dateDepart ? dateDepart.toISOString().split('T')[0] : undefined,
+        page: 0,
+        size: 10
+    }
+});
 
             await sauvegarderHistorique(villeDepart.trim(), villeArrivee.trim());
 
