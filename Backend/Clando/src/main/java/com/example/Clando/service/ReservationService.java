@@ -84,6 +84,7 @@ public class ReservationService {
 
         String tokenConducteur = trajet.getConducteur().getExpoPushToken();
         if (tokenConducteur != null && !tokenConducteur.isBlank()) {
+<<<<<<< HEAD
             String departAffiche = request.getDepartPassager() != null 
     ? request.getDepartPassager() 
     : trajet.getVilleDepart();
@@ -99,6 +100,15 @@ notificationService.envoyerNotification(
     " veut reserver de " + departAffiche +
     " a " + arriveeAffichee
 );
+=======
+            notificationService.envoyerNotification(
+                tokenConducteur,
+                "Nouvelle reservation !",
+                passager.getPrenom() + " " + passager.getNom() +
+                " veut reserver votre trajet " + trajet.getVilleDepart() +
+                " -> " + trajet.getVilleArrivee()
+            );
+>>>>>>> cbff4a2fceee13779af0c1d143993d0f7383b45a
         }
 
         return toResponse(reservationRepository.save(reservation));
