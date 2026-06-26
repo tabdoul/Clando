@@ -131,6 +131,58 @@
                         </div>
                     </div>
 
+                    <!-- Mes documents -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <p class="card-titre" style="margin: 0;">
+            <mat-icon>folder_open</mat-icon>
+            Mes documents
+        </p>
+        <button mat-stroked-button class="btn-ajouter" routerLink="/documents">
+            <mat-icon>upload</mat-icon> Gérer
+        </button>
+    </div>
+
+    <div class="verif-item">
+        <div class="verif-gauche">
+            <mat-icon>badge</mat-icon>
+            <div>
+                <div class="verif-label">Pièce d'identité (CNI / Passeport)</div>
+                <div class="verif-sous-label">Requis pour conduire</div>
+            </div>
+        </div>
+        <button mat-stroked-button class="btn-verifier" routerLink="/documents">
+            Soumettre
+        </button>
+    </div>
+
+    <div class="verif-item">
+        <div class="verif-gauche">
+            <mat-icon>credit_card</mat-icon>
+            <div>
+                <div class="verif-label">Permis de conduire</div>
+                <div class="verif-sous-label">Requis pour publier un trajet</div>
+            </div>
+        </div>
+        <button mat-stroked-button class="btn-verifier" routerLink="/documents">
+            Soumettre
+        </button>
+    </div>
+
+    <div class="verif-item">
+        <div class="verif-gauche">
+            <mat-icon>directions_car</mat-icon>
+            <div>
+                <div class="verif-label">Carte grise</div>
+                <div class="verif-sous-label">Optionnel</div>
+            </div>
+        </div>
+        <button mat-stroked-button class="btn-verifier" routerLink="/documents">
+            Soumettre
+        </button>
+    </div>
+</div>
+
                     <!-- Mes véhicules -->
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">

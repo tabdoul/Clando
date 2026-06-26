@@ -47,40 +47,47 @@ private static final Map<String, List<String>> QUARTIERS_PAR_ITINERAIRE = Map.of
     }
 
     public boolean trajetCorrespond(String itineraire,
-                                    String departTrajet, String arriveeTrajet,
-                                    String departRecherche, String arriveeRecherche) {
-        if (itineraire == null) return false;
+                                String departTrajet, String arriveeTrajet,
+                                String departRecherche, String arriveeRecherche) {
+    if (itineraire == null) return false;
 
-        List<String> quartiers = null;
-        for (Map.Entry<String, List<String>> entry : QUARTIERS_PAR_ITINERAIRE.entrySet()) {
-            if (normaliser(entry.getKey()).contains(normaliser(itineraire)) ||
-                normaliser(itineraire).contains(normaliser(entry.getKey()))) {
-                quartiers = entry.getValue();
-                break;
-            }
+    List<String> quartiers = null;
+    for (Map.Entry<String, List<String>> entry : QUARTIERS_PAR_ITINERAIRE.entrySet()) {
+        if (normaliser(entry.getKey()).contains(normaliser(itineraire)) ||
+            normaliser(itineraire).contains(normaliser(entry.getKey()))) {
+            quartiers = entry.getValue();
+            break;
         }
+    }
 
-        if (quartiers == null) return false;
+    if (quartiers == null) return false;
 
-        // Position du trajet réel sur la route
-        int indexDepartTrajet = trouverIndex(quartiers, departTrajet);
-        int indexArriveeTrajet = trouverIndex(quartiers, arriveeTrajet);
+    int indexDepartTrajet    = trouverIndex(quartiers, departTrajet);
+    int indexArriveeTrajet   = trouverIndex(quartiers, arriveeTrajet);
+    int indexDepartRecherche = trouverIndex(quartiers, departRecherche);
+    int indexArriveeRecherche = trouverIndex(quartiers, arriveeRecherche);
 
-        // Position de la recherche sur la route
-        int indexDepartRecherche = trouverIndex(quartiers, departRecherche);
-        int indexArriveeRecherche = trouverIndex(quartiers, arriveeRecherche);
+    if (indexDepartTrajet == -1 || indexArriveeTrajet == -1 ||
+        indexDepartRecherche == -1 || indexArriveeRecherche == -1) {
+        return false;
+    }
 
-        if (indexDepartTrajet == -1 || indexArriveeTrajet == -1 ||
-            indexDepartRecherche == -1 || indexArriveeRecherche == -1) {
-            return false;
-        }
-
-        // Le trajet doit partir avant ou au point de départ recherché
-        // ET arriver après ou au point d'arrivée recherché
+    //  Sens ALLER : périphérie → centre (km36 → kaloum)
+    if (indexDepartTrajet < indexArriveeTrajet) {
         return indexDepartTrajet <= indexDepartRecherche &&
                indexArriveeTrajet >= indexArriveeRecherche &&
                indexDepartRecherche < indexArriveeRecherche;
     }
+
+    //  Sens RETOUR : centre → périphérie (kaloum → km36)
+    if (indexDepartTrajet > indexArriveeTrajet) {
+        return indexDepartTrajet >= indexDepartRecherche &&
+               indexArriveeTrajet <= indexArriveeRecherche &&
+               indexDepartRecherche > indexArriveeRecherche;
+    }
+
+    return false;
+}
 
     public List<String> getQuartiers(String itineraire) {
         for (Map.Entry<String, List<String>> entry : QUARTIERS_PAR_ITINERAIRE.entrySet()) {

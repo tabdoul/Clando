@@ -120,43 +120,74 @@
             </div>
 
             <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="card card-prix">
-                    <div class="prix-valeur">{{ trajet.prixConducteur | number }} GNF</div>
+            <!-- Sidebar -->
+<div class="sidebar">
+    <div class="card card-prix">
+        <div class="prix-valeur">{{ trajet.prixConducteur | number }} GNF</div>
+        <div class="prix-label">par place · +13% frais au paiement</div>
 
-                    <div class="prix-label">par place · +13% frais au paiement</div>
+        <div class="prix-info">
+            <mat-icon>info_outline</mat-icon>
+            <span>Le paiement s'effectue après confirmation du conducteur via Orange Money.</span>
+        </div>
 
+        <!-- Champs départ/arrivée passager -->
+        <div *ngIf="trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && isConnecte"
+             class="trajet-passager-fields">
+            <p class="trajet-passager-label">Votre point de montée</p>
+            <mat-form-field appearance="outline" style="width:100%;">
+                <mat-label>Où montez-vous ?</mat-label>
+                <input matInput
+                       [(ngModel)]="departPassager"
+                       (ngModelChange)="filtrerDepart($event)"
+                       [matAutocomplete]="autoDepart"
+                       placeholder="Ex: Kissosso">
+                <mat-icon matSuffix>my_location</mat-icon>
+                <mat-autocomplete #autoDepart="matAutocomplete">
+                    <mat-option *ngFor="let q of quartiersDepart" [value]="q">{{ q }}</mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
 
-                    <div class="prix-info">
-                        <mat-icon>info_outline</mat-icon>
-                        <span>Le paiement s'effectue après confirmation du conducteur via Orange Money.</span>
-                    </div>
+            <p class="trajet-passager-label">Votre point de descente</p>
+            <mat-form-field appearance="outline" style="width:100%;">
+                <mat-label>Où descendez-vous ?</mat-label>
+                <input matInput
+                       [(ngModel)]="arriveePassager"
+                       (ngModelChange)="filtrerArrivee($event)"
+                       [matAutocomplete]="autoArrivee"
+                       placeholder="Ex: Kaloum">
+                <mat-icon matSuffix>location_on</mat-icon>
+                <mat-autocomplete #autoArrivee="matAutocomplete">
+                    <mat-option *ngFor="let q of quartiersArrivee" [value]="q">{{ q }}</mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+        </div>
 
-                    <!-- Trajet complet -->
-                    <div *ngIf="trajet.statut === 'COMPLET' || trajet.placesDisponibles === 0"
-                         class="badge-complet">
-                        <mat-icon>block</mat-icon> Trajet complet
-                    </div>
+        <!-- Trajet complet -->
+        <div *ngIf="trajet.statut === 'COMPLET' || trajet.placesDisponibles === 0"
+             class="badge-complet">
+            <mat-icon>block</mat-icon> Trajet complet
+        </div>
 
-                    <!-- Bouton réserver -->
-                    <button *ngIf="trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0"
-                            mat-raised-button
-                            class="btn-reserver"
-                            [disabled]="loadingReservation"
-                            (click)="reserver()">
-                        <mat-icon>{{ isConnecte ? 'event_seat' : 'login' }}</mat-icon>
-                        <span *ngIf="!loadingReservation">
-                            {{ isConnecte ? 'Réserver ce trajet' : 'Se connecter pour réserver' }}
-                        </span>
-                        <span *ngIf="loadingReservation">Envoi en cours...</span>
-                    </button>
+        <!-- Bouton réserver -->
+        <button *ngIf="trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0"
+                mat-raised-button
+                class="btn-reserver"
+                [disabled]="loadingReservation"
+                (click)="reserver()">
+            <mat-icon>{{ isConnecte ? 'event_seat' : 'login' }}</mat-icon>
+            <span *ngIf="!loadingReservation">
+                {{ isConnecte ? 'Réserver ce trajet' : 'Se connecter pour réserver' }}
+            </span>
+            <span *ngIf="loadingReservation">Envoi en cours...</span>
+        </button>
 
-                    <p *ngIf="!isConnecte" class="login-hint">
-                        <a routerLink="/login">Connectez-vous</a> ou
-                        <a routerLink="/register">créez un compte</a> pour réserver
-                    </p>
-                </div>
-            </div>
+        <p *ngIf="!isConnecte" class="login-hint">
+            <a routerLink="/login">Connectez-vous</a> ou
+            <a routerLink="/register">créez un compte</a> pour réserver
+        </p>
+    </div>
+</div>
 
         </div>
     </div>
