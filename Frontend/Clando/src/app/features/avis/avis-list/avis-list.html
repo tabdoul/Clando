@@ -1,0 +1,39 @@
+<div class="page">
+    <div class="container">
+
+        <div class="page-header">
+            <h1>Avis reçus</h1>
+        </div>
+
+        <div *ngIf="loading" class="loading">
+            <mat-icon>hourglass_empty</mat-icon>
+            Chargement...
+        </div>
+
+        <div *ngIf="!loading && avis.length === 0" class="empty-state">
+            <mat-icon>star_border</mat-icon>
+            <p>Aucun avis pour le moment</p>
+        </div>
+
+        <div *ngIf="!loading && avis.length > 0" class="avis-grid">
+            <div *ngFor="let a of avis" class="avis-card">
+
+                <div class="avis-note">{{ getStars(a.note) }}</div>
+
+                <div class="avis-destinataire">
+                    De : <span>{{ a.auteurPrenom }} {{ a.auteurNom }}</span>
+                </div>
+
+                <div *ngIf="a.commentaire" class="avis-commentaire">
+                    "{{ a.commentaire }}"
+                </div>
+
+                <div class="avis-date">
+                    {{ a.dateAvis | date:'dd/MM/yyyy' }}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>

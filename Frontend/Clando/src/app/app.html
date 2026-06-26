@@ -1,0 +1,72 @@
+<mat-toolbar style="background-color: #00b5e2; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">    <a routerLink="/" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 8px;">
+        <mat-icon>directions_car</mat-icon>
+        <span style="font-weight: bold; font-size: 1.2rem;">Wayvo</span>
+    </a>
+    <span style="flex: 1;"></span>
+
+    <!-- Desktop uniquement -->
+    <div class="nav-desktop">
+        <a mat-button routerLink="/trajets" style="color: white;">
+            <mat-icon>search</mat-icon> Trajets
+        </a>
+        <a mat-button routerLink="/telecharger" style="color: white;">
+            <mat-icon>phone_android</mat-icon> Appli
+        </a>
+
+        <ng-container *ngIf="authService.isLoggedIn()">
+            <a mat-button routerLink="/publier" style="color: white;">
+                <mat-icon>add_circle</mat-icon> Publier
+            </a>
+            <a mat-button routerLink="/mes-reservations" style="color: white;">
+                <mat-icon>event_seat</mat-icon>
+            </a>
+            <a mat-button routerLink="/notifications" style="color: white;">
+                <mat-icon [matBadge]="nbNotifications > 0 ? nbNotifications : null"
+                          matBadgeColor="warn"
+                          [matBadgeHidden]="nbNotifications === 0"
+                          aria-hidden="false">
+                    notifications
+                </mat-icon>
+            </a>
+            <a mat-button routerLink="/profil" style="color: white;">
+                <mat-icon>account_circle</mat-icon>
+            </a>
+            <button mat-button style="color: white;" (click)="logout()">
+                <mat-icon>logout</mat-icon>
+            </button>
+        </ng-container>
+
+        <ng-container *ngIf="!authService.isLoggedIn()">
+            <a mat-button routerLink="/login" style="color: white;">Connexion</a>
+            <a mat-raised-button routerLink="/register"
+               style="background: white; color: #00b5e2; margin-left: 8px;">
+                S'inscrire
+            </a>
+        </ng-container>
+    </div>
+
+    <!-- Mobile uniquement — icônes seulement -->
+    <div class="nav-mobile">
+        <a mat-icon-button routerLink="/trajets" style="color: white;">
+            <mat-icon>search</mat-icon>
+        </a>
+        <ng-container *ngIf="authService.isLoggedIn()">
+            <a mat-icon-button routerLink="/notifications" style="color: white;">
+                <mat-icon [matBadge]="nbNotifications > 0 ? nbNotifications : null"
+                          matBadgeColor="warn"
+                          [matBadgeHidden]="nbNotifications === 0"
+                          aria-hidden="false">
+                    notifications
+                </mat-icon>
+            </a>
+            <a mat-icon-button routerLink="/profil" style="color: white;">
+                <mat-icon>account_circle</mat-icon>
+            </a>
+        </ng-container>
+        <ng-container *ngIf="!authService.isLoggedIn()">
+            <a mat-button routerLink="/login" style="color: white; font-size: 0.85rem;">Connexion</a>
+        </ng-container>
+    </div>
+</mat-toolbar>
+
+<router-outlet></router-outlet>

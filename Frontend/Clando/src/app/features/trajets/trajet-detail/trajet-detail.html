@@ -1,0 +1,170 @@
+<div *ngIf="loading" class="loading">
+    <mat-icon>directions_car</mat-icon>
+    <p>Chargement du trajet...</p>
+</div>
+
+<div class="page" *ngIf="!loading && trajet">
+    <div class="container">
+
+        <!-- Retour -->
+        <a routerLink="/trajets" class="retour">
+            <mat-icon>arrow_back</mat-icon>
+            Retour aux trajets
+        </a>
+
+        <div class="detail-layout">
+
+            <!-- Colonne principale -->
+            <div class="colonne-principale">
+
+                <!-- Badge femmes -->
+                <div *ngIf="trajet.femmesUniquement" class="badge-femmes">
+                    <mat-icon>female</mat-icon>
+                    Trajet réservé aux femmes uniquement
+                </div>
+
+                <!-- Carte trajet -->
+                <div class="card">
+                    <p class="card-label">Trajet</p>
+
+                    <div class="trajet-route">
+                        <div class="ville">
+                            <span class="ville-nom">{{ trajet.villeDepart }}</span>
+                            <span class="ville-label">Départ</span>
+                        </div>
+                        <div class="route-ligne">
+                            <div class="route-bar"></div>
+                            <mat-icon class="route-icon">directions_car</mat-icon>
+                            <div class="route-bar"></div>
+                        </div>
+                        <div class="ville">
+                            <span class="ville-nom">{{ trajet.villeArrivee }}</span>
+                            <span class="ville-label">Arrivée</span>
+                        </div>
+                    </div>
+
+                    <div *ngIf="trajet.itineraire" class="itineraire">
+                        <mat-icon>route</mat-icon>
+                        Via {{ trajet.itineraire }}
+                    </div>
+
+                    <div class="info-liste">
+                        <div class="info-item">
+                            <mat-icon>schedule</mat-icon>
+                            <div>
+                                <span class="info-label">Date et heure</span>
+                                <span class="info-valeur">
+                                    {{ trajet.dateHeureDepart | date:'EEEE dd MMMM yyyy à HH:mm' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <mat-icon>event_seat</mat-icon>
+                            <div>
+                                <span class="info-label">Places</span>
+                                <span class="info-valeur" [class.rouge]="trajet.placesDisponibles === 1">
+                                    {{ placesRestantes }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <mat-icon>directions_car</mat-icon>
+                            <div>
+                                <span class="info-label">Véhicule</span>
+                                <span class="info-valeur">{{ trajet.vehiculeMarque }} {{ trajet.vehiculeModele }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <mat-icon>payments</mat-icon>
+                            <div>
+                                <span class="info-label">Paiement</span>
+                                <span class="info-valeur">Après confirmation · Orange Money</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte conducteur -->
+                <div class="card">
+                    <p class="card-label">Votre conducteur</p>
+
+                    <div class="conducteur-row">
+                        <div class="conducteur-avatar">
+                            <img *ngIf="trajet.conducteurPhoto"
+                                 [src]="trajet.conducteurPhoto"
+                                 alt="Photo conducteur" />
+                            <mat-icon *ngIf="!trajet.conducteurPhoto">person</mat-icon>
+                        </div>
+                        <div class="conducteur-info">
+                            <span class="conducteur-nom">
+                                {{ trajet.conducteurPrenom }} {{ trajet.conducteurNom }}
+                            </span>
+                            <div class="conducteur-badges">
+                                <span *ngIf="trajet.noteMoyenneConducteur" class="badge-note">
+                                    <mat-icon>star</mat-icon>
+                                    {{ trajet.noteMoyenneConducteur | number:'1.1-1' }}/5
+                                </span>
+                                <span *ngIf="!trajet.noteMoyenneConducteur" class="badge-nouveau">
+                                    Nouveau conducteur
+                                </span>
+                                <span *ngIf="trajet.nbTrajetsTerminesConducteur" class="badge-trajets">
+                                    {{ trajet.nbTrajetsTerminesConducteur }} trajet(s)
+                                </span>
+                                <span class="badge-verifie">
+                                    <mat-icon>verified</mat-icon> Vérifié
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="card card-prix">
+                    <div class="prix-valeur">{{ trajet.prixConducteur | number }} GNF</div>
+
+                    <div class="prix-label">par place · +13% frais au paiement</div>
+
+
+                    <div class="prix-info">
+                        <mat-icon>info_outline</mat-icon>
+                        <span>Le paiement s'effectue après confirmation du conducteur via Orange Money.</span>
+                    </div>
+
+                    <!-- Trajet complet -->
+                    <div *ngIf="trajet.statut === 'COMPLET' || trajet.placesDisponibles === 0"
+                         class="badge-complet">
+                        <mat-icon>block</mat-icon> Trajet complet
+                    </div>
+
+                    <!-- Bouton réserver -->
+                    <button *ngIf="trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0"
+                            mat-raised-button
+                            class="btn-reserver"
+                            [disabled]="loadingReservation"
+                            (click)="reserver()">
+                        <mat-icon>{{ isConnecte ? 'event_seat' : 'login' }}</mat-icon>
+                        <span *ngIf="!loadingReservation">
+                            {{ isConnecte ? 'Réserver ce trajet' : 'Se connecter pour réserver' }}
+                        </span>
+                        <span *ngIf="loadingReservation">Envoi en cours...</span>
+                    </button>
+
+                    <p *ngIf="!isConnecte" class="login-hint">
+                        <a routerLink="/login">Connectez-vous</a> ou
+                        <a routerLink="/register">créez un compte</a> pour réserver
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Trajet non trouvé -->
+<div *ngIf="!loading && !trajet" class="loading">
+    <mat-icon>error_outline</mat-icon>
+    <p>Trajet introuvable.</p>
+    <a routerLink="/trajets" mat-button>Retour aux trajets</a>
+</div>

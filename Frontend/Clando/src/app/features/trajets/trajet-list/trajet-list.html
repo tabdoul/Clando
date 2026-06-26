@@ -1,0 +1,151 @@
+<div class="page">
+
+    <div class="search-hero">
+        <h1>Trouvez votre trajet</h1>
+        <p>Covoiturage simple, sécurisé et abordable</p>
+
+        <mat-card class="search-card">
+            <form [formGroup]="searchForm" (ngSubmit)="rechercher()">
+                <div class="search-grid">
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Lieu de départ</mat-label>
+                        <input matInput
+                               formControlName="villeDepart"
+                               placeholder="Ex: Kissosso"
+                               [matAutocomplete]="autoDepart">
+                        <mat-icon matSuffix>my_location</mat-icon>
+                        <mat-autocomplete #autoDepart="matAutocomplete">
+                            <mat-option *ngFor="let quartier of quartiersDepart" [value]="quartier">
+                                <mat-icon style="font-size: 16px; color: #00b5e2;">location_on</mat-icon>
+                                {{ quartier }}
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Lieu d'arrivée</mat-label>
+                        <input matInput
+                               formControlName="villeArrivee"
+                               placeholder="Ex: Kaloum"
+                               [matAutocomplete]="autoArrivee">
+                        <mat-icon matSuffix>location_on</mat-icon>
+                        <mat-autocomplete #autoArrivee="matAutocomplete">
+                            <mat-option *ngFor="let quartier of quartiersArrivee" [value]="quartier">
+                                <mat-icon style="font-size: 16px; color: #00b5e2;">location_on</mat-icon>
+                                {{ quartier }}
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Date de départ</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="dateDepart" placeholder="JJ/MM/AAAA">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Passagers</mat-label>
+                        <input matInput formControlName="nbPassagers" type="number" min="1" max="9">
+                        <mat-icon matSuffix>person</mat-icon>
+                    </mat-form-field>
+
+                </div>
+
+                <button mat-raised-button type="submit" class="btn-search">
+                    <mat-icon>search</mat-icon> Rechercher un trajet
+                </button>
+            </form>
+        </mat-card>
+    </div>
+
+    <div class="results" *ngIf="rechercheLancee">
+
+        <div class="results-header">
+            <h2>{{ trajets.length }} trajet(s) disponible(s)</h2>
+            <button mat-stroked-button (click)="rechercher()">
+                <mat-icon>refresh</mat-icon> Actualiser
+            </button>
+        </div>
+
+        <div *ngIf="loading" class="loading">
+            <mat-icon>directions_car</mat-icon>
+            <p>Chargement...</p>
+        </div>
+
+        <mat-card *ngFor="let trajet of trajets" class="trajet-card"
+                  [class.trajet-complet]="trajet.statut !== 'OUVERT'"
+                  [class.trajet-femmes]="trajet.femmesUniquement">
+
+            <div *ngIf="trajet.femmesUniquement" class="badge-femmes">
+                <mat-icon>female</mat-icon> Trajet réservé aux femmes
+            </div>
+
+            <div class="trajet-content">
+
+                <div class="trajet-left">
+                    <div class="trajet-heure">
+                        <div class="heure">{{ trajet.dateHeureDepart | date:'HH:mm' }}</div>
+                        <div class="date">{{ trajet.dateHeureDepart | date:'dd MMM' }}</div>
+                    </div>
+
+                    <div class="trajet-route">
+                        <span *ngIf="trajet.itineraire" class="itineraire">
+                            {{ trajet.itineraire }}
+                        </span>
+                        <div class="route-line">
+                            <span class="ville-nom">{{ trajet.villeDepart }}</span>
+                            <div class="line">
+                                <mat-icon class="car-icon">directions_car</mat-icon>
+                            </div>
+                            <span class="ville-nom">{{ trajet.villeArrivee }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trajet-conducteur">
+                    <div class="avatar">
+                        <img *ngIf="trajet.conducteurPhoto" [src]="trajet.conducteurPhoto" alt="photo" />
+                        <mat-icon *ngIf="!trajet.conducteurPhoto">person</mat-icon>
+                    </div>
+                    <div>
+                        <div class="conducteur-nom">{{ trajet.conducteurPrenom }} {{ trajet.conducteurNom }}</div>
+                        <div class="conducteur-vehicule">{{ trajet.vehiculeMarque }} {{ trajet.vehiculeModele }}</div>
+                        <div class="conducteur-note" *ngIf="trajet.noteMoyenneConducteur">
+                           {{ trajet.noteMoyenneConducteur }}/5
+                        </div>
+                    </div>
+                    <div class="places">
+                        <mat-icon>event_seat</mat-icon>
+                        {{ trajet.placesDisponibles }} place(s)
+                    </div>
+                </div>
+
+                <div class="trajet-prix">
+                    <div class="prix">{{ trajet.prixConducteur | number }} GNF</div>
+                    <div class="prix-label">par place</div>
+
+                    <span *ngIf="trajet.statut === 'COMPLET'" class="badge-complet">
+                        Complet
+                    </span>
+
+                    <a *ngIf="trajet.statut === 'OUVERT'"
+                       mat-raised-button
+                       [routerLink]="['/trajets', trajet.id]"
+                       class="btn-voir">
+                        Voir le trajet
+                    </a>
+                </div>
+
+            </div>
+        </mat-card>
+
+        <div *ngIf="!loading && trajets.length === 0" class="empty">
+            <mat-icon>directions_car</mat-icon>
+            <h3>Aucun trajet trouvé</h3>
+            <p>Essayez d'autres dates ou destinations</p>
+        </div>
+
+    </div>
+</div>

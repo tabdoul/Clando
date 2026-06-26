@@ -1,0 +1,9 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Backend/Clando/Dockerfile"
+
+[deploy]
+startCommand = "java -jar /app/app.jar"
+healthcheckPath = "/api/utilisateurs"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
