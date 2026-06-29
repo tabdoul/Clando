@@ -4,6 +4,7 @@ import com.example.Clando.entity.Reservation;
 import com.example.Clando.entity.Trajet;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
+import com.example.Clando.service.NotificationService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,14 +19,17 @@ public class TrajetScheduler {
 
     private final TrajetRepository trajetRepository;
     private final ReservationRepository reservationRepository;
+    private final NotificationService notificationService;
 
     public TrajetScheduler(TrajetRepository trajetRepository,
-                           ReservationRepository reservationRepository) {
+                           ReservationRepository reservationRepository,
+                           NotificationService notificationService) {
         this.trajetRepository = trajetRepository;
         this.reservationRepository = reservationRepository;
+        this.notificationService = notificationService;
     }
 
-    // Tourne toutes les heures
+    //  Tourne toutes les heures — clôture les trajets expirés
     @Scheduled(fixedRate = 3600000)
     @Transactional
     public void cloturerTrajetsExpires() {
@@ -43,14 +47,12 @@ public class TrajetScheduler {
             trajet.setStatut(Trajet.StatutTrajet.TERMINE);
             trajetRepository.save(trajet);
 
-            // Passer les réservations confirmées en TERMINEE
             List<Reservation> reservations = reservationRepository.findByTrajetId(trajet.getId());
             for (Reservation reservation : reservations) {
                 if (reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE) {
                     reservation.setStatut(Reservation.StatutReservation.TERMINEE);
                     reservationRepository.save(reservation);
                 }
-                // Annuler les réservations EN_ATTENTE non confirmées
                 if (reservation.getStatut() == Reservation.StatutReservation.EN_ATTENTE
                  || reservation.getStatut() == Reservation.StatutReservation.PRIX_REFUSE
                  || reservation.getStatut() == Reservation.StatutReservation.CONTRE_OFFRE) {
@@ -63,6 +65,56 @@ public class TrajetScheduler {
         if (!trajetsExpires.isEmpty()) {
             System.out.println("[Scheduler] " + trajetsExpires.size() +
                 " trajet(s) cloture(s) automatiquement.");
+        }
+    }
+
+    //  Tourne toutes les minutes — notifie 30 min avant le départ
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void notifierDepartImminent() {
+        LocalDateTime maintenant = ZonedDateTime
+            .now(ZoneId.of("Africa/Conakry"))
+            .toLocalDateTime();
+
+        LocalDateTime dans30min = maintenant.plusMinutes(30);
+        LocalDateTime dans31min = maintenant.plusMinutes(31);
+
+        List<Reservation> reservations = reservationRepository
+            .findReservationsANotifier(dans30min, dans31min);
+
+        for (Reservation reservation : reservations) {
+            //  Notification au passager
+            String tokenPassager = reservation.getPassager().getExpoPushToken();
+            if (tokenPassager != null && !tokenPassager.isBlank()) {
+                notificationService.envoyerNotification(
+                    tokenPassager,
+                    "Votre trajet part dans 30 minutes !",
+                    reservation.getTrajet().getVilleDepart() + " → " +
+                    reservation.getTrajet().getVilleArrivee() +
+                    " — Preparez-vous !"
+                );
+            }
+
+            //  Notification au conducteur
+            String tokenConducteur = reservation.getTrajet().getConducteur().getExpoPushToken();
+            if (tokenConducteur != null && !tokenConducteur.isBlank()) {
+                notificationService.envoyerNotification(
+                    tokenConducteur,
+                    "Depart dans 30 minutes !",
+                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
+                    " → " + reservation.getTrajet().getVilleArrivee() +
+                    " part bientot."
+                );
+            }
+
+            // Marquer comme notifié pour ne pas renvoyer
+            reservation.setNotificationDepartEnvoyee(true);
+            reservationRepository.save(reservation);
+        }
+
+        if (!reservations.isEmpty()) {
+            System.out.println("[Scheduler] " + reservations.size() +
+                " notification(s) de depart imminent envoyee(s).");
         }
     }
 }
