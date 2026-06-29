@@ -10,7 +10,6 @@
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Email</mat-label>
                 <input matInput formControlName="email" type="email" placeholder="exemple@gmail.com">
-                <mat-icon matSuffix>email</mat-icon>
                 <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email obligatoire</mat-error>
                 <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Email invalide</mat-error>
             </mat-form-field>
@@ -18,7 +17,6 @@
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Mot de passe</mat-label>
                 <input matInput formControlName="motDePasse" type="password">
-                <mat-icon matSuffix>lock</mat-icon>
                 <mat-error *ngIf="loginForm.get('motDePasse')?.hasError('required')">Mot de passe obligatoire</mat-error>
             </mat-form-field>
 

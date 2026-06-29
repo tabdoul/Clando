@@ -54,7 +54,7 @@ public class ReservationService {
         if (trajet.getPlacesDisponibles() < request.getNbPlaces()) {
             throw new IllegalStateException("Pas assez de places disponibles");
         }
-
+        
         if (trajet.isFemmesUniquement()) {
             String genrePassager = passager.getGenre();
             if (genrePassager == null || !genrePassager.equals("FEMME")) {

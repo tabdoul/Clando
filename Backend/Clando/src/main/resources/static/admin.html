@@ -36,7 +36,6 @@
         h1 { font-size: 24px; margin-bottom: 8px; color: #eee; }
         .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
 
-        /* Stats grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -60,7 +59,6 @@
         .stat-trend.hausse { color: #2ecc71; }
         .stat-trend.baisse { color: #e74c3c; }
 
-        /* Grille graphiques */
         .charts-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -85,16 +83,12 @@
 
         canvas { max-height: 220px; }
 
-        /* Activité récente */
         .activite-item {
             display: flex; align-items: center; gap: 12px;
             padding: 10px 0; border-bottom: 1px solid #2a2a2a;
         }
         .activite-item:last-child { border-bottom: none; }
-        .activite-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            flex-shrink: 0;
-        }
+        .activite-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .activite-dot.bleu { background: #00b5e2; }
         .activite-dot.vert { background: #2ecc71; }
         .activite-dot.orange { background: #f39c12; }
@@ -102,7 +96,6 @@
         .activite-texte { flex: 1; font-size: 13px; color: #ddd; }
         .activite-heure { font-size: 11px; color: #555; }
 
-        /* Tableau */
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 10px 12px; color: #555; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2a2a; }
         td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 13px; color: #ddd; }
@@ -126,27 +119,47 @@
         .avatar { width: 36px; height: 36px; border-radius: 50%; background: #252525; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; color: #888; border: 1px solid #333; }
         .avatar-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); z-index: 100;
+            align-items: center; justify-content: center;
+        }
         .modal-overlay.active { display: flex; }
-        .modal { background: #1e1e1e; border-radius: 16px; padding: 24px; border: 1px solid #2a2a2a; width: 500px; max-width: 90%; }
+        .modal {
+            background: #1e1e1e; border-radius: 16px; padding: 24px;
+            border: 1px solid #2a2a2a; width: 500px; max-width: 90%;
+        }
         .modal h2 { font-size: 18px; margin-bottom: 16px; }
-        .modal textarea { width: 100%; background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; color: #eee; font-size: 14px; resize: vertical; min-height: 100px; margin-bottom: 16px; }
+        .modal textarea {
+            width: 100%; background: #252525; border: 1px solid #2a2a2a;
+            border-radius: 8px; padding: 12px; color: #eee; font-size: 14px;
+            resize: vertical; min-height: 100px; margin-bottom: 16px;
+        }
         .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
 
-        .search-input { background: #252525; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 14px; color: #eee; font-size: 14px; width: 250px; }
+        .modal-image-inner {
+            background: #1e1e1e; border-radius: 16px; padding: 24px;
+            border: 1px solid #2a2a2a; max-width: 90vw; text-align: center;
+        }
+
+        .search-input {
+            background: #252525; border: 1px solid #2a2a2a; border-radius: 8px;
+            padding: 8px 14px; color: #eee; font-size: 14px; width: 250px;
+        }
         .search-input:focus { outline: none; border-color: #00b5e2; }
 
         .loading { text-align: center; padding: 40px; color: #666; }
         .empty { text-align: center; padding: 40px; color: #666; font-size: 14px; }
 
-        .doc-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid #2a2a2a; }
+        .doc-preview {
+            width: 60px; height: 60px; object-fit: cover;
+            border-radius: 8px; cursor: pointer; border: 1px solid #2a2a2a;
+        }
         .verifie { color: #2ecc71; font-size: 12px; }
         .non-verifie { color: #555; font-size: 12px; }
 
-        /* KPI row */
         .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: grid; grid-template-columns: repeat(3, 1fr);
             gap: 12px; margin-top: 16px;
         }
         .kpi-item { text-align: center; padding: 12px; background: #252525; border-radius: 10px; }
@@ -217,100 +230,60 @@
     <div id="page-dashboard" class="page active">
         <h1>Tableau de bord</h1>
         <p class="subtitle" id="dashboard-date"></p>
-
-        <!-- Stats principales -->
-        <div class="stats-grid" id="stats-grid">
-            <div class="loading">Chargement...</div>
-        </div>
-
-        <!-- Graphiques ligne 1 -->
+        <div class="stats-grid" id="stats-grid"><div class="loading">Chargement...</div></div>
         <div class="charts-grid">
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <div class="card-title">Trajets publiés par jour</div>
-                        <div class="card-subtitle">7 derniers jours</div>
-                    </div>
+                    <div><div class="card-title">Trajets publiés par jour</div><div class="card-subtitle">7 derniers jours</div></div>
                 </div>
                 <canvas id="chart-trajets"></canvas>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <div class="card-title">Réservations</div>
-                        <div class="card-subtitle">Par statut</div>
-                    </div>
+                    <div><div class="card-title">Réservations</div><div class="card-subtitle">Par statut</div></div>
                 </div>
                 <canvas id="chart-reservations"></canvas>
             </div>
         </div>
-
-        <!-- Graphiques ligne 2 -->
         <div class="charts-grid-3">
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <div class="card-title">Inscriptions</div>
-                        <div class="card-subtitle">7 derniers jours</div>
-                    </div>
+                    <div><div class="card-title">Inscriptions</div><div class="card-subtitle">7 derniers jours</div></div>
                 </div>
                 <canvas id="chart-inscriptions"></canvas>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <div class="card-title">Taux de confirmation</div>
-                        <div class="card-subtitle">Réservations confirmées vs total</div>
-                    </div>
+                    <div><div class="card-title">Taux de confirmation</div><div class="card-subtitle">Confirmées vs total</div></div>
                 </div>
                 <canvas id="chart-taux"></canvas>
             </div>
             <div class="card">
                 <div class="card-header">
-                    <div>
-                        <div class="card-title">Revenus estimés</div>
-                        <div class="card-subtitle">Commission 13%</div>
-                    </div>
+                    <div><div class="card-title">Revenus estimés</div><div class="card-subtitle">Commission 13%</div></div>
                 </div>
-                <div id="revenus-content" style="text-align:center; padding: 20px 0;">
+                <div style="text-align:center; padding: 20px 0;">
                     <div style="font-size: 32px; font-weight: bold; color: #00b5e2;" id="revenus-total">—</div>
                     <div style="font-size: 12px; color: #666; margin-top: 4px;">GNF ce mois</div>
-                    <div class="kpi-row" style="margin-top: 16px;">
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="revenus-semaine">—</div>
-                            <div class="kpi-label">Cette semaine</div>
-                        </div>
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="revenus-hier">—</div>
-                            <div class="kpi-label">Hier</div>
-                        </div>
-                        <div class="kpi-item">
-                            <div class="kpi-value" id="revenus-aujourd">—</div>
-                            <div class="kpi-label">Aujourd'hui</div>
-                        </div>
+                    <div class="kpi-row">
+                        <div class="kpi-item"><div class="kpi-value" id="revenus-semaine">—</div><div class="kpi-label">Cette semaine</div></div>
+                        <div class="kpi-item"><div class="kpi-value" id="revenus-hier">—</div><div class="kpi-label">Hier</div></div>
+                        <div class="kpi-item"><div class="kpi-value" id="revenus-aujourd">—</div><div class="kpi-label">Aujourd'hui</div></div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Activité récente + Top trajets -->
         <div class="charts-grid">
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Activité récente</div>
                     <button class="btn btn-primary btn-sm" onclick="chargerDashboard()">Actualiser</button>
                 </div>
-                <div id="activite-liste">
-                    <div class="loading">Chargement...</div>
-                </div>
+                <div id="activite-liste"><div class="loading">Chargement...</div></div>
             </div>
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Trajets populaires</div>
-                </div>
-                <div id="top-trajets">
-                    <div class="loading">Chargement...</div>
-                </div>
+                <div class="card-header"><div class="card-title">Trajets populaires</div></div>
+                <div id="top-trajets"><div class="loading">Chargement...</div></div>
             </div>
         </div>
     </div>
@@ -341,8 +314,8 @@
 </div>
 
 <!-- Modal signalement -->
-<div class="modal-overlay" id="modal-signalement">
-    <div class="modal">
+<div class="modal-overlay" id="modal-signalement" onclick="fermerModal()">
+    <div class="modal" onclick="event.stopPropagation()">
         <h2>Répondre au signalement</h2>
         <textarea id="reponse-texte" placeholder="Votre réponse..."></textarea>
         <div class="modal-actions">
@@ -352,10 +325,11 @@
     </div>
 </div>
 
-<!-- Modal image -->
-<div class="modal-overlay" id="modal-image">
-    <div class="modal" style="text-align:center">
-        <img id="modal-img" src="" style="max-width:100%; border-radius:8px; margin-bottom:16px">
+<!-- Modal image document -->
+<div class="modal-overlay" id="modal-image" onclick="fermerModalImage()">
+    <div class="modal-image-inner" onclick="event.stopPropagation()">
+        <img id="modal-img" src="" style="max-width:100%; max-height:80vh; border-radius:8px; margin-bottom:16px; object-fit:contain;">
+        <br>
         <button class="btn btn-danger" onclick="fermerModalImage()">Fermer</button>
     </div>
 </div>
@@ -406,14 +380,8 @@
         return r.json();
     }
 
-    async function patch(url) {
-        const r = await fetch(API + url, { method: 'PATCH' });
-        return r.json();
-    }
-
     // ── Dashboard ─────────────────────────────────────────────────
     async function chargerDashboard() {
-        // Date
         document.getElementById('dashboard-date').textContent =
             new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -430,13 +398,12 @@
             afficherGraphiqueReservations(reservations);
             afficherGraphiqueInscriptions(utilisateurs);
             afficherGraphiqueTaux(reservations);
-            afficherRevenus(reservations, trajets);
+            afficherRevenus(reservations);
             afficherActivite(trajets, reservations, utilisateurs);
             afficherTopTrajets(trajets);
 
         } catch (e) {
             console.error('Erreur dashboard:', e);
-            // Fallback sur les stats simples
             try {
                 const stats = await get('/api/admin/stats');
                 afficherStatsSimples(stats);
@@ -448,27 +415,11 @@
 
     function afficherStats(stats, trajets, utilisateurs, reservations) {
         const aujourd = new Date().toDateString();
-        const hier = new Date(Date.now() - 86400000).toDateString();
-
-        const trajetsAujourd = trajets.filter(t =>
-            new Date(t.dateHeureDepart).toDateString() === aujourd
-        ).length;
-
-        const inscriptsAujourd = utilisateurs.filter(u =>
-            new Date(u.dateInscription).toDateString() === aujourd
-        ).length;
-
-        const reservAujourd = reservations.filter(r =>
-            new Date(r.dateReservation).toDateString() === aujourd
-        ).length;
-
-        const reservConfirmees = reservations.filter(r =>
-            r.statut === 'CONFIRMEE' || r.statut === 'TERMINEE'
-        ).length;
-
-        const tauxConfirmation = reservations.length > 0
-            ? Math.round((reservConfirmees / reservations.length) * 100)
-            : 0;
+        const trajetsAujourd = trajets.filter(t => new Date(t.dateHeureDepart).toDateString() === aujourd).length;
+        const inscriptsAujourd = utilisateurs.filter(u => new Date(u.dateInscription).toDateString() === aujourd).length;
+        const reservAujourd = reservations.filter(r => new Date(r.dateReservation).toDateString() === aujourd).length;
+        const reservConfirmees = reservations.filter(r => r.statut === 'CONFIRMEE' || r.statut === 'TERMINEE').length;
+        const tauxConfirmation = reservations.length > 0 ? Math.round((reservConfirmees / reservations.length) * 100) : 0;
 
         document.getElementById('stats-grid').innerHTML = `
             <div class="stat-card">
@@ -506,26 +457,11 @@
 
     function afficherStatsSimples(stats) {
         document.getElementById('stats-grid').innerHTML = `
-            <div class="stat-card">
-                <div class="stat-value">${stats.nbUtilisateurs}</div>
-                <div class="stat-label">Utilisateurs inscrits</div>
-            </div>
-            <div class="stat-card vert">
-                <div class="stat-value">${stats.nbTrajets}</div>
-                <div class="stat-label">Trajets publiés</div>
-            </div>
-            <div class="stat-card orange">
-                <div class="stat-value">${stats.nbReservations}</div>
-                <div class="stat-label">Réservations totales</div>
-            </div>
-            <div class="stat-card rouge">
-                <div class="stat-value">${stats.nbDocumentsEnAttente}</div>
-                <div class="stat-label">Documents en attente</div>
-            </div>
-            <div class="stat-card rouge">
-                <div class="stat-value">${stats.nbSignalementsOuverts}</div>
-                <div class="stat-label">Signalements ouverts</div>
-            </div>
+            <div class="stat-card"><div class="stat-value">${stats.nbUtilisateurs}</div><div class="stat-label">Utilisateurs</div></div>
+            <div class="stat-card vert"><div class="stat-value">${stats.nbTrajets}</div><div class="stat-label">Trajets</div></div>
+            <div class="stat-card orange"><div class="stat-value">${stats.nbReservations}</div><div class="stat-label">Réservations</div></div>
+            <div class="stat-card rouge"><div class="stat-value">${stats.nbDocumentsEnAttente}</div><div class="stat-label">Documents en attente</div></div>
+            <div class="stat-card rouge"><div class="stat-value">${stats.nbSignalementsOuverts}</div><div class="stat-label">Signalements ouverts</div></div>
         `;
     }
 
@@ -544,22 +480,17 @@
     function afficherGraphiqueTrajets(trajets) {
         const jours = getLast7Days();
         const data = jours.map(j =>
-            trajets.filter(t => new Date(t.dateCreation || t.dateHeureDepart).toDateString() === j.toDateString()).length
+            trajets.filter(t => new Date(t.dateHeureDepart).toDateString() === j.toDateString()).length
         );
-
         if (chartTrajets) chartTrajets.destroy();
-        const ctx = document.getElementById('chart-trajets').getContext('2d');
-        chartTrajets = new Chart(ctx, {
+        chartTrajets = new Chart(document.getElementById('chart-trajets').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: jours.map(formatJour),
                 datasets: [{
-                    label: 'Trajets',
-                    data,
+                    label: 'Trajets', data,
                     backgroundColor: 'rgba(0, 181, 226, 0.3)',
-                    borderColor: '#00b5e2',
-                    borderWidth: 2,
-                    borderRadius: 6,
+                    borderColor: '#00b5e2', borderWidth: 2, borderRadius: 6,
                 }]
             },
             options: {
@@ -574,17 +505,10 @@
     }
 
     function afficherGraphiqueReservations(reservations) {
-        const statuts = {
-            'EN_ATTENTE': 0, 'CONFIRMEE': 0, 'TERMINEE': 0,
-            'ANNULEE': 0, 'REFUSEE': 0
-        };
-        reservations.forEach(r => {
-            if (statuts[r.statut] !== undefined) statuts[r.statut]++;
-        });
-
+        const statuts = { 'EN_ATTENTE': 0, 'CONFIRMEE': 0, 'TERMINEE': 0, 'ANNULEE': 0, 'REFUSEE': 0 };
+        reservations.forEach(r => { if (statuts[r.statut] !== undefined) statuts[r.statut]++; });
         if (chartReservations) chartReservations.destroy();
-        const ctx = document.getElementById('chart-reservations').getContext('2d');
-        chartReservations = new Chart(ctx, {
+        chartReservations = new Chart(document.getElementById('chart-reservations').getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['En attente', 'Confirmée', 'Terminée', 'Annulée', 'Refusée'],
@@ -596,12 +520,7 @@
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#888', font: { size: 11 }, padding: 12 }
-                    }
-                }
+                plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 11 }, padding: 12 } } }
             }
         });
     }
@@ -611,22 +530,15 @@
         const data = jours.map(j =>
             utilisateurs.filter(u => new Date(u.dateInscription).toDateString() === j.toDateString()).length
         );
-
         if (chartInscriptions) chartInscriptions.destroy();
-        const ctx = document.getElementById('chart-inscriptions').getContext('2d');
-        chartInscriptions = new Chart(ctx, {
+        chartInscriptions = new Chart(document.getElementById('chart-inscriptions').getContext('2d'), {
             type: 'line',
             data: {
                 labels: jours.map(formatJour),
                 datasets: [{
-                    label: 'Inscriptions',
-                    data,
-                    borderColor: '#2ecc71',
-                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#2ecc71',
-                    pointRadius: 4,
+                    label: 'Inscriptions', data,
+                    borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.4, fill: true, pointBackgroundColor: '#2ecc71', pointRadius: 4,
                 }]
             },
             options: {
@@ -643,35 +555,23 @@
     function afficherGraphiqueTaux(reservations) {
         const confirmees = reservations.filter(r => r.statut === 'CONFIRMEE' || r.statut === 'TERMINEE').length;
         const autres = reservations.length - confirmees;
-
         if (chartTaux) chartTaux.destroy();
-        const ctx = document.getElementById('chart-taux').getContext('2d');
-        chartTaux = new Chart(ctx, {
+        chartTaux = new Chart(document.getElementById('chart-taux').getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['Confirmées', 'Autres'],
-                datasets: [{
-                    data: [confirmees, autres],
-                    backgroundColor: ['#00b5e2', '#252525'],
-                    borderWidth: 0,
-                }]
+                datasets: [{ data: [confirmees, autres], backgroundColor: ['#00b5e2', '#252525'], borderWidth: 0 }]
             },
             options: {
-                responsive: true,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: true }
-                }
+                responsive: true, cutout: '75%',
+                plugins: { legend: { display: false }, tooltip: { enabled: true } }
             },
             plugins: [{
                 id: 'center',
                 beforeDraw(chart) {
                     const { width, height, ctx } = chart;
                     ctx.restore();
-                    const taux = reservations.length > 0
-                        ? Math.round((confirmees / reservations.length) * 100)
-                        : 0;
+                    const taux = reservations.length > 0 ? Math.round((confirmees / reservations.length) * 100) : 0;
                     ctx.font = 'bold 24px Segoe UI';
                     ctx.fillStyle = '#eee';
                     ctx.textAlign = 'center';
@@ -683,41 +583,26 @@
         });
     }
 
-    function afficherRevenus(reservations, trajets) {
+    function afficherRevenus(reservations) {
         const COMMISSION = 0.13;
         const maintenant = new Date();
         const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
-        const debutSemaine = new Date(maintenant);
-        debutSemaine.setDate(maintenant.getDate() - 7);
-        const hier = new Date(maintenant);
-        hier.setDate(maintenant.getDate() - 1);
+        const debutSemaine = new Date(maintenant); debutSemaine.setDate(maintenant.getDate() - 7);
+        const hier = new Date(maintenant); hier.setDate(maintenant.getDate() - 1);
+        const reservPayees = reservations.filter(r => r.statutPaiement === 'SUCCESS');
 
-        const reservPagées = reservations.filter(r => r.statutPaiement === 'SUCCESS');
+        const calculer = (liste, debut, fin) => liste
+            .filter(r => { const d = new Date(r.dateReservation); return d >= debut && (!fin || d <= fin); })
+            .reduce((sum, r) => sum + (r.prix || 0) * COMMISSION, 0);
 
-        const calculer = (liste, debut, fin) => {
-            return liste
-                .filter(r => {
-                    const d = new Date(r.dateReservation);
-                    return d >= debut && (!fin || d <= fin);
-                })
-                .reduce((sum, r) => sum + (r.prix || 0) * COMMISSION, 0);
-        };
-
-        const revenusMois = calculer(reservPagées, debutMois);
-        const revenusSemaine = calculer(reservPagées, debutSemaine);
-        const revenusHier = calculer(reservPagées, hier, maintenant);
-        const revenusAujourd = calculer(reservPagées, new Date(maintenant.toDateString()));
-
-        document.getElementById('revenus-total').textContent = Math.round(revenusMois).toLocaleString('fr-FR');
-        document.getElementById('revenus-semaine').textContent = Math.round(revenusSemaine).toLocaleString('fr-FR');
-        document.getElementById('revenus-hier').textContent = Math.round(revenusHier).toLocaleString('fr-FR');
-        document.getElementById('revenus-aujourd').textContent = Math.round(revenusAujourd).toLocaleString('fr-FR');
+        document.getElementById('revenus-total').textContent = Math.round(calculer(reservPayees, debutMois)).toLocaleString('fr-FR');
+        document.getElementById('revenus-semaine').textContent = Math.round(calculer(reservPayees, debutSemaine)).toLocaleString('fr-FR');
+        document.getElementById('revenus-hier').textContent = Math.round(calculer(reservPayees, hier, maintenant)).toLocaleString('fr-FR');
+        document.getElementById('revenus-aujourd').textContent = Math.round(calculer(reservPayees, new Date(maintenant.toDateString()))).toLocaleString('fr-FR');
     }
 
     function afficherActivite(trajets, reservations, utilisateurs) {
         const activites = [];
-
-        // Dernières réservations
         reservations.slice(-3).reverse().forEach(r => {
             activites.push({
                 couleur: r.statut === 'CONFIRMEE' ? 'vert' : r.statut === 'ANNULEE' ? 'rouge' : 'orange',
@@ -725,27 +610,13 @@
                 date: new Date(r.dateReservation)
             });
         });
-
-        // Derniers trajets
         trajets.slice(-3).reverse().forEach(t => {
-            activites.push({
-                couleur: 'bleu',
-                texte: `Trajet publié — ${t.villeDepart} → ${t.villeArrivee}`,
-                date: new Date(t.dateHeureDepart)
-            });
+            activites.push({ couleur: 'bleu', texte: `Trajet publié — ${t.villeDepart} → ${t.villeArrivee}`, date: new Date(t.dateHeureDepart) });
         });
-
-        // Derniers utilisateurs
         utilisateurs.slice(-2).reverse().forEach(u => {
-            activites.push({
-                couleur: 'vert',
-                texte: `Nouvel utilisateur — ${u.prenom} ${u.nom}`,
-                date: new Date(u.dateInscription)
-            });
+            activites.push({ couleur: 'vert', texte: `Nouvel utilisateur — ${u.prenom} ${u.nom}`, date: new Date(u.dateInscription) });
         });
-
         activites.sort((a, b) => b.date - a.date);
-
         document.getElementById('activite-liste').innerHTML = activites.slice(0, 8).map(a => `
             <div class="activite-item">
                 <div class="activite-dot ${a.couleur}"></div>
@@ -761,16 +632,8 @@
             const key = `${t.villeDepart} → ${t.villeArrivee}`;
             compteur[key] = (compteur[key] || 0) + 1;
         });
-
-        const top = Object.entries(compteur)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 6);
-
-        if (top.length === 0) {
-            document.getElementById('top-trajets').innerHTML = '<div class="empty">Aucun trajet</div>';
-            return;
-        }
-
+        const top = Object.entries(compteur).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        if (top.length === 0) { document.getElementById('top-trajets').innerHTML = '<div class="empty">Aucun trajet</div>'; return; }
         const max = top[0][1];
         document.getElementById('top-trajets').innerHTML = top.map(([trajet, nb]) => `
             <div style="margin-bottom: 12px;">
@@ -779,7 +642,7 @@
                     <span style="font-size:12px; color:#666;">${nb} trajet${nb > 1 ? 's' : ''}</span>
                 </div>
                 <div style="background:#252525; border-radius:4px; height:6px;">
-                    <div style="background:#00b5e2; border-radius:4px; height:6px; width:${Math.round((nb/max)*100)}%; transition: width 0.5s;"></div>
+                    <div style="background:#00b5e2; border-radius:4px; height:6px; width:${Math.round((nb/max)*100)}%;"></div>
                 </div>
             </div>
         `).join('');
@@ -787,9 +650,10 @@
 
     // ── Documents ─────────────────────────────────────────────────
     async function chargerDocuments() {
-        const docs = await get('/api/admin/documents');
+        document.getElementById('documents-table').innerHTML = '<div class="loading">Chargement...</div>';
+        const docs = await get('/api/documents/en-attente');
         if (docs.length === 0) {
-            document.getElementById('documents-table').innerHTML = '<div class="empty">Aucun document en attente ✓</div>';
+            document.getElementById('documents-table').innerHTML = '<div class="empty">✓ Aucun document en attente</div>';
             return;
         }
         document.getElementById('documents-table').innerHTML = `
@@ -800,13 +664,19 @@
                 <tbody>
                     ${docs.map(d => `
                         <tr>
-                            <td><img class="doc-preview" src="${API}/api/documents/fichier/${d.id}" onclick="voirImage('${API}/api/documents/fichier/${d.id}')" onerror="this.style.display='none'"></td>
-                            <td>${d.utilisateurPrenom} ${d.utilisateurNom}</td>
+                            <td>
+                                <img class="doc-preview"
+                                     src="${d.cheminFichier}"
+                                     onclick="voirImage('${d.cheminFichier}')"
+                                     alt="${formatType(d.type)}"
+                                     onerror="this.style.display='none'">
+                            </td>
+                            <td><strong>${d.utilisateurPrenom} ${d.utilisateurNom}</strong></td>
                             <td><span class="badge badge-attente">${formatType(d.type)}</span></td>
                             <td>${formatDate(d.dateUpload)}</td>
-                            <td style="display:flex;gap:8px">
-                                <button class="btn btn-success btn-sm" onclick="validerDoc(${d.id}, true)">✓ Valider</button>
-                                <button class="btn btn-danger btn-sm" onclick="validerDoc(${d.id}, false)">✗ Rejeter</button>
+                            <td style="display:flex; gap:8px; align-items:center;">
+                                <button class="btn btn-success btn-sm" onclick="validerDoc(${d.id})">✓ Valider</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejeterDoc(${d.id})">✗ Rejeter</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -815,18 +685,30 @@
         `;
     }
 
-    async function validerDoc(id, accepte) {
-        const commentaire = accepte ? 'Document valide' : prompt('Motif du rejet :') || 'Document invalide';
-        await fetch(`${API}/api/admin/documents/${id}/valider?accepte=${accepte}&commentaire=${encodeURIComponent(commentaire)}`, { method: 'PATCH' });
+    async function validerDoc(id) {
+        if (!confirm('Valider ce document ?')) return;
+        await fetch(`${API}/api/documents/${id}/valider?accepte=true&commentaire=Document%20valide`, { method: 'PATCH' });
+        chargerDocuments();
+        chargerDashboard();
+    }
+
+    async function rejeterDoc(id) {
+        const commentaire = prompt('Motif du rejet (obligatoire) :');
+        if (!commentaire || !commentaire.trim()) {
+            alert('Veuillez indiquer un motif de rejet');
+            return;
+        }
+        await fetch(`${API}/api/documents/${id}/valider?accepte=false&commentaire=${encodeURIComponent(commentaire)}`, { method: 'PATCH' });
         chargerDocuments();
         chargerDashboard();
     }
 
     // ── Signalements ──────────────────────────────────────────────
     async function chargerSignalements() {
+        document.getElementById('signalements-table').innerHTML = '<div class="loading">Chargement...</div>';
         const sigs = await get('/api/admin/signalements');
         if (sigs.length === 0) {
-            document.getElementById('signalements-table').innerHTML = '<div class="empty">Aucun signalement ouvert ✓</div>';
+            document.getElementById('signalements-table').innerHTML = '<div class="empty">✓ Aucun signalement ouvert</div>';
             return;
         }
         document.getElementById('signalements-table').innerHTML = `
@@ -839,7 +721,7 @@
                         <tr>
                             <td>${s.utilisateurPrenom} ${s.utilisateurNom}</td>
                             <td><span class="badge badge-ouvert">${formatType(s.type)}</span></td>
-                            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.description}</td>
+                            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.description}</td>
                             <td>${formatDate(s.dateSignalement)}</td>
                             <td><button class="btn btn-primary btn-sm" onclick="ouvrirModal(${s.id})">Répondre</button></td>
                         </tr>
@@ -870,6 +752,7 @@
 
     // ── Utilisateurs ──────────────────────────────────────────────
     async function chargerUtilisateurs() {
+        document.getElementById('utilisateurs-table').innerHTML = '<div class="loading">Chargement...</div>';
         tousUtilisateurs = await get('/api/admin/utilisateurs');
         afficherUtilisateurs(tousUtilisateurs);
     }
@@ -885,14 +768,17 @@
                     ${users.map(u => `
                         <tr>
                             <td>${u.photo
-                                ? `<img class="avatar-img" src="${API}/api/utilisateurs/photo/${u.photo.split('\\\\').pop().split('/').pop()}">`
+                                ? `<img class="avatar-img" src="${u.photo}" onerror="this.style.display='none'">`
                                 : `<div class="avatar">${(u.prenom||'?')[0]}${(u.nom||'?')[0]}</div>`
                             }</td>
                             <td>${u.prenom} ${u.nom}</td>
                             <td>${u.email}</td>
                             <td>${u.telephone || '-'}</td>
                             <td>${formatDate(u.dateInscription)}</td>
-                            <td>${u.verifie ? '<span class="verifie">✓ Vérifié</span>' : '<span class="non-verifie">Non vérifié</span>'}</td>
+                            <td>${u.verifie
+                                ? '<span class="verifie">✓ Vérifié</span>'
+                                : '<span class="non-verifie">Non vérifié</span>'
+                            }</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -907,7 +793,7 @@
         afficherUtilisateurs(filtered);
     }
 
-    // ── Modales ───────────────────────────────────────────────────
+    // ── Modales image ─────────────────────────────────────────────
     function voirImage(url) {
         document.getElementById('modal-img').src = url;
         document.getElementById('modal-image').classList.add('active');
@@ -920,10 +806,10 @@
     // ── Utils ─────────────────────────────────────────────────────
     function formatType(type) {
         const types = {
-            'CNI': 'CNI', 'PASSEPORT': 'Passeport', 'PERMIS_CONDUIRE': 'Permis',
-            'CERTIFICAT_IMMATRICULATION': 'Carte grise', 'PROBLEME_TECHNIQUE': 'Problème technique',
-            'COMPORTEMENT_INAPPROPRIE': 'Comportement', 'ARNAQUE': 'Arnaque',
-            'TRAJET_ANNULE': 'Trajet annulé', 'AUTRE': 'Autre'
+            'CNI': 'CNI', 'PASSEPORT': 'Passeport',
+            'PERMIS_CONDUIRE': 'Permis', 'CERTIFICAT_IMMATRICULATION': 'Carte grise',
+            'PROBLEME_TECHNIQUE': 'Problème technique', 'COMPORTEMENT_INAPPROPRIE': 'Comportement',
+            'ARNAQUE': 'Arnaque', 'TRAJET_ANNULE': 'Trajet annulé', 'AUTRE': 'Autre'
         };
         return types[type] || type;
     }
@@ -933,7 +819,6 @@
         return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
-    // Chargement initial
     chargerDashboard();
 </script>
 </body>
