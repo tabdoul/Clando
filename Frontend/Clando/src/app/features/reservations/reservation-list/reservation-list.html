@@ -16,63 +16,91 @@
                         Chargement...
                     </div>
 
-                    <div *ngIf="!loadingPassager && mesReservations.length === 0"
-                         class="empty-state">
+                    <div *ngIf="!loadingPassager && mesReservations.length === 0" class="empty-state">
                         <mat-icon>event_busy</mat-icon>
                         <p>Aucune réservation pour le moment</p>
                     </div>
 
                     <div *ngFor="let r of mesReservations" class="reservation-card">
 
-                        <div class="card-top">
-                            <div class="card-infos">
-
-                                <div class="trajet-label">{{ getTrajetLabel(r) }}</div>
-
-                                <div class="meta-row">
-                                    <mat-icon>calendar_today</mat-icon>
-                                    Réservé le {{ r.dateReservation | date:'dd/MM/yyyy' }}
-                                </div>
-
-                                <div class="meta-row">
-                                    <mat-icon>event_seat</mat-icon>
-                                    {{ r.nbPlaces }} place(s)
-                                </div>
-
-                                <div *ngIf="r.prixPropose" class="prix-propose">
-                                    <mat-icon>payments</mat-icon>
-                                    <span>Votre prix : {{ r.prixPropose | number }} GNF</span>
-                                </div>
-
+                        <!-- En-tête conducteur -->
+                        <div class="conducteur-row">
+                            <div class="conducteur-avatar">
+                                <mat-icon>person</mat-icon>
                             </div>
-
-                            <div class="card-actions">
-                                <span class="statut-badge"
-                                      [ngClass]="{
-                                        'statut-attente':      r.statut === 'EN_ATTENTE',
-                                        'statut-confirmee':    r.statut === 'CONFIRMEE',
-                                        'statut-annulee':      r.statut === 'ANNULEE',
-                                        'statut-refusee':      r.statut === 'REFUSEE',
-                                        'statut-prix-refuse':  r.statut === 'PRIX_REFUSE',
-                                        'statut-contre-offre': r.statut === 'CONTRE_OFFRE',
-                                        'statut-terminee':     r.statut === 'TERMINEE'
-                                      }">
-                                    {{ getStatutLabel(r.statut) }}
+                            <div class="conducteur-info">
+                                <span class="conducteur-nom">
+                                    {{ r.conducteurPrenom }} {{ r.conducteurNom }}
                                 </span>
+                                <span class="conducteur-sous">votre conducteur</span>
+                            </div>
+                            <span class="statut-badge"
+                                  [ngClass]="{
+                                    'statut-attente':  r.statut === 'EN_ATTENTE',
+                                    'statut-confirmee': r.statut === 'CONFIRMEE',
+                                    'statut-annulee':  r.statut === 'ANNULEE',
+                                    'statut-refusee':  r.statut === 'REFUSEE',
+                                    'statut-terminee': r.statut === 'TERMINEE'
+                                  }">
+                                {{ getStatutLabel(r.statut) }}
+                            </span>
+                        </div>
 
-                                <button *ngIf="peutAnnuler(r)"
-                                        mat-stroked-button class="btn-annuler"
-                                        (click)="annulerReservation(r)">
-                                    <mat-icon style="font-size:16px;">cancel</mat-icon>
-                                    Annuler
-                                </button>
+                        <div class="separator"></div>
+
+                        <!-- Trajet -->
+                        <div class="trajet-bloc">
+                            <div class="trajet-ligne">
+                                <div class="trajet-dot trajet-dot-depart"></div>
+                                <span class="trajet-ville">{{ r.villeDepart }}</span>
+                            </div>
+                            <div class="trajet-connecteur">
+                                <mat-icon class="trajet-arrow">arrow_downward</mat-icon>
+                            </div>
+                            <div class="trajet-ligne">
+                                <div class="trajet-dot trajet-dot-arrivee"></div>
+                                <span class="trajet-ville">{{ r.villeArrivee }}</span>
                             </div>
                         </div>
 
-                        <!-- CONFIRMEE non payée — bloc paiement -->
+                        <!-- Montée/descente passager -->
+                        <div *ngIf="r.departPassager && r.arriveePassager" class="passager-trajet">
+                            <mat-icon>location_on</mat-icon>
+                            <span>Monte à <strong>{{ r.departPassager }}</strong>
+                                — Descend à <strong>{{ r.arriveePassager }}</strong></span>
+                        </div>
+
+                        <!-- Méta -->
+                        <div class="meta-bloc">
+                            <div class="meta-item">
+                                <mat-icon>calendar_today</mat-icon>
+                                <span>{{ r.dateReservation | date:'dd/MM/yyyy' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <mat-icon>event_seat</mat-icon>
+                                <span>{{ r.nbPlaces }} place(s)</span>
+                            </div>
+                        </div>
+
+                        <!-- Bouton annuler -->
+                        <button *ngIf="peutAnnuler(r)"
+                                mat-stroked-button class="btn-annuler"
+                                style="margin-top: 10px; width: 100%;"
+                                (click)="annulerReservation(r)">
+                            <mat-icon>cancel</mat-icon> Annuler
+                        </button>
+
+                        <!-- EN_ATTENTE -->
+                        <div *ngIf="r.statut === 'EN_ATTENTE'"
+                             class="bloc-statut bloc-statut-attente">
+                            <mat-icon>hourglass_empty</mat-icon>
+                            <span>En attente de confirmation du conducteur.</span>
+                        </div>
+
+                        <!-- CONFIRMEE non payée -->
                         <div *ngIf="r.statut === 'CONFIRMEE' && r.statutPaiement !== 'SUCCESS'"
-                             class="message-contextuel message-confirmee">
-                            <div class="confirmee-header">
+                             class="bloc-paiement">
+                            <div class="bloc-paiement-header">
                                 <mat-icon>check_circle</mat-icon>
                                 <span>Réservation confirmée — procédez au paiement</span>
                             </div>
@@ -82,7 +110,7 @@
                                     <span>{{ getPrixBase(r) | number }} GNF</span>
                                 </div>
                                 <div class="prix-detail-ligne">
-                                    <span>Frais de service</span>
+                                    <span>Frais de service (13%)</span>
                                     <span>{{ getFreais(r) | number }} GNF</span>
                                 </div>
                                 <div class="prix-detail-ligne prix-total">
@@ -100,96 +128,40 @@
                                     <mat-icon matSuffix>phone</mat-icon>
                                 </mat-form-field>
                                 <button mat-raised-button class="btn-payer"
-        [disabled]="loadingPaiement[r.id!]"
-        (click)="initierPaiement(r)">
-    <mat-icon>payment</mat-icon>
-    {{ loadingPaiement[r.id!] ? 'Envoi...' : 'Payer (test)' }}
-</button>
+                                        [disabled]="loadingPaiement[r.id!]"
+                                        (click)="initierPaiement(r)">
+                                    <mat-icon>payment</mat-icon>
+                                    {{ loadingPaiement[r.id!] ? 'Envoi...' : 'Payer' }}
+                                </button>
                             </div>
                         </div>
 
                         <!-- CONFIRMEE payée -->
                         <div *ngIf="r.statut === 'CONFIRMEE' && r.statutPaiement === 'SUCCESS'"
-                             class="message-contextuel message-terminee">
+                             class="bloc-statut bloc-statut-ok">
                             <mat-icon>check_circle</mat-icon>
-                            Paiement confirmé — {{ r.prix | number }} GNF
-                        </div>
-
-                        <!-- CONTRE_OFFRE -->
-                        <div *ngIf="r.statut === 'CONTRE_OFFRE'"
-                             class="message-contextuel message-contre-offre">
-                            <div class="contre-offre-header">
-                                <mat-icon>swap_horiz</mat-icon>
-                                <span>Le conducteur propose un nouveau prix</span>
-                            </div>
-                            <div class="contre-offre-prix">
-                                <div class="prix-item">
-                                    <span class="prix-label">Votre prix</span>
-                                    <span class="prix-barre">{{ r.prixPropose | number }} GNF</span>
-                                </div>
-                                <mat-icon>arrow_forward</mat-icon>
-                                <div class="prix-item">
-                                    <span class="prix-label">Prix conducteur</span>
-                                    <span class="prix-nouveau">{{ r.prixConducteur | number }} GNF</span>
-                                </div>
-                            </div>
-                            <div class="contre-offre-actions">
-                                <button mat-raised-button class="btn-accepter-offre"
-                                        (click)="accepterContreOffre(r)">
-                                    <mat-icon>check</mat-icon> Accepter
-                                </button>
-                                <button mat-stroked-button class="btn-refuser-offre"
-                                        (click)="refuserContreOffre(r)">
-                                    <mat-icon>close</mat-icon> Refuser
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- PRIX_REFUSE -->
-                        <div *ngIf="r.statut === 'PRIX_REFUSE'"
-                             class="message-contextuel message-prix">
-                            <mat-icon>chat</mat-icon>
-                            <div style="flex:1;">
-                                <div>Le conducteur a refusé votre prix.</div>
-                                <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
-                                    <mat-form-field appearance="outline" style="flex:1; margin:0;">
-                                        <mat-label>Nouveau prix (GNF)</mat-label>
-                                        <input matInput
-                                               [(ngModel)]="nouveauxPrix[r.id!]"
-                                               type="number"
-                                               placeholder="Ex: 50000">
-                                    </mat-form-field>
-                                    <button mat-raised-button class="btn-proposer"
-                                            (click)="nouvelleProposition(r)">
-                                        Proposer
-                                    </button>
-                                </div>
-                            </div>
+                            <span>Paiement confirmé — {{ r.prix | number }} GNF</span>
                         </div>
 
                         <!-- REFUSEE -->
-                        <div *ngIf="r.statut === 'REFUSEE'"
-                             class="message-contextuel message-refusee">
+                        <div *ngIf="r.statut === 'REFUSEE'" class="bloc-statut bloc-statut-refuse">
                             <mat-icon>block</mat-icon>
-                            Le conducteur a refusé votre demande.
+                            <span>Le conducteur a refusé votre demande.</span>
                         </div>
 
                         <!-- ANNULEE -->
-                        <div *ngIf="r.statut === 'ANNULEE'"
-                             class="message-contextuel message-annulee">
+                        <div *ngIf="r.statut === 'ANNULEE'" class="bloc-statut bloc-statut-annule">
                             <mat-icon>info</mat-icon>
-                            Réservation annulée. Le remboursement sera effectué sous 24-48h.
+                            <span>Réservation annulée. Remboursement sous 24-48h.</span>
                         </div>
 
                         <!-- TERMINEE -->
-                        <div *ngIf="r.statut === 'TERMINEE'"
-                             class="message-contextuel message-terminee">
+                        <div *ngIf="r.statut === 'TERMINEE'" class="bloc-statut bloc-statut-ok">
                             <mat-icon>check_circle</mat-icon>
-                            Trajet terminé. Merci d'avoir voyagé avec Wayvo !
+                            <span>Trajet terminé. Merci d'avoir voyagé avec Wayvo !</span>
                         </div>
 
                     </div>
-
                 </div>
             </mat-tab>
 
@@ -202,99 +174,76 @@
                         Chargement...
                     </div>
 
-                    <div *ngIf="!loadingConducteur && reservationsRecues.length === 0"
-                         class="empty-state">
+                    <div *ngIf="!loadingConducteur && reservationsRecues.length === 0" class="empty-state">
                         <mat-icon>inbox</mat-icon>
                         <p>Aucune demande en attente</p>
                     </div>
 
-                    <div *ngFor="let r of reservationsRecues"
-                         class="reservation-card conducteur">
+                    <div *ngFor="let r of reservationsRecues" class="reservation-card conducteur">
 
-                        <div class="card-top">
-                            <div class="card-infos">
-
-                                <div class="passager-row">
-                                    <div class="passager-avatar">
-                                        <mat-icon>person</mat-icon>
-                                    </div>
-                                    <div>
-                                        <div class="passager-nom">{{ getNomPassager(r) }}</div>
-                                        <div class="passager-sous">veut réserver votre trajet</div>
-                                    </div>
-                                </div>
-
-                                <div class="meta-row" style="font-weight: 600; color: #1a1a1a;">
-                                    <mat-icon style="color: #00b5e2;">directions_car</mat-icon>
-                                    {{ getTrajetLabel(r) }}
-                                </div>
-
-                                <div class="meta-row">
-                                    <mat-icon>event_seat</mat-icon>
-                                    {{ r.nbPlaces }} place(s)
-                                    <span style="margin-left: 8px; display: flex; align-items: center; gap: 4px;">
-                                        <mat-icon>calendar_today</mat-icon>
-                                        {{ r.dateReservation | date:'dd/MM/yyyy' }}
-                                    </span>
-                                </div>
-
-                                <div *ngIf="r.prixPropose" class="prix-propose">
-                                    <mat-icon style="color: #f39c12;">payments</mat-icon>
-                                    <span style="color: #e65100;">
-                                        Prix proposé : {{ r.prixPropose | number }} GNF
-                                    </span>
-                                </div>
-
+                        <!-- En-tête passager -->
+                        <div class="conducteur-row">
+                            <div class="conducteur-avatar" style="background: #f39c12;">
+                                <mat-icon>person</mat-icon>
                             </div>
+                            <div class="conducteur-info">
+                                <span class="conducteur-nom">{{ getNomPassager(r) }}</span>
+                                <span class="conducteur-sous">souhaite rejoindre votre trajet</span>
+                            </div>
+                            <span class="statut-badge statut-attente">
+                                {{ getStatutLabel(r.statut) }}
+                            </span>
+                        </div>
 
-                            <div class="card-actions">
-                                <span class="statut-badge"
-                                      [ngClass]="{
-                                        'statut-attente':      r.statut === 'EN_ATTENTE',
-                                        'statut-confirmee':    r.statut === 'CONFIRMEE',
-                                        'statut-annulee':      r.statut === 'ANNULEE',
-                                        'statut-refusee':      r.statut === 'REFUSEE',
-                                        'statut-prix-refuse':  r.statut === 'PRIX_REFUSE',
-                                        'statut-contre-offre': r.statut === 'CONTRE_OFFRE',
-                                        'statut-terminee':     r.statut === 'TERMINEE'
-                                      }">
-                                    {{ getStatutLabel(r.statut) }}
-                                </span>
+                        <div class="separator"></div>
 
-                                <div *ngIf="r.statut === 'EN_ATTENTE'" class="actions-row">
-                                    <button mat-raised-button class="btn-confirmer"
-                                            (click)="confirmerReservation(r)">
-                                        <mat-icon style="font-size:16px;">check</mat-icon>
-                                        Confirmer
-                                    </button>
-                                    <button mat-stroked-button class="btn-refuser"
-                                            (click)="refuserReservation(r)">
-                                        <mat-icon style="font-size:16px;">close</mat-icon>
-                                        Refuser
-                                    </button>
-                                </div>
-
-                                <!-- Contre-offre conducteur -->
-                                <div *ngIf="r.statut === 'EN_ATTENTE'" style="margin-top: 8px;">
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <mat-form-field appearance="outline" style="flex:1; margin:0;">
-                                            <mat-label>Proposer un prix</mat-label>
-                                            <input matInput
-                                                   [(ngModel)]="contreOffres[r.id!]"
-                                                   type="number"
-                                                   placeholder="Ex: 60000">
-                                        </mat-form-field>
-                                        <button mat-stroked-button class="btn-contre-offre"
-                                                (click)="envoyerContreOffre(r)">
-                                            Contre-offre
-                                        </button>
-                                    </div>
-                                </div>
+                        <!-- Trajet -->
+                        <div class="trajet-bloc">
+                            <div class="trajet-ligne">
+                                <div class="trajet-dot trajet-dot-depart"></div>
+                                <span class="trajet-ville">{{ r.villeDepart }}</span>
+                            </div>
+                            <div class="trajet-connecteur">
+                                <mat-icon class="trajet-arrow">arrow_downward</mat-icon>
+                            </div>
+                            <div class="trajet-ligne">
+                                <div class="trajet-dot trajet-dot-arrivee"></div>
+                                <span class="trajet-ville">{{ r.villeArrivee }}</span>
                             </div>
                         </div>
 
-                    </div>
+                        <!-- Montée/descente passager -->
+                        <div *ngIf="r.departPassager && r.arriveePassager" class="passager-trajet">
+                            <mat-icon>location_on</mat-icon>
+                            <span>Monte à <strong>{{ r.departPassager }}</strong>
+                                — Descend à <strong>{{ r.arriveePassager }}</strong></span>
+                        </div>
 
+                        <!-- Méta -->
+                        <div class="meta-bloc">
+                            <div class="meta-item">
+                                <mat-icon>event_seat</mat-icon>
+                                <span>{{ r.nbPlaces }} place(s)</span>
+                            </div>
+                            <div class="meta-item">
+                                <mat-icon>calendar_today</mat-icon>
+                                <span>{{ r.dateReservation | date:'dd/MM/yyyy' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="actions-principale">
+                            <button mat-raised-button class="btn-confirmer"
+                                    (click)="confirmerReservation(r)">
+                                <mat-icon>check</mat-icon> Accepter
+                            </button>
+                            <button mat-stroked-button class="btn-refuser"
+                                    (click)="refuserReservation(r)">
+                                <mat-icon>close</mat-icon> Refuser
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
             </mat-tab>
 

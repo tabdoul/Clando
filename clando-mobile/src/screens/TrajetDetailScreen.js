@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
     ScrollView, Alert, Image, ActivityIndicator,
-    Modal, TextInput, Keyboard,
+    Modal, Keyboard,
     KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,9 +14,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const [avis, setAvis] = useState([]);
     const [loadingAvis, setLoadingAvis] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [prixPropose, setPrixPropose] = useState(
-        (trajet.prixConducteur ?? trajet.prix).toString()
-    );
     const [loading, setLoading] = useState(false);
     const [genreUtilisateur, setGenreUtilisateur] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
@@ -87,15 +84,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
         Keyboard.dismiss();
         const userId = await getUserId();
         if (!userId) { Alert.alert('Erreur', 'Veuillez vous reconnecter'); return; }
-        const prixFinal = parseFloat(prixPropose);
-        if (isNaN(prixFinal) || prixFinal <= 0) { Alert.alert('Prix invalide', 'Veuillez entrer un prix valide'); return; }
         setLoading(true);
         try {
             await api.post('/reservations', {
                 nbPlaces: 1,
                 passagerId: userId,
                 trajetId: trajet.id,
-                prixPropose: prixFinal !== trajet.prixConducteur ? prixFinal : null,
+                prixPropose: null,
                 departPassager,
                 arriveePassager,
             });
@@ -106,7 +101,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 [{ text: 'Voir mes reservations', onPress: () => navigation.navigate('Main', { screen: 'Reservations' }) }]
             );
         } catch (error) {
-            Alert.alert('Reservation impossible', error.response?.data?.erreur || 'Impossible d\'envoyer la demande.');
+            Alert.alert('Reservation impossible', error.response?.data?.erreur || "Impossible d'envoyer la demande.");
         } finally {
             setLoading(false);
         }
@@ -124,7 +119,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const aReservationConfirmee = passagers.some(p => Number(p.passagerId) === currentUserId);
     const passagersAffiches = (estConducteur || aReservationConfirmee) ? passagers : [];
     const estBloqueParGenre = trajet.femmesUniquement && genreUtilisateur === 'HOMME';
-    const prixDifferent = parseFloat(prixPropose) !== trajet.prixConducteur && !isNaN(parseFloat(prixPropose));
 
     return (
         <View style={styles.container}>
@@ -350,7 +344,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <ActivityIndicator size={20} color="#00b5e2" />
                     ) : avis.length === 0 ? (
                         <View style={styles.card}>
-                            <Text style={styles.aucunAvis}>Ce conducteur n'a pas encore recu d'avis</Text>
+                            <Text style={styles.aucunAvis}>{"Ce conducteur n'a pas encore recu d'avis"}</Text>
                         </View>
                     ) : (
                         avis.slice(0, 5).map((a) => (
@@ -383,7 +377,9 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <Text style={styles.bottomPrixLabel}>Prix</Text>
                         <Text style={styles.bottomPrixValeur}>{`${trajet.prixConducteur?.toLocaleString()} GNF`}</Text>
                         <Text style={styles.bottomPlaces}>
-                            {trajet.placesDisponibles > 1 ? `${trajet.placesDisponibles} places restantes` : '1 place restante'}
+                            {trajet.placesDisponibles > 1
+                                ? `${trajet.placesDisponibles} places restantes`
+                                : '1 place restante'}
                         </Text>
                     </View>
                     <TouchableOpacity
@@ -406,13 +402,20 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 animationType="slide"
                 onRequestClose={() => setShowConfirmModal(false)}>
                 <View style={styles.modalOverlay}>
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={{ width: '100%' }}>
                         <View style={styles.modalCard}>
-                            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                            <ScrollView
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}>
 
                                 <Text style={styles.modalTitle}>Confirmer la reservation</Text>
-                                <Text style={styles.modalSubtitle}>{`avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}`}</Text>
+                                <Text style={styles.modalSubtitle}>
+                                    {`avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}`}
+                                </Text>
 
+                                {/* Trajet passager */}
                                 <View style={styles.modalTrajetPassager}>
                                     <Text style={styles.modalTrajetTitre}>Votre trajet</Text>
                                     <View style={styles.modalTrajetLigne}>
@@ -430,6 +433,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                     </View>
                                 </View>
 
+                                {/* Info */}
                                 <View style={styles.modalInfo}>
                                     <Ionicons name="information-circle-outline" size={16} color="#00b5e2" />
                                     <Text style={styles.modalInfoText}>
@@ -437,38 +441,22 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                     </Text>
                                 </View>
 
+                                {/* Prix */}
                                 <View style={styles.modalPrixOriginal}>
                                     <Text style={styles.modalPrixLabel}>Prix du trajet</Text>
-                                    <Text style={styles.modalPrixValeur}>{`${trajet.prixConducteur?.toLocaleString()} GNF`}</Text>
-                                </View>
-
-                                <Text style={styles.modalLabel}>Proposer un autre prix (optionnel)</Text>
-                                <Text style={styles.modalLabelSub}>Vous pouvez negocier le prix avec le conducteur</Text>
-
-                                <View style={[styles.modalInput, prixDifferent && { borderColor: '#f39c12' }]}>
-                                    <Ionicons name="cash-outline" size={18} color={prixDifferent ? '#f39c12' : '#888'} />
-                                    <TextInput
-                                        style={styles.modalInputText}
-                                        value={prixPropose}
-                                        onChangeText={setPrixPropose}
-                                        keyboardType="numeric"
-                                        placeholderTextColor="#666"
-                                        returnKeyType="done"
-                                        onSubmitEditing={() => Keyboard.dismiss()}
-                                    />
-                                    <Text style={styles.modalDevise}>GNF</Text>
-                                </View>
-
-                                {prixDifferent && (
-                                    <Text style={styles.modalNegocInfo}>
-                                        {`Vous proposez ${parseFloat(prixPropose).toLocaleString()} GNF au lieu de ${trajet.prixConducteur?.toLocaleString()} GNF`}
+                                    <Text style={styles.modalPrixValeur}>
+                                        {`${trajet.prixConducteur?.toLocaleString()} GNF`}
                                     </Text>
-                                )}
+                                </View>
 
+                                {/* Boutons */}
                                 <View style={[styles.modalBoutons, { marginTop: 20 }]}>
                                     <TouchableOpacity
                                         style={styles.modalBoutonAnnuler}
-                                        onPress={() => { Keyboard.dismiss(); setShowConfirmModal(false); }}>
+                                        onPress={() => {
+                                            Keyboard.dismiss();
+                                            setShowConfirmModal(false);
+                                        }}>
                                         <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -480,6 +468,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
+
                             </ScrollView>
                         </View>
                     </KeyboardAvoidingView>
@@ -497,7 +486,10 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
-    headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center' },
+    headerCenter: {
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        flex: 1, justifyContent: 'center',
+    },
     headerVille: { fontSize: 16, fontWeight: 'bold', color: '#eee', maxWidth: 120 },
     dateContainer: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
     dateText: { fontSize: 18, fontWeight: 'bold', color: '#eee', textTransform: 'capitalize' },
@@ -508,20 +500,29 @@ const styles = StyleSheet.create({
     },
     femmesUniquementText: { color: '#9b59b6', fontSize: 12, fontWeight: '700' },
     section: { paddingHorizontal: 16, marginTop: 12 },
-    sectionTitle: { fontSize: 15, fontWeight: '600', color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
+    sectionTitle: {
+        fontSize: 15, fontWeight: '600', color: '#888',
+        marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1,
+    },
     card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
     timeline: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
     timelineRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
     timelineHeure: { fontSize: 18, fontWeight: 'bold', color: '#eee', width: 56 },
     timelineCenter: { alignItems: 'center', marginHorizontal: 12, width: 16 },
-    timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#00b5e2', borderWidth: 2, borderColor: '#1e1e1e' },
+    timelineDot: {
+        width: 12, height: 12, borderRadius: 6,
+        backgroundColor: '#00b5e2', borderWidth: 2, borderColor: '#1e1e1e',
+    },
     timelineDotArrivee: { backgroundColor: '#2ecc71' },
     timelineLine: { width: 2, height: 40, backgroundColor: '#333', marginTop: 4 },
     timelineInfo: { flex: 1 },
     timelineVille: { fontSize: 16, fontWeight: '600', color: '#eee' },
     timelineItineraire: { fontSize: 12, color: '#00b5e2', marginTop: 2 },
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-    infoIcone: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center' },
+    infoIcone: {
+        width: 36, height: 36, borderRadius: 18,
+        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+    },
     infoContent: { flex: 1 },
     infoLabel: { fontSize: 12, color: '#666', marginBottom: 2 },
     infoValeur: { fontSize: 14, color: '#ddd', fontWeight: '500' },
@@ -532,14 +533,21 @@ const styles = StyleSheet.create({
         marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a', gap: 12,
     },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
-    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center' },
+    passagerAvatarPlaceholder: {
+        width: 44, height: 44, borderRadius: 22,
+        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+    },
     passagerInitiales: { color: '#888', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
     passagerTrajet: { color: '#888', fontSize: 12, marginTop: 2 },
     passagerBtnChat: { padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20 },
     conducteurRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
-    conducteurAvatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
+    conducteurAvatar: {
+        width: 60, height: 60, borderRadius: 30,
+        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden', borderWidth: 1, borderColor: '#333',
+    },
     conducteurAvatarImage: { width: 60, height: 60, borderRadius: 30 },
     conducteurAvatarText: { color: '#888', fontSize: 20, fontWeight: 'bold' },
     conducteurDetails: { flex: 1 },
@@ -548,7 +556,10 @@ const styles = StyleSheet.create({
     conducteurNote: { fontSize: 14, color: '#f39c12', fontWeight: '600' },
     conducteurNbAvis: { fontSize: 12, color: '#666' },
     conducteurBadges: { flexDirection: 'row', gap: 6 },
-    badgeVerifie: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#252525', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8 },
+    badgeVerifie: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: '#252525', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8,
+    },
     badgeVerifieText: { color: '#888', fontSize: 11, fontWeight: '600' },
     badgeTrajets: { backgroundColor: '#252525', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8 },
     badgeTrajetsText: { color: '#888', fontSize: 11, fontWeight: '600' },
@@ -557,15 +568,30 @@ const styles = StyleSheet.create({
     telContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
     conducteurTel: { fontSize: 14, color: '#00b5e2', fontWeight: '600' },
     infoSecurite: { fontSize: 12, color: '#555', fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
-    avisHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-    noteMoyenneContainer: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1e1e1e', borderRadius: 10, padding: 8, borderWidth: 1, borderColor: '#2a2a2a' },
+    avisHeader: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: 10,
+    },
+    noteMoyenneContainer: {
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 8, borderWidth: 1, borderColor: '#2a2a2a',
+    },
     noteMoyenneValeur: { fontSize: 16, fontWeight: 'bold', color: '#f39c12' },
     noteMoyenneEtoiles: { flexDirection: 'row', gap: 2 },
     noteMoyenneTotal: { fontSize: 11, color: '#666' },
-    avisItem: { backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a' },
-    avisTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    avisItem: {
+        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
+        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a',
+    },
+    avisTop: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: 8,
+    },
     avisAvatarContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    avisAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center' },
+    avisAvatar: {
+        width: 32, height: 32, borderRadius: 16,
+        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+    },
     avisAvatarText: { color: '#888', fontSize: 12, fontWeight: '700' },
     avisAuteur: { fontSize: 13, fontWeight: '600', color: '#ddd' },
     avisEtoiles: { flexDirection: 'row', gap: 2 },
@@ -597,10 +623,16 @@ const styles = StyleSheet.create({
     modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#eee', marginBottom: 2 },
     modalSubtitle: { fontSize: 13, color: '#888', marginBottom: 16 },
     modalTrajetPassager: { backgroundColor: '#252525', borderRadius: 12, padding: 14, marginBottom: 14 },
-    modalTrajetTitre: { fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, fontWeight: '600' },
+    modalTrajetTitre: {
+        fontSize: 11, color: '#888', textTransform: 'uppercase',
+        letterSpacing: 1, marginBottom: 10, fontWeight: '600',
+    },
     modalTrajetLigne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     modalTrajetTexte: { fontSize: 15, fontWeight: '600', color: '#eee' },
-    modalTrajetSeparateur: { flexDirection: 'row', alignItems: 'center', marginLeft: 26, gap: 4, marginVertical: 6 },
+    modalTrajetSeparateur: {
+        flexDirection: 'row', alignItems: 'center',
+        marginLeft: 26, gap: 4, marginVertical: 6,
+    },
     modalTrajetBarre: { flex: 1, height: 1, backgroundColor: '#333' },
     modalInfo: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 8,
@@ -613,19 +645,15 @@ const styles = StyleSheet.create({
     },
     modalPrixLabel: { fontSize: 14, color: '#888' },
     modalPrixValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
-    modalLabel: { fontSize: 13, fontWeight: '600', color: '#ddd', marginBottom: 2 },
-    modalLabelSub: { fontSize: 12, color: '#666', marginBottom: 8 },
-    modalInput: {
-        flexDirection: 'row', alignItems: 'center',
-        borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
-        paddingHorizontal: 12, backgroundColor: '#252525', marginBottom: 4,
-    },
-    modalInputText: { flex: 1, padding: 12, fontSize: 15, color: '#eee' },
-    modalDevise: { color: '#888', fontSize: 14 },
-    modalNegocInfo: { fontSize: 12, color: '#f39c12', marginBottom: 4, fontStyle: 'italic' },
     modalBoutons: { flexDirection: 'row', gap: 12 },
-    modalBoutonAnnuler: { flex: 1, borderWidth: 1, borderColor: '#444', borderRadius: 10, padding: 14, alignItems: 'center' },
+    modalBoutonAnnuler: {
+        flex: 1, borderWidth: 1, borderColor: '#444',
+        borderRadius: 10, padding: 14, alignItems: 'center',
+    },
     modalBoutonAnnulerText: { color: '#888', fontSize: 15, fontWeight: '600' },
-    modalBoutonConfirmer: { flex: 1, backgroundColor: '#00b5e2', borderRadius: 10, padding: 14, alignItems: 'center' },
+    modalBoutonConfirmer: {
+        flex: 1, backgroundColor: '#00b5e2',
+        borderRadius: 10, padding: 14, alignItems: 'center',
+    },
     modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 });

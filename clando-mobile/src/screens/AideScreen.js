@@ -245,7 +245,7 @@ export default function AideScreen({ navigation }) {
                                 {s.reponseAdmin && (
                                     <View style={styles.reponseCard}>
                                         <Text style={styles.reponseLabel}>
-                                            Réponse de l'équipe Wayvo :
+                                            {"Réponse de l'équipe Wayvo :"}
                                         </Text>
                                         <Text style={styles.reponseTexte}>{s.reponseAdmin}</Text>
                                     </View>

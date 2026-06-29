@@ -39,15 +39,8 @@ export class ReservationListComponent implements OnInit {
     reservationsRecues: Reservation[] = [];
     loadingConducteur = false;
 
-    // Paiement
     numerosPaiement: Record<number, string> = {};
     loadingPaiement: Record<number, boolean> = {};
-
-    // Nouvelle proposition passager
-    nouveauxPrix: Record<number, number> = {};
-
-    // Contre-offre conducteur
-    contreOffres: Record<number, number> = {};
 
     constructor(
         private reservationService: ReservationService,
@@ -72,8 +65,8 @@ export class ReservationListComponent implements OnInit {
             next: (data) => {
                 this.mesReservations = data.sort((a, b) => {
                     const ordre: Record<string, number> = {
-                        'EN_ATTENTE': 0, 'CONFIRMEE': 1, 'CONTRE_OFFRE': 2,
-                        'PRIX_REFUSE': 3, 'REFUSEE': 4, 'ANNULEE': 5, 'TERMINEE': 6
+                        'EN_ATTENTE': 0, 'CONFIRMEE': 1,
+                        'REFUSEE': 2, 'ANNULEE': 3, 'TERMINEE': 4
                     };
                     return (ordre[a.statut] ?? 9) - (ordre[b.statut] ?? 9);
                 });
@@ -88,7 +81,7 @@ export class ReservationListComponent implements OnInit {
     }
 
     peutAnnuler(r: Reservation): boolean {
-        return ['EN_ATTENTE', 'CONFIRMEE', 'PRIX_REFUSE'].includes(r.statut);
+        return ['EN_ATTENTE', 'CONFIRMEE'].includes(r.statut);
     }
 
     annulerReservation(r: Reservation): void {
@@ -103,68 +96,23 @@ export class ReservationListComponent implements OnInit {
     }
 
     initierPaiement(r: Reservation): void {
-    if (!r.id) return;
-    const numero = this.numerosPaiement[r.id];
-    if (!numero?.trim()) {
-        this.snackBar.open('Veuillez entrer votre numéro Orange Money', 'Fermer', { duration: 3000 });
-        return;
-    }
-    this.loadingPaiement[r.id] = true;
-    //  Mode test — simule le paiement sans Djomy
-    this.reservationService.payerTest(r.id).subscribe({
-        next: () => {
-            this.loadingPaiement[r.id!] = false;
-            this.snackBar.open('Paiement confirmé !', 'Fermer', { duration: 4000 });
-            this.chargerMesReservations();
-        },
-        error: (err) => {
-            this.loadingPaiement[r.id!] = false;
-            this.snackBar.open(err.error?.erreur || 'Erreur paiement', 'Fermer', { duration: 3000 });
-        }
-    });
-}
-
-    accepterContreOffre(r: Reservation): void {
-        if (!r.id || !r.prixConducteur) return;
-        this.reservationService.nouvelleProposition(r.id, r.prixConducteur).subscribe({
-            next: () => {
-                this.reservationService.repondreNegociation(r.id!, true).subscribe({
-                    next: () => {
-                        this.snackBar.open('Prix accepté ! Vous avez 30 min pour payer.', 'Fermer', { duration: 5000 });
-                        this.chargerMesReservations();
-                    },
-                    error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
-                });
-            },
-            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
-        });
-    }
-
-    refuserContreOffre(r: Reservation): void {
-        if (!r.id || !confirm('Refuser la contre-offre ? La réservation sera annulée.')) return;
-        this.reservationService.annuler(r.id).subscribe({
-            next: () => {
-                this.snackBar.open('Contre-offre refusée', 'Fermer', { duration: 3000 });
-                this.chargerMesReservations();
-            },
-            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
-        });
-    }
-
-    nouvelleProposition(r: Reservation): void {
         if (!r.id) return;
-        const prix = this.nouveauxPrix[r.id];
-        if (!prix || prix <= 0) {
-            this.snackBar.open('Prix invalide', 'Fermer', { duration: 3000 });
+        const numero = this.numerosPaiement[r.id];
+        if (!numero?.trim()) {
+            this.snackBar.open('Veuillez entrer votre numéro Orange Money', 'Fermer', { duration: 3000 });
             return;
         }
-        this.reservationService.nouvelleProposition(r.id, prix).subscribe({
+        this.loadingPaiement[r.id] = true;
+        this.reservationService.payerTest(r.id).subscribe({
             next: () => {
-                this.snackBar.open('Proposition envoyée !', 'Fermer', { duration: 3000 });
-                this.nouveauxPrix[r.id!] = 0;
+                this.loadingPaiement[r.id!] = false;
+                this.snackBar.open('Paiement confirmé !', 'Fermer', { duration: 4000 });
                 this.chargerMesReservations();
             },
-            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
+            error: (err) => {
+                this.loadingPaiement[r.id!] = false;
+                this.snackBar.open(err.error?.erreur || 'Erreur paiement', 'Fermer', { duration: 3000 });
+            }
         });
     }
 
@@ -210,27 +158,10 @@ export class ReservationListComponent implements OnInit {
         });
     }
 
-    envoyerContreOffre(r: Reservation): void {
-        if (!r.id) return;
-        const prix = this.contreOffres[r.id];
-        if (!prix || prix <= 0) {
-            this.snackBar.open('Prix invalide', 'Fermer', { duration: 3000 });
-            return;
-        }
-        this.reservationService.repondreNegociationAvecPrix(r.id, prix).subscribe({
-            next: () => {
-                this.snackBar.open('Contre-offre envoyée au passager !', 'Fermer', { duration: 3000 });
-                this.contreOffres[r.id!] = 0;
-                this.chargerReservationsRecues();
-            },
-            error: (err) => this.snackBar.open(err.error?.erreur || 'Erreur', 'Fermer', { duration: 3000 })
-        });
-    }
-
     // ─── UTILITAIRES ────────────────────────────────────────────
 
     getPrixBase(r: Reservation): number {
-        return r.prixPropose || Math.round((r.prix || 0) / 1.13);
+        return Math.round((r.prix || 0) / 1.13);
     }
 
     getFreais(r: Reservation): number {
@@ -239,14 +170,12 @@ export class ReservationListComponent implements OnInit {
 
     getStatutLabel(statut: string): string {
         switch (statut) {
-            case 'EN_ATTENTE':   return 'En attente';
-            case 'CONFIRMEE':    return 'Confirmée';
-            case 'ANNULEE':      return 'Annulée';
-            case 'REFUSEE':      return 'Refusée';
-            case 'PRIX_REFUSE':  return 'Prix refusé';
-            case 'CONTRE_OFFRE': return 'Contre-offre';
-            case 'TERMINEE':     return 'Terminée';
-            default:             return statut;
+            case 'EN_ATTENTE': return 'En attente';
+            case 'CONFIRMEE':  return 'Confirmée';
+            case 'ANNULEE':    return 'Annulée';
+            case 'REFUSEE':    return 'Refusée';
+            case 'TERMINEE':   return 'Terminée';
+            default:           return statut;
         }
     }
 

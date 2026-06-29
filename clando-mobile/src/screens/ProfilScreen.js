@@ -32,6 +32,7 @@ export default function ProfilScreen({ navigation }) {
     const [showHistorique, setShowHistorique] = useState(false);
     const [showAvis, setShowAvis] = useState(false);
     const [ongletActif, setOngletActif] = useState('profil');
+    const [showHistoriqueModal, setShowHistoriqueModal] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -548,26 +549,40 @@ export default function ProfilScreen({ navigation }) {
                                 </TouchableOpacity>
 
                                 {showHistorique && (
-                                    <View style={styles.sousListe}>
-                                        {trajetsTermines.length === 0 ? (
-                                            <Text style={styles.emptyText}>Aucun trajet effectue</Text>
-                                        ) : (
-                                            trajetsTermines.map((t, index) => (
-                                                <View key={t.id.toString()}>
-                                                    {index > 0 && <View style={styles.separator} />}
-                                                    <View style={styles.historiqueItem}>
-                                                        <Text style={styles.trajetVilles}>
-                                                            {`${t.villeDepart} → ${t.villeArrivee}`}
-                                                        </Text>
-                                                        <Text style={styles.trajetDetails}>
-                                                            {formatDate(t.dateHeureDepart)}
-                                                        </Text>
-                                                    </View>
-                                                </View>
-                                            ))
-                                        )}
-                                    </View>
-                                )}
+    <View style={styles.sousListe}>
+        {trajetsTermines.length === 0 ? (
+            <Text style={styles.emptyText}>Aucun trajet effectue</Text>
+        ) : (
+            <>
+                {trajetsTermines.slice(0, 5).map((t, index) => (
+                    <View key={t.id.toString()}>
+                        {index > 0 && <View style={styles.separator} />}
+                        <View style={styles.historiqueItem}>
+                            <Text style={styles.trajetVilles}>
+                                {`${t.villeDepart} → ${t.villeArrivee}`}
+                            </Text>
+                            <Text style={styles.trajetDetails}>
+                                {formatDate(t.dateHeureDepart)}
+                            </Text>
+                        </View>
+                    </View>
+                ))}
+
+                {/* Bouton voir tout dans un modal */}
+                {trajetsTermines.length > 5 && (
+                    <TouchableOpacity
+                        style={styles.voirPlusBtn}
+                        onPress={() => setShowHistoriqueModal(true)}>
+                        <Text style={styles.voirPlusText}>
+                            {`Voir tout (${trajetsTermines.length} trajets)`}
+                        </Text>
+                        <Ionicons name="chevron-forward" size={14} color="#00b5e2" />
+                    </TouchableOpacity>
+                )}
+            </>
+        )}
+    </View>
+)}
 
                                 <View style={styles.separator} />
 
@@ -641,13 +656,15 @@ export default function ProfilScreen({ navigation }) {
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Support</Text>
                             <View style={styles.card}>
-                                <TouchableOpacity style={styles.navItem}>
-                                    <View style={styles.navGauche}>
-                                        <Ionicons name="help-circle-outline" size={18} color="#555" />
-                                        <Text style={styles.navLabel}>Aide & Support</Text>
-                                    </View>
-                                    <Ionicons name="chevron-forward" size={16} color="#444" />
-                                </TouchableOpacity>
+                                <TouchableOpacity
+    style={styles.navItem}
+    onPress={() => navigation.navigate('Aide')}>
+    <View style={styles.navGauche}>
+        <Ionicons name="help-circle-outline" size={18} color="#555" />
+        <Text style={styles.navLabel}>Aide & Support</Text>
+    </View>
+    <Ionicons name="chevron-forward" size={16} color="#444" />
+</TouchableOpacity>
                                 <View style={styles.separator} />
                                 <TouchableOpacity style={styles.navItem}>
                                     <View style={styles.navGauche}>
@@ -682,6 +699,47 @@ export default function ProfilScreen({ navigation }) {
 
                 <View style={{ height: 40 }} />
             </ScrollView>
+
+            {/* Modal historique complet */}
+<Modal
+    visible={showHistoriqueModal}
+    transparent
+    animationType="slide"
+    onRequestClose={() => setShowHistoriqueModal(false)}>
+    <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                    {`Historique (${trajetsTermines.length} trajets)`}
+                </Text>
+                <TouchableOpacity onPress={() => setShowHistoriqueModal(false)}>
+                    <Ionicons name="close" size={24} color="#eee" />
+                </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {trajetsTermines.map((t, index) => (
+                    <View key={t.id.toString()}>
+                        {index > 0 && <View style={styles.separator} />}
+                        <View style={styles.historiqueItem}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.trajetVilles}>
+                                    {`${t.villeDepart} → ${t.villeArrivee}`}
+                                </Text>
+                                <Text style={styles.trajetDetails}>
+                                    {formatDate(t.dateHeureDepart)}
+                                </Text>
+                            </View>
+                            <Text style={{ color: '#00b5e2', fontSize: 13, fontWeight: '600' }}>
+                                {`${t.prixConducteur?.toLocaleString()} GNF`}
+                            </Text>
+                        </View>
+                    </View>
+                ))}
+                <View style={{ height: 20 }} />
+            </ScrollView>
+        </View>
+    </View>
+</Modal>
 
             {/* Modal passagers */}
             <Modal
@@ -916,6 +974,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'flex-start', marginBottom: 16,
     },
+    voirPlusBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingTop: 10, marginTop: 6,
+    borderTopWidth: 1, borderTopColor: '#2a2a2a',
+},
+voirPlusText: { fontSize: 13, color: '#00b5e2', fontWeight: '600' },
     modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#eee' },
     modalSubtitle: { fontSize: 12, color: '#666', marginTop: 3 },
     modalVide: { alignItems: 'center', paddingVertical: 32, gap: 8 },

@@ -13,9 +13,6 @@ export default function NotificationsScreen({ navigation }) {
     const [reservations, setReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [showContreOffreModal, setShowContreOffreModal] = useState(false);
-    const [reservationSelectionnee, setReservationSelectionnee] = useState(null);
-    const [contreOffre, setContreOffre] = useState('');
     const [loadingAction, setLoadingAction] = useState(false);
 
     useFocusEffect(
@@ -73,36 +70,6 @@ export default function NotificationsScreen({ navigation }) {
         );
     };
 
-    const ouvrirContreOffre = (item) => {
-        setReservationSelectionnee(item);
-        setContreOffre('');
-        setShowContreOffreModal(true);
-    };
-
-    // ✅ CORRIGÉ — prixConducteur passé dans l'URL
-    const envoyerContreOffre = async () => {
-        const prix = parseFloat(contreOffre);
-        if (isNaN(prix) || prix <= 0) {
-            Alert.alert('Erreur', 'Veuillez entrer un prix valide');
-            return;
-        }
-        setLoadingAction(true);
-        try {
-            await api.patch(
-                `/reservations/${reservationSelectionnee.id}/negociation?accepter=false&prixConducteur=${prix}`
-            );
-            setShowContreOffreModal(false);
-            chargerNotifications();
-            Alert.alert(
-                'Contre-offre envoyee !',
-                `Votre proposition de ${prix.toLocaleString()} GNF a ete envoyee au passager.`
-            );
-        } catch (error) {
-            Alert.alert('Erreur', "Impossible d'envoyer la contre-offre");
-        } finally {
-            setLoadingAction(false);
-        }
-    };
 
     const refuser = async (item) => {
         Alert.alert(
@@ -248,19 +215,7 @@ export default function NotificationsScreen({ navigation }) {
                                 </Text>
                             </View>
 
-                            {/* Prix proposé */}
-                            {item.prixPropose && (
-                                <View style={styles.prixBloc}>
-                                    <View style={styles.prixItem}>
-                                        <Text style={styles.prixItemLabel}>Prix passager</Text>
-                                        <Text style={styles.prixItemValeur}>
-                                            {item.prixPropose?.toLocaleString()} GNF
-                                        </Text>
-                                    </View>
-                                </View>
-                            )}
-
-                            <View style={styles.separator} />
+                                            <View style={styles.separator} />
 
                             {/* Bouton principal */}
                             <TouchableOpacity
@@ -273,24 +228,16 @@ export default function NotificationsScreen({ navigation }) {
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Boutons secondaires */}
-                            <View style={styles.boutonsSecondaires}>
-                                <TouchableOpacity
-                                    style={styles.boutonContreOffre}
-                                    onPress={() => ouvrirContreOffre(item)}
-                                    disabled={loadingAction}>
-                                    <Ionicons name="swap-horizontal-outline" size={14} color="#888" />
-                                    <Text style={styles.boutonContreOffreText}>Proposer mon prix</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.boutonRefuser}
-                                    onPress={() => refuser(item)}
-                                    disabled={loadingAction}>
-                                    <Ionicons name="close-circle-outline" size={14} color="#e74c3c" />
-                                    <Text style={styles.boutonRefuserText}>Refuser</Text>
-                                </TouchableOpacity>
-                            </View>
-
+                            {/*  Accepter ou Refuser uniquement */}
+<View style={styles.boutonsSecondaires}>
+    <TouchableOpacity
+        style={styles.boutonRefuser}
+        onPress={() => refuser(item)}
+        disabled={loadingAction}>
+        <Ionicons name="close-circle-outline" size={14} color="#e74c3c" />
+        <Text style={styles.boutonRefuserText}>Refuser</Text>
+    </TouchableOpacity>
+</View>
                         </View>
                     </View>
                 ))}
@@ -298,70 +245,6 @@ export default function NotificationsScreen({ navigation }) {
                 <View style={{ height: 30 }} />
             </ScrollView>
 
-            {/* Modal contre-offre */}
-            <Modal
-                visible={showContreOffreModal}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setShowContreOffreModal(false)}>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Proposer mon prix</Text>
-                            <TouchableOpacity onPress={() => setShowContreOffreModal(false)}>
-                                <Ionicons name="close" size={24} color="#eee" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {reservationSelectionnee && (
-                            <Text style={styles.modalSubtitle}>
-                                {`Le passager a propose ${reservationSelectionnee.prixPropose?.toLocaleString()} GNF`}
-                            </Text>
-                        )}
-
-                        <View style={styles.modalInfo}>
-                            <Ionicons name="information-circle-outline" size={16} color="#888" />
-                            <Text style={styles.modalInfoText}>
-                                Entrez le prix que vous souhaitez. Le passager pourra l'accepter ou refuser.
-                            </Text>
-                        </View>
-
-                        <Text style={styles.modalLabel}>Votre prix</Text>
-                        <View style={styles.modalInput}>
-                            <Ionicons name="cash-outline" size={18} color="#888" />
-                            <TextInput
-                                style={styles.modalInputText}
-                                placeholder="Ex: 45000"
-                                placeholderTextColor="#555"
-                                value={contreOffre}
-                                onChangeText={setContreOffre}
-                                keyboardType="numeric"
-                                returnKeyType="done"
-                                autoFocus
-                            />
-                            <Text style={styles.modalDevise}>GNF</Text>
-                        </View>
-
-                        <View style={styles.modalBoutons}>
-                            <TouchableOpacity
-                                style={styles.modalBoutonAnnuler}
-                                onPress={() => setShowContreOffreModal(false)}>
-                                <Text style={styles.modalBoutonAnnulerText}>Annuler</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalBoutonConfirmer, loadingAction && { opacity: 0.7 }]}
-                                onPress={envoyerContreOffre}
-                                disabled={loadingAction}>
-                                {loadingAction ? (
-                                    <ActivityIndicator color="white" size={18} />
-                                ) : (
-                                    <Text style={styles.modalBoutonConfirmerText}>Envoyer</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 }
@@ -442,17 +325,7 @@ const styles = StyleSheet.create({
     boutonAccepterText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
 
     boutonsSecondaires: { flexDirection: 'row', gap: 8 },
-    boutonContreOffre: {
-        flex: 1, borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10,
-        paddingVertical: 10, flexDirection: 'row',
-        alignItems: 'center', justifyContent: 'center', gap: 6,
-    },
-    boutonContreOffreText: { color: '#888', fontSize: 13, fontWeight: '600' },
-    boutonRefuser: {
-        flex: 1, borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
-        paddingVertical: 10, flexDirection: 'row',
-        alignItems: 'center', justifyContent: 'center', gap: 6,
-    },
+
     boutonRefuserText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
@@ -481,6 +354,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14, paddingVertical: 4,
         borderWidth: 1, borderColor: '#333', marginBottom: 20,
     },
+    boutonRefuser: {
+    flex: 1, borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
+    paddingVertical: 10, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+},
     modalInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
     modalDevise: { color: '#666', fontSize: 14 },
     modalBoutons: { flexDirection: 'row', gap: 12 },
