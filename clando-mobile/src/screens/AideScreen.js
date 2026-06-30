@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function AideScreen({ navigation }) {
     const [typeSelectionne, setTypeSelectionne] = useState(null);
@@ -17,21 +18,17 @@ export default function AideScreen({ navigation }) {
     const [faqOuverte, setFaqOuverte] = useState(null);
 
     const types = [
-        { key: 'PROBLEME_TECHNIQUE', label: 'Problème technique', icon: 'construct-outline', color: '#00b5e2' },
-        { key: 'COMPORTEMENT_INAPPROPRIE', label: 'Comportement inapproprié', icon: 'warning-outline', color: '#e74c3c' },
-        { key: 'ARNAQUE', label: 'Arnaque', icon: 'shield-outline', color: '#e74c3c' },
-        { key: 'TRAJET_ANNULE', label: 'Trajet annulé injustement', icon: 'car-outline', color: '#f39c12' },
-        { key: 'AUTRE', label: 'Autre', icon: 'help-circle-outline', color: '#888' },
+        { key: 'PROBLEME_TECHNIQUE', label: 'Problème technique', icon: 'construct-outline', color: colors.primary },
+        { key: 'COMPORTEMENT_INAPPROPRIE', label: 'Comportement inapproprié', icon: 'warning-outline', color: colors.red },
+        { key: 'ARNAQUE', label: 'Arnaque', icon: 'shield-outline', color: colors.red },
+        { key: 'TRAJET_ANNULE', label: 'Trajet annulé injustement', icon: 'car-outline', color: colors.orange },
+        { key: 'AUTRE', label: 'Autre', icon: 'help-circle-outline', color: colors.textMuted },
     ];
 
     const faq = [
         {
             question: "Comment réserver un trajet ?",
             reponse: "Recherchez votre destination, cliquez sur un trajet et appuyez sur Réserver. Le conducteur recevra votre demande."
-        },
-        {
-            question: "Comment négocier le prix ?",
-            reponse: "Lors de la réservation, vous pouvez proposer un prix différent. Vous avez droit à 2 tentatives de négociation."
         },
         {
             question: "Comment annuler une réservation ?",
@@ -100,12 +97,11 @@ export default function AideScreen({ navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Aide & Support</Text>
             </View>
 
-            {/* Onglets */}
             <View style={styles.onglets}>
                 <TouchableOpacity
                     style={[styles.onglet, onglet === 'faq' && styles.ongletActif]}
@@ -128,7 +124,6 @@ export default function AideScreen({ navigation }) {
 
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                {/* FAQ */}
                 {onglet === 'faq' && (
                     <View style={styles.section}>
                         {faq.map((item, index) => (
@@ -140,7 +135,7 @@ export default function AideScreen({ navigation }) {
                                     <Text style={styles.faqQuestion}>{item.question}</Text>
                                     <Ionicons
                                         name={faqOuverte === index ? "chevron-up" : "chevron-down"}
-                                        size={18} color="#666" />
+                                        size={18} color={colors.textMuted} />
                                 </View>
                                 {faqOuverte === index && (
                                     <Text style={styles.faqReponse}>{item.reponse}</Text>
@@ -149,16 +144,15 @@ export default function AideScreen({ navigation }) {
                         ))}
 
                         <View style={styles.contactCard}>
-                            <Ionicons name="mail-outline" size={24} color="#00b5e2" />
+                            <Ionicons name="mail-outline" size={24} color={colors.primary} />
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactTitre}>Nous contacter</Text>
-                                <Text style={styles.contactDetail}>support@Wayvo.guinee</Text>
+                                <Text style={styles.contactDetail}>support@wayvo.guinee</Text>
                             </View>
                         </View>
                     </View>
                 )}
 
-                {/* Signaler */}
                 {onglet === 'signaler' && (
                     <View style={styles.section}>
                         <Text style={styles.fieldLabel}>Type de problème</Text>
@@ -172,7 +166,7 @@ export default function AideScreen({ navigation }) {
                                 onPress={() => setTypeSelectionne(item.key)}>
                                 <Ionicons
                                     name={item.icon} size={20}
-                                    color={typeSelectionne === item.key ? item.color : '#666'} />
+                                    color={typeSelectionne === item.key ? item.color : colors.textMuted} />
                                 <Text style={[
                                     styles.typeLabel,
                                     typeSelectionne === item.key && { color: item.color }
@@ -189,7 +183,7 @@ export default function AideScreen({ navigation }) {
                         <TextInput
                             style={styles.descriptionInput}
                             placeholder="Décrivez votre problème en détail..."
-                            placeholderTextColor="#666"
+                            placeholderTextColor={colors.textDisabled}
                             value={description}
                             onChangeText={setDescription}
                             multiline
@@ -211,15 +205,14 @@ export default function AideScreen({ navigation }) {
                     </View>
                 )}
 
-                {/* Mes signalements */}
                 {onglet === 'mes-signalements' && (
                     <View style={styles.section}>
                         {loadingSignalements && (
-                            <ActivityIndicator size={36} color="#00b5e2" style={{ marginTop: 20 }} />
+                            <ActivityIndicator size={36} color={colors.primary} style={{ marginTop: 20 }} />
                         )}
                         {!loadingSignalements && mesSignalements.length === 0 && (
                             <View style={styles.emptyContainer}>
-                                <Ionicons name="checkmark-circle-outline" size={48} color="#444" />
+                                <Ionicons name="checkmark-circle-outline" size={48} color={colors.border} />
                                 <Text style={styles.emptyText}>Aucun signalement</Text>
                             </View>
                         )}
@@ -232,7 +225,7 @@ export default function AideScreen({ navigation }) {
                                     ]}>
                                         <Text style={[
                                             styles.statutText,
-                                            { color: s.statut === 'RESOLU' ? '#2ecc71' : '#f39c12' }
+                                            { color: s.statut === 'RESOLU' ? colors.primary : '#e65100' }
                                         ]}>
                                             {s.statut === 'RESOLU' ? 'Résolu ✓' : 'En attente'}
                                         </Text>
@@ -262,87 +255,88 @@ export default function AideScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        backgroundColor: colors.primary,
+        paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 16,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
-    headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#eee' },
+    headerTitle: { fontSize: 22, fontWeight: 'bold', color: 'white' },
     onglets: {
-        flexDirection: 'row', backgroundColor: '#1a1a1a',
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        flexDirection: 'row', backgroundColor: colors.surface,
+        borderBottomWidth: 1, borderBottomColor: colors.separator,
     },
     onglet: {
         flex: 1, paddingVertical: 14, alignItems: 'center',
         borderBottomWidth: 2, borderBottomColor: 'transparent',
     },
-    ongletActif: { borderBottomColor: '#00b5e2' },
-    ongletText: { fontSize: 13, color: '#666', fontWeight: '600' },
-    ongletTextActif: { color: '#00b5e2' },
-    section: { paddingHorizontal: 16, marginTop: 16 },
+    ongletActif: { borderBottomColor: colors.accent },
+    ongletText: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
+    ongletTextActif: { color: colors.accent },
+    section: { paddingHorizontal: spacing.lg, marginTop: 16 },
     faqItem: {
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
-        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
+        marginBottom: 8, borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
     faqHeader: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
     },
-    faqQuestion: { fontSize: 14, fontWeight: '600', color: '#ddd', flex: 1, marginRight: 8 },
-    faqReponse: { fontSize: 13, color: '#888', marginTop: 10, lineHeight: 20 },
+    faqQuestion: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, flex: 1, marginRight: 8 },
+    faqReponse: { fontSize: 13, color: colors.textMuted, marginTop: 10, lineHeight: 20 },
     fieldLabel: {
-        fontSize: 12, fontWeight: '600', color: '#888',
+        fontSize: 12, fontWeight: '600', color: colors.textMuted,
         textTransform: 'uppercase', letterSpacing: 1,
         marginBottom: 8, marginTop: 16,
     },
     typeItem: {
-        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 14,
+        backgroundColor: colors.surface, borderRadius: radius.sm, padding: 14,
         marginBottom: 8, flexDirection: 'row', alignItems: 'center',
-        gap: 12, borderWidth: 1, borderColor: '#2a2a2a',
+        gap: 12, borderWidth: 1, borderColor: colors.border,
     },
-    typeItemSelected: { borderColor: '#00b5e2', backgroundColor: '#0a2a35' },
-    typeLabel: { fontSize: 14, color: '#888', flex: 1 },
+    typeItemSelected: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    typeLabel: { fontSize: 14, color: colors.textMuted, flex: 1 },
     descriptionInput: {
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
-        color: '#eee', fontSize: 14, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
+        color: colors.textPrimary, fontSize: 14, borderWidth: 1, borderColor: colors.border,
         minHeight: 120, textAlignVertical: 'top',
     },
     boutonEnvoyer: {
-        backgroundColor: '#00b5e2', borderRadius: 12, padding: 16,
+        backgroundColor: colors.accent, borderRadius: radius.md, padding: 16,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
         gap: 8, marginTop: 16,
     },
     boutonEnvoyerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
     contactCard: {
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 16,
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: 16,
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        borderWidth: 1, borderColor: '#2a2a2a', marginTop: 16,
+        borderWidth: 1, borderColor: colors.border, marginTop: 16,
+        ...shadows.card,
     },
     contactInfo: { flex: 1 },
-    contactTitre: { fontSize: 14, fontWeight: '600', color: '#eee' },
-    contactDetail: { fontSize: 13, color: '#888', marginTop: 2 },
+    contactTitre: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+    contactDetail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
     emptyContainer: { alignItems: 'center', paddingVertical: 40 },
-    emptyText: { fontSize: 14, color: '#666', marginTop: 10 },
+    emptyText: { fontSize: 14, color: colors.textMuted, marginTop: 10 },
     signalementCard: {
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
-        marginBottom: 10, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
+        marginBottom: 10, borderWidth: 1, borderColor: colors.border,
     },
     signalementHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: 8,
     },
     statutBadge: { paddingVertical: 3, paddingHorizontal: 10, borderRadius: 20 },
-    badgeVert: { backgroundColor: '#1a3a2a' },
-    badgeOrange: { backgroundColor: '#3a2a1a' },
+    badgeVert: { backgroundColor: colors.greenLight },
+    badgeOrange: { backgroundColor: colors.orangeLight },
     statutText: { fontSize: 11, fontWeight: '600' },
-    signalementDate: { fontSize: 12, color: '#666' },
-    signalementDescription: { fontSize: 13, color: '#aaa', lineHeight: 18 },
+    signalementDate: { fontSize: 12, color: colors.textMuted },
+    signalementDescription: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
     reponseCard: {
-        backgroundColor: '#0a2a35', borderRadius: 8, padding: 10,
-        marginTop: 10, borderWidth: 1, borderColor: '#00b5e2',
+        backgroundColor: colors.primaryLight, borderRadius: 8, padding: 10,
+        marginTop: 10, borderWidth: 1, borderColor: colors.primary,
     },
-    reponseLabel: { fontSize: 11, color: '#00b5e2', fontWeight: '600', marginBottom: 4 },
-    reponseTexte: { fontSize: 13, color: '#aaa', lineHeight: 18 },
+    reponseLabel: { fontSize: 11, color: colors.primary, fontWeight: '600', marginBottom: 4 },
+    reponseTexte: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
 });

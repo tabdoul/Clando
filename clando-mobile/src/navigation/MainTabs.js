@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors } from '../../constants/theme';
 
 import RechercheScreen from '../screens/RechercheScreen';
 import PublierScreen from '../screens/PublierScreen';
@@ -30,11 +30,11 @@ function BoutonSOS() {
 export default function MainTabs() {
     const [nbMessages, setNbMessages] = useState(0);
 
-   useEffect(() => {
-    chargerNbMessages();
-    const interval = setInterval(chargerNbMessages, 5000);
-    return () => clearInterval(interval);
-}, []);
+    useEffect(() => {
+        chargerNbMessages();
+        const interval = setInterval(chargerNbMessages, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const chargerNbMessages = async () => {
         try {
@@ -42,27 +42,36 @@ export default function MainTabs() {
             if (!userId) return;
             const response = await api.get(`/messages/non-lus/${userId}`);
             setNbMessages(response.data.nbNonLus);
-        } catch (error) {
-            console.log('Erreur badge messages');
-        }
+        } catch (error) {}
     };
 
     return (
         <View style={{ flex: 1 }}>
             <Tab.Navigator
                 screenOptions={{
-                    tabBarActiveTintColor: '#00b5e2',
-                    tabBarInactiveTintColor: '#666',
+                    tabBarActiveTintColor: colors.primary,
+                    tabBarInactiveTintColor: colors.textMuted,
                     headerShown: false,
                     tabBarStyle: {
-                        backgroundColor: '#1a1a1a',
-                        borderTopColor: '#2a2a2a',
+                        backgroundColor: colors.surface,
+                        borderTopColor: colors.border,
                         borderTopWidth: 1,
                         paddingBottom: 20,
-                        paddingTop: 4,
+                        paddingTop: 6,
                         height: 75,
-                    }
+                        shadowColor: colors.primary,
+                        shadowOffset: { width: 0, height: -2 },
+                        shadowOpacity: 0.08,
+                        shadowRadius: 8,
+                        elevation: 10,
+                    },
+                    tabBarLabelStyle: {
+                        fontSize: 11,
+                        fontWeight: '600',
+                        marginTop: 2,
+                    },
                 }}>
+
                 <Tab.Screen
                     name="Recherche"
                     component={RechercheScreen}
@@ -73,16 +82,36 @@ export default function MainTabs() {
                         )
                     }}
                 />
+
                 <Tab.Screen
                     name="Publier"
                     component={PublierScreen}
                     options={{
-                        tabBarLabel: 'Publier',
-                        tabBarIcon: ({ color, size }) => (
-                            <Ionicons name="add-circle-outline" size={size} color={color} />
-                        )
+                        tabBarIcon: ({ focused }) => (
+                            <View style={[
+                                styles.publishBtn,
+                                focused && styles.publishBtnActive
+                            ]}>
+                                <Ionicons
+                                    name="add"
+                                    size={22}
+                                    color={focused ? 'white' : colors.primary}
+                                />
+                            </View>
+                        ),
+                        tabBarLabel: ({ focused }) => (
+                            <Text style={{
+                                fontSize: 11,
+                                fontWeight: '600',
+                                color: focused ? colors.primary : colors.textMuted,
+                                marginTop: 2,
+                            }}>
+                                Publier
+                            </Text>
+                        ),
                     }}
                 />
+
                 <Tab.Screen
                     name="Reservations"
                     component={ReservationsScreen}
@@ -93,6 +122,7 @@ export default function MainTabs() {
                         )
                     }}
                 />
+
                 <Tab.Screen
                     name="Messages"
                     component={MessagesScreen}
@@ -112,6 +142,7 @@ export default function MainTabs() {
                         )
                     }}
                 />
+
                 <Tab.Screen
                     name="Profil"
                     component={ProfilScreen}
@@ -130,11 +161,26 @@ export default function MainTabs() {
 }
 
 const styles = StyleSheet.create({
+    publishBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.primaryLight,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        borderColor: colors.primary,
+        marginTop: -4,
+    },
+    publishBtnActive: {
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
+    },
     boutonSOS: {
         position: 'absolute',
         bottom: 90,
         right: 20,
-        backgroundColor: '#e74c3c',
+        backgroundColor: colors.red,
         borderRadius: 30,
         paddingVertical: 10,
         paddingHorizontal: 16,
@@ -142,7 +188,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
         elevation: 8,
-        shadowColor: '#e74c3c',
+        shadowColor: colors.red,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
@@ -156,7 +202,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -4,
         right: -8,
-        backgroundColor: '#e74c3c',
+        backgroundColor: colors.red,
         borderRadius: 10,
         minWidth: 16,
         height: 16,

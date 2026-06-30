@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    RefreshControl, Image, TextInput, Modal
+    RefreshControl, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function NotificationsScreen({ navigation }) {
     const [reservations, setReservations] = useState([]);
@@ -43,9 +44,7 @@ export default function NotificationsScreen({ navigation }) {
     const accepter = async (item) => {
         Alert.alert(
             'Confirmer la reservation',
-            item.prixPropose
-                ? `Accepter la proposition de ${item.passagerPrenom} au prix de ${item.prixPropose?.toLocaleString()} GNF ?`
-                : `Accepter la reservation de ${item.passagerPrenom} ${item.passagerNom} ?`,
+            `Accepter la reservation de ${item.passagerPrenom} ${item.passagerNom} ?`,
             [
                 { text: 'Non', style: 'cancel' },
                 {
@@ -70,7 +69,6 @@ export default function NotificationsScreen({ navigation }) {
         );
     };
 
-
     const refuser = async (item) => {
         Alert.alert(
             'Refuser la reservation',
@@ -82,7 +80,6 @@ export default function NotificationsScreen({ navigation }) {
                     onPress: async () => {
                         setLoadingAction(true);
                         try {
-                            // ✅ Pas de prixConducteur = refus simple
                             await api.patch(`/reservations/${item.id}/negociation?accepter=false`);
                             chargerNotifications();
                         } catch (error) {
@@ -105,7 +102,7 @@ export default function NotificationsScreen({ navigation }) {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size={36} color="#00b5e2" />
+                <ActivityIndicator size={36} color={colors.primary} />
             </View>
         );
     }
@@ -114,7 +111,7 @@ export default function NotificationsScreen({ navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Demandes de reservation</Text>
                 {reservations.length > 0 && (
@@ -130,14 +127,14 @@ export default function NotificationsScreen({ navigation }) {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#00b5e2"
-                        colors={["#00b5e2"]}
+                        tintColor={colors.primary}
+                        colors={[colors.primary]}
                     />
                 }>
 
                 {reservations.length === 0 && (
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="notifications-outline" size={64} color="#333" />
+                        <Ionicons name="notifications-outline" size={64} color={colors.border} />
                         <Text style={styles.emptyText}>Aucune demande en attente</Text>
                         <Text style={styles.emptySubtext}>
                             Les demandes de reservation apparaitront ici
@@ -149,7 +146,6 @@ export default function NotificationsScreen({ navigation }) {
                     <View key={item.id.toString()} style={styles.cardWrapper}>
                         <View style={styles.card}>
 
-                            {/* Passager */}
                             <View style={styles.cardTop}>
                                 <View style={styles.avatarContainer}>
                                     {item.passagerPhoto ? (
@@ -177,7 +173,6 @@ export default function NotificationsScreen({ navigation }) {
 
                             <View style={styles.separator} />
 
-                            {/* Trajet conducteur */}
                             <View style={styles.trajetConducteur}>
                                 <View style={styles.trajetLigne}>
                                     <View style={styles.trajetDot} />
@@ -185,7 +180,7 @@ export default function NotificationsScreen({ navigation }) {
                                 </View>
                                 <View style={styles.trajetConnecteur}>
                                     <View style={styles.trajetConnecteurLigne} />
-                                    <Ionicons name="arrow-down" size={12} color="#555" />
+                                    <Ionicons name="arrow-down" size={12} color={colors.textMuted} />
                                     <View style={styles.trajetConnecteurLigne} />
                                 </View>
                                 <View style={styles.trajetLigne}>
@@ -194,10 +189,9 @@ export default function NotificationsScreen({ navigation }) {
                                 </View>
                             </View>
 
-                            {/* Trajet passager */}
                             {item.departPassager && item.arriveePassager && (
                                 <View style={styles.trajetPassagerContainer}>
-                                    <Ionicons name="location-outline" size={14} color="#888" />
+                                    <Ionicons name="location-outline" size={14} color={colors.textMuted} />
                                     <Text style={styles.trajetPassagerTexte}>
                                         {`Monte a `}
                                         <Text style={styles.trajetPassagerGras}>{item.departPassager}</Text>
@@ -207,37 +201,32 @@ export default function NotificationsScreen({ navigation }) {
                                 </View>
                             )}
 
-                            {/* Détails */}
                             <View style={styles.detailsBloc}>
-                                <Ionicons name="person-outline" size={13} color="#555" />
+                                <Ionicons name="person-outline" size={13} color={colors.textMuted} />
                                 <Text style={styles.detailText}>
                                     {`${item.nbPlaces} place(s) demandee(s)`}
                                 </Text>
                             </View>
 
-                                            <View style={styles.separator} />
+                            <View style={styles.separator} />
 
-                            {/* Bouton principal */}
                             <TouchableOpacity
                                 style={styles.boutonAccepter}
                                 onPress={() => accepter(item)}
                                 disabled={loadingAction}>
                                 <Ionicons name="checkmark-circle-outline" size={16} color="white" />
-                                <Text style={styles.boutonAccepterText}>
-                                    {item.prixPropose ? 'Accepter ce prix' : 'Accepter la reservation'}
-                                </Text>
+                                <Text style={styles.boutonAccepterText}>Accepter la reservation</Text>
                             </TouchableOpacity>
 
-                            {/*  Accepter ou Refuser uniquement */}
-<View style={styles.boutonsSecondaires}>
-    <TouchableOpacity
-        style={styles.boutonRefuser}
-        onPress={() => refuser(item)}
-        disabled={loadingAction}>
-        <Ionicons name="close-circle-outline" size={14} color="#e74c3c" />
-        <Text style={styles.boutonRefuserText}>Refuser</Text>
-    </TouchableOpacity>
-</View>
+                            <View style={styles.boutonsSecondaires}>
+                                <TouchableOpacity
+                                    style={styles.boutonRefuser}
+                                    onPress={() => refuser(item)}
+                                    disabled={loadingAction}>
+                                    <Ionicons name="close-circle-outline" size={14} color={colors.red} />
+                                    <Text style={styles.boutonRefuserText}>Refuser</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 ))}
@@ -250,75 +239,67 @@ export default function NotificationsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
-    loadingContainer: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
+    container: { flex: 1, backgroundColor: colors.background },
+    loadingContainer: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
     header: {
-        backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        backgroundColor: colors.primary, paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 12,
     },
     backButton: { padding: 4 },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#eee', flex: 1 },
-    badge: { backgroundColor: '#00b5e2', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
+    headerTitle: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
+    badge: { backgroundColor: colors.red, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
     badgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
 
     emptyContainer: { alignItems: 'center', marginTop: 80, paddingHorizontal: 40 },
-    emptyText: { fontSize: 18, color: '#555', marginTop: 16 },
-    emptySubtext: { fontSize: 14, color: '#444', marginTop: 4, textAlign: 'center', lineHeight: 20 },
+    emptyText: { fontSize: 18, color: colors.textMuted, marginTop: 16 },
+    emptySubtext: { fontSize: 14, color: colors.textDisabled, marginTop: 4, textAlign: 'center', lineHeight: 20 },
 
-    cardWrapper: { paddingHorizontal: 16, marginTop: 12 },
+    cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
     card: {
-        backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg,
+        borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
 
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
     avatarContainer: { width: 46, height: 46, borderRadius: 23, overflow: 'hidden' },
     avatar: {
         width: 46, height: 46, borderRadius: 23,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#333',
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: colors.border,
     },
     avatarImage: { width: 46, height: 46, borderRadius: 23 },
-    avatarText: { color: '#888', fontSize: 15, fontWeight: 'bold' },
+    avatarText: { color: colors.textMuted, fontSize: 15, fontWeight: 'bold' },
     passagerInfo: { flex: 1 },
-    passagerNom: { fontSize: 15, fontWeight: '700', color: '#eee' },
-    passagerSubtitle: { fontSize: 12, color: '#666', marginTop: 2 },
-    demandeDate: { fontSize: 11, color: '#444', marginTop: 2 },
+    passagerNom: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+    passagerSubtitle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+    demandeDate: { fontSize: 11, color: colors.textDisabled, marginTop: 2 },
 
-    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
+    separator: { height: 1, backgroundColor: colors.separator, marginVertical: 12 },
 
     trajetConducteur: { marginBottom: 10 },
     trajetLigne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    trajetDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00b5e2' },
-    trajetDotArrivee: { backgroundColor: '#444' },
-    trajetVille: { fontSize: 15, fontWeight: '600', color: '#ddd', flex: 1 },
+    trajetDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+    trajetDotArrivee: { backgroundColor: colors.accent },
+    trajetVille: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, flex: 1 },
     trajetConnecteur: {
         flexDirection: 'row', alignItems: 'center',
         marginLeft: 3, gap: 4, marginVertical: 4,
     },
-    trajetConnecteurLigne: { flex: 1, height: 1, backgroundColor: '#2a2a2a' },
+    trajetConnecteurLigne: { flex: 1, height: 1, backgroundColor: colors.separator },
 
     trajetPassagerContainer: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: '#252525', borderRadius: 10, padding: 10, marginBottom: 10,
+        backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm, padding: 10, marginBottom: 10,
     },
-    trajetPassagerTexte: { fontSize: 13, color: '#888', flex: 1, lineHeight: 20 },
-    trajetPassagerGras: { color: '#ddd', fontWeight: '600' },
+    trajetPassagerTexte: { fontSize: 13, color: colors.textMuted, flex: 1, lineHeight: 20 },
+    trajetPassagerGras: { color: colors.textPrimary, fontWeight: '600' },
 
     detailsBloc: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-    detailText: { fontSize: 13, color: '#666' },
-
-    prixBloc: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 4,
-    },
-    prixItem: { alignItems: 'center' },
-    prixItemLabel: { fontSize: 11, color: '#555', textTransform: 'uppercase', letterSpacing: 1 },
-    prixItemValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2', marginTop: 4 },
+    detailText: { fontSize: 13, color: colors.textMuted },
 
     boutonAccepter: {
-        backgroundColor: '#00b5e2', borderRadius: 10, padding: 13,
+        backgroundColor: colors.accent, borderRadius: radius.sm, padding: 13,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
         gap: 8, marginBottom: 8,
     },
@@ -326,50 +307,10 @@ const styles = StyleSheet.create({
 
     boutonsSecondaires: { flexDirection: 'row', gap: 8 },
 
-    boutonRefuserText: { color: '#e74c3c', fontSize: 13, fontWeight: '600' },
-
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-    modalCard: {
-        backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        padding: 24, borderTopWidth: 1, borderColor: '#2a2a2a',
-    },
-    modalHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 8,
-    },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
-    modalSubtitle: { fontSize: 13, color: '#888', marginBottom: 16 },
-    modalInfo: {
-        flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 16,
-    },
-    modalInfoText: { fontSize: 13, color: '#888', flex: 1, lineHeight: 20 },
-    modalLabel: {
-        fontSize: 12, fontWeight: '600', color: '#888',
-        marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
-    },
-    modalInput: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: '#252525', borderRadius: 10,
-        paddingHorizontal: 14, paddingVertical: 4,
-        borderWidth: 1, borderColor: '#333', marginBottom: 20,
-    },
     boutonRefuser: {
-    flex: 1, borderWidth: 1, borderColor: '#e74c3c', borderRadius: 10,
-    paddingVertical: 10, flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center', gap: 6,
-},
-    modalInputText: { flex: 1, padding: 10, fontSize: 16, color: '#eee' },
-    modalDevise: { color: '#666', fontSize: 14 },
-    modalBoutons: { flexDirection: 'row', gap: 12 },
-    modalBoutonAnnuler: {
-        flex: 1, borderWidth: 1, borderColor: '#333',
-        borderRadius: 10, padding: 14, alignItems: 'center',
+        flex: 1, borderWidth: 1, borderColor: colors.red, borderRadius: radius.sm,
+        paddingVertical: 10, flexDirection: 'row',
+        alignItems: 'center', justifyContent: 'center', gap: 6,
     },
-    modalBoutonAnnulerText: { color: '#666', fontSize: 15, fontWeight: '600' },
-    modalBoutonConfirmer: {
-        flex: 1, backgroundColor: '#00b5e2',
-        borderRadius: 10, padding: 14, alignItems: 'center',
-    },
-    modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+    boutonRefuserText: { color: colors.red, fontSize: 13, fontWeight: '600' },
 });

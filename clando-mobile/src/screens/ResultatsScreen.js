@@ -4,6 +4,7 @@ import {
     StyleSheet, ScrollView, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function ResultatsScreen({ route, navigation }) {
     const { trajets, villeDepart, villeArrivee } = route.params;
@@ -22,12 +23,12 @@ export default function ResultatsScreen({ route, navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>
                     <View style={styles.trajetHeader}>
                         <Text style={styles.villeText}>{villeDepart}</Text>
-                        <Ionicons name="arrow-forward" size={16} color="#00b5e2" />
+                        <Ionicons name="arrow-forward" size={16} color={colors.accent} />
                         <Text style={styles.villeText}>{villeArrivee}</Text>
                     </View>
                     <Text style={styles.headerSubtitle}>{`${trajets.length} trajet(s) disponible(s)`}</Text>
@@ -51,7 +52,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                     <Text style={styles.ville}>{item.villeDepart}</Text>
                                     <View style={styles.ligne}>
                                         <View style={styles.ligneBar} />
-                                        <Ionicons name="car-outline" size={18} color="#00b5e2" />
+                                        <Ionicons name="car-outline" size={18} color={colors.primary} />
                                         <View style={styles.ligneBar} />
                                     </View>
                                     <Text style={styles.ville}>{item.villeArrivee}</Text>
@@ -95,7 +96,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                             {`${item.conducteurNom} ${item.conducteurPrenom}`}
                                         </Text>
                                         <View style={styles.conducteurStats}>
-                                            <Ionicons name="star" size={12} color="#f39c12" />
+                                            <Ionicons name="star" size={12} color={colors.orange} />
                                             <Text style={styles.conducteurNote}>
                                                 {item.noteMoyenneConducteur > 0
                                                     ? item.noteMoyenneConducteur.toFixed(1)
@@ -139,65 +140,65 @@ export default function ResultatsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        backgroundColor: colors.primary,
+        paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 16,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
     headerInfo: { flex: 1 },
     trajetHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    villeText: { fontSize: 18, fontWeight: 'bold', color: '#eee' },
-    headerSubtitle: { fontSize: 13, color: '#888', marginTop: 4 },
-    cardWrapper: { paddingHorizontal: 16, marginTop: 12 },
+    villeText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+    headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+    cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
     card: {
-        backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16,
-        borderLeftWidth: 3, borderLeftColor: '#00b5e2',
-        borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg,
+        borderLeftWidth: 3, borderLeftColor: colors.primary,
+        borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     heureContainer: { alignItems: 'center', minWidth: 52 },
-    heure: { fontSize: 20, fontWeight: 'bold', color: '#eee' },
-    dateTrajet: { fontSize: 11, color: '#666', marginTop: 2 },
+    heure: { fontSize: 20, fontWeight: 'bold', color: colors.textPrimary },
+    dateTrajet: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
     trajetInfo: { flex: 1, alignItems: 'center' },
-    ville: { fontSize: 14, fontWeight: '600', color: '#ddd' },
+    ville: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
     ligne: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5 },
-    ligneBar: { flex: 1, height: 1, backgroundColor: '#333' },
-    itineraire: { fontSize: 11, color: '#00b5e2', fontStyle: 'italic', marginTop: 3 },
+    ligneBar: { flex: 1, height: 1, backgroundColor: colors.border },
+    itineraire: { fontSize: 11, color: colors.primary, fontStyle: 'italic', marginTop: 3 },
     prixContainer: { alignItems: 'flex-end', minWidth: 80 },
-    prix: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
-    prixDevise: { fontSize: 11, color: '#00b5e2', marginTop: -2 },
-    places: { fontSize: 11, color: '#666', marginTop: 4 },
-    presqueCompletBadge: { backgroundColor: '#3a2a1a', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
-    presqueCompletText: { color: '#f39c12', fontSize: 9, fontWeight: '600' },
-    comptetBadge: { backgroundColor: '#3a1a1a', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
-    comptetBadgeText: { color: '#e74c3c', fontSize: 9, fontWeight: '600' },
-    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 12 },
+    prix: { fontSize: 18, fontWeight: 'bold', color: colors.accent },
+    prixDevise: { fontSize: 11, color: colors.accent, marginTop: -2 },
+    places: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
+    presqueCompletBadge: { backgroundColor: colors.orangeLight, borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
+    presqueCompletText: { color: '#e65100', fontSize: 9, fontWeight: '600' },
+    comptetBadge: { backgroundColor: colors.redLight, borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
+    comptetBadgeText: { color: colors.red, fontSize: 9, fontWeight: '600' },
+    separator: { height: 1, backgroundColor: colors.separator, marginVertical: 12 },
     cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     conducteurInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#333' },
+    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
     avatarImage: { width: 40, height: 40, borderRadius: 20 },
-    avatarText: { color: '#888', fontSize: 14, fontWeight: 'bold' },
-    conducteurNom: { fontSize: 13, fontWeight: '600', color: '#ddd' },
+    avatarText: { color: colors.textMuted, fontSize: 14, fontWeight: 'bold' },
+    conducteurNom: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
     conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-    conducteurNote: { fontSize: 12, color: '#f39c12', fontWeight: '600' },
-    conducteurTrajets: { fontSize: 11, color: '#666' },
-    vehicule: { fontSize: 11, color: '#666', marginTop: 2 },
+    conducteurNote: { fontSize: 12, color: colors.orange, fontWeight: '600' },
+    conducteurTrajets: { fontSize: 11, color: colors.textMuted },
+    vehicule: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
     rightSection: { alignItems: 'flex-end', gap: 6 },
     femmesUniquementBadge: {
-        backgroundColor: '#1a0a2a', borderRadius: 8,
+        backgroundColor: colors.purpleLight, borderRadius: 8,
         paddingVertical: 3, paddingHorizontal: 8,
-        borderWidth: 1, borderColor: '#9b59b6',
+        borderWidth: 1, borderColor: colors.purple,
     },
-    femmesUniquementBadgeText: { color: '#9b59b6', fontSize: 10, fontWeight: '600' },
+    femmesUniquementBadgeText: { color: colors.purple, fontSize: 10, fontWeight: '600' },
     boutonReserver: {
-        backgroundColor: '#00b5e2', borderRadius: 20,
+        backgroundColor: colors.accent, borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 14,
         flexDirection: 'row', alignItems: 'center', gap: 4,
     },
     boutonReserverText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
-    complet: { backgroundColor: '#333', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
-    comptetText: { color: '#888', fontSize: 13 },
+    complet: { backgroundColor: colors.surfaceSecondary, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
+    comptetText: { color: colors.textMuted, fontSize: 13 },
 });

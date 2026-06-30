@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
-import { QUARTIERS_CONAKRY } from '../constants/QUARTIERS_CONAKRY';
+import { QUARTIERS_CONAKRY } from '../../constants/QUARTIERS_CONAKRY';
 
 export default function PublierScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');

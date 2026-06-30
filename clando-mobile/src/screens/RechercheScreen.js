@@ -9,7 +9,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
-import { QUARTIERS_CONAKRY } from '../constants/QUARTIERS_CONAKRY';
+import { QUARTIERS_CONAKRY } from '../../constants/QUARTIERS_CONAKRY';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function RechercheScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');
@@ -182,8 +183,8 @@ export default function RechercheScreen({ navigation }) {
                     villeDepart: villeDepart.trim(),
                     villeArrivee: villeArrivee.trim(),
                     dateDepart: dateSaisie && dateDepart
-    ? `${dateDepart.getFullYear()}-${String(dateDepart.getMonth() + 1).padStart(2, '0')}-${String(dateDepart.getDate()).padStart(2, '0')}`
-    : undefined,
+                        ? `${dateDepart.getFullYear()}-${String(dateDepart.getMonth() + 1).padStart(2, '0')}-${String(dateDepart.getDate()).padStart(2, '0')}`
+                        : undefined,
                     page: 0,
                     size: 10
                 }
@@ -220,11 +221,13 @@ export default function RechercheScreen({ navigation }) {
                 <View style={styles.header}>
                     <View style={styles.headerRow}>
                         <View style={{ width: 40 }} />
-                        <Text style={styles.headerTitle}>Wayvo</Text>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
+                            <Text style={styles.headerTitle}>Wayvo</Text>
+                        </View>
                         <TouchableOpacity
                             style={styles.cloche}
                             onPress={() => navigation.navigate('Notifications')}>
-                            <Ionicons name="notifications-outline" size={26} color="#eee" />
+                            <Ionicons name="notifications-outline" size={24} color="white" />
                             {nbNotifications > 0 && (
                                 <View style={styles.badge}>
                                     <Text style={styles.badgeText}>{nbNotifications}</Text>
@@ -241,15 +244,16 @@ export default function RechercheScreen({ navigation }) {
                 <View style={styles.searchCard}>
 
                     {/* Départ */}
-                    <Text style={styles.fieldLabel}>
-                        <Ionicons name="radio-button-on" size={12} color="#00b5e2" /> Depart
-                    </Text>
-                    <View style={[styles.inputContainer, champActif === 'depart' && styles.inputContainerActif]}>
-                        <Ionicons name="location-outline" size={18} color="#888" />
+                    <Text style={styles.fieldLabel}>Depart</Text>
+                    <View style={[
+                        styles.inputContainer,
+                        champActif === 'depart' && styles.inputContainerActif
+                    ]}>
+                        <Ionicons name="radio-button-on" size={16} color={colors.primary} />
                         <TextInput
                             style={styles.input}
-                            placeholder="D'ou partez-vous ?"
-                            placeholderTextColor="#999"
+                            placeholder="D'où partez-vous ?"
+                            placeholderTextColor={colors.textDisabled}
                             value={villeDepart}
                             onChangeText={onChangeDepart}
                             onFocus={() => { setChampActif('depart'); filtrerSuggestions(villeDepart); }}
@@ -257,10 +261,11 @@ export default function RechercheScreen({ navigation }) {
                         />
                         {villeDepart.length > 0 && (
                             <TouchableOpacity onPress={() => { setVilleDepart(''); setSuggestions([]); }}>
-                                <Ionicons name="close-circle" size={18} color="#666" />
+                                <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
                             </TouchableOpacity>
                         )}
                     </View>
+
                     {champActif === 'depart' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
@@ -268,7 +273,7 @@ export default function RechercheScreen({ navigation }) {
                                     key={q}
                                     style={styles.suggestionItem}
                                     onPress={() => choisirSuggestion(q)}>
-                                    <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                    <Ionicons name="location-outline" size={14} color={colors.primary} />
                                     <Text style={styles.suggestionTexte}>{q}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -279,21 +284,22 @@ export default function RechercheScreen({ navigation }) {
                     <TouchableOpacity style={styles.inverserBtn} onPress={inverserVilles}>
                         <View style={styles.inverserLigne} />
                         <View style={styles.inverserIcone}>
-                            <Ionicons name="swap-vertical" size={18} color="#00b5e2" />
+                            <Ionicons name="swap-vertical" size={16} color={colors.accent} />
                         </View>
                         <View style={styles.inverserLigne} />
                     </TouchableOpacity>
 
                     {/* Arrivée */}
-                    <Text style={styles.fieldLabel}>
-                        <Ionicons name="radio-button-on" size={12} color="#2ecc71" /> Arrivee
-                    </Text>
-                    <View style={[styles.inputContainer, champActif === 'arrivee' && styles.inputContainerActif]}>
-                        <Ionicons name="location" size={18} color="#888" />
+                    <Text style={styles.fieldLabel}>Arrivee</Text>
+                    <View style={[
+                        styles.inputContainer,
+                        champActif === 'arrivee' && styles.inputContainerActif
+                    ]}>
+                        <Ionicons name="radio-button-on" size={16} color={colors.accent} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Ou allez-vous ?"
-                            placeholderTextColor="#999"
+                            placeholder="Où allez-vous ?"
+                            placeholderTextColor={colors.textDisabled}
                             value={villeArrivee}
                             onChangeText={onChangeArrivee}
                             onFocus={() => { setChampActif('arrivee'); filtrerSuggestions(villeArrivee); }}
@@ -301,10 +307,11 @@ export default function RechercheScreen({ navigation }) {
                         />
                         {villeArrivee.length > 0 && (
                             <TouchableOpacity onPress={() => { setVilleArrivee(''); setSuggestions([]); }}>
-                                <Ionicons name="close-circle" size={18} color="#666" />
+                                <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
                             </TouchableOpacity>
                         )}
                     </View>
+
                     {champActif === 'arrivee' && suggestions.length > 0 && (
                         <View style={styles.suggestionsContainer}>
                             {suggestions.map((q) => (
@@ -312,7 +319,7 @@ export default function RechercheScreen({ navigation }) {
                                     key={q}
                                     style={styles.suggestionItem}
                                     onPress={() => choisirSuggestion(q)}>
-                                    <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                    <Ionicons name="location-outline" size={14} color={colors.primary} />
                                     <Text style={styles.suggestionTexte}>{q}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -320,9 +327,7 @@ export default function RechercheScreen({ navigation }) {
                     )}
 
                     {/* Date */}
-                    <Text style={styles.fieldLabel}>
-                        <Ionicons name="calendar-outline" size={12} color="#888" /> Date du trajet
-                    </Text>
+                    <Text style={styles.fieldLabel}>Date du trajet</Text>
                     <View style={styles.dateRow}>
                         <TouchableOpacity
                             style={[styles.inputContainer, { flex: 1 }]}
@@ -331,18 +336,20 @@ export default function RechercheScreen({ navigation }) {
                                 fermerSuggestions();
                                 setShowDatePicker(true);
                             }}>
-                            <Ionicons name="calendar-outline" size={18} color="#888" />
-                            <Text style={[styles.input, { color: dateSaisie ? '#eee' : '#666' }]}>
+                            <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+                            <Text style={[styles.input, {
+                                color: dateSaisie ? colors.textPrimary : colors.textDisabled,
+                                paddingVertical: 10,
+                            }]}>
                                 {formatDateAffichage(dateDepart)}
                             </Text>
-                            <Ionicons name="chevron-down" size={16} color="#888" />
+                            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
                         </TouchableOpacity>
-                        {/* ✅ Bouton effacer la date */}
                         {dateSaisie && (
                             <TouchableOpacity
                                 style={styles.effacerDate}
                                 onPress={() => { setDateSaisie(false); setDateDepart(null); }}>
-                                <Ionicons name="close-circle" size={20} color="#666" />
+                                <Ionicons name="close-circle" size={20} color={colors.textDisabled} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -353,7 +360,7 @@ export default function RechercheScreen({ navigation }) {
                             mode="date"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             minimumDate={new Date()}
-                            themeVariant="dark"
+                            themeVariant="light"
                             onChange={(event, selectedDate) => {
                                 setShowDatePicker(false);
                                 if (selectedDate) {
@@ -388,7 +395,7 @@ export default function RechercheScreen({ navigation }) {
                                 key={item.id}
                                 style={styles.rechercheItem}
                                 onPress={() => utiliserRecherche(item.depart, item.arrivee)}>
-                                <Ionicons name="heart" size={16} color="#e74c3c" />
+                                <Ionicons name="heart" size={16} color={colors.accent} />
                                 <View style={styles.rechercheInfo}>
                                     <Text style={styles.rechercheTexte}>
                                         {`${item.depart} → ${item.arrivee}`}
@@ -397,7 +404,7 @@ export default function RechercheScreen({ navigation }) {
                                 <TouchableOpacity
                                     onPress={() => toggleFavori(item.depart, item.arrivee)}
                                     style={styles.actionBtn}>
-                                    <Ionicons name="close" size={16} color="#666" />
+                                    <Ionicons name="close" size={16} color={colors.textMuted} />
                                 </TouchableOpacity>
                             </TouchableOpacity>
                         ))}
@@ -418,7 +425,7 @@ export default function RechercheScreen({ navigation }) {
                                 key={item.id}
                                 style={styles.rechercheItem}
                                 onPress={() => utiliserRecherche(item.depart, item.arrivee)}>
-                                <Ionicons name="time-outline" size={16} color="#666" />
+                                <Ionicons name="time-outline" size={16} color={colors.textMuted} />
                                 <View style={styles.rechercheInfo}>
                                     <Text style={styles.rechercheTexte}>
                                         {`${item.depart} → ${item.arrivee}`}
@@ -432,13 +439,13 @@ export default function RechercheScreen({ navigation }) {
                                         <Ionicons
                                             name={estFavori(item.depart, item.arrivee) ? "heart" : "heart-outline"}
                                             size={16}
-                                            color={estFavori(item.depart, item.arrivee) ? "#e74c3c" : "#666"}
+                                            color={estFavori(item.depart, item.arrivee) ? colors.accent : colors.textMuted}
                                         />
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => supprimerHistorique(item.id)}
                                         style={styles.actionBtn}>
-                                        <Ionicons name="close" size={16} color="#666" />
+                                        <Ionicons name="close" size={16} color={colors.textMuted} />
                                     </TouchableOpacity>
                                 </View>
                             </TouchableOpacity>
@@ -453,101 +460,228 @@ export default function RechercheScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+
+    // ── Header ──────────────────────────────────────────
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 40, paddingHorizontal: 24,
+        backgroundColor: colors.primary,
+        paddingTop: 60,
+        paddingBottom: 48,
+        paddingHorizontal: spacing.xl,
     },
     headerRow: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 12,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
     },
     headerTitle: {
-        fontSize: 36, fontWeight: 'bold', color: '#00b5e2',
-        letterSpacing: 3, textAlign: 'center', flex: 1,
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: 'white',
+        letterSpacing: 3,
+        textAlign: 'center',
     },
-    cloche: { width: 40, alignItems: 'flex-end', position: 'relative' },
+    headerSubtitle: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.85)',
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    cloche: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: radius.full,
+        position: 'relative',
+    },
     badge: {
-        position: 'absolute', top: -4, right: -4,
-        backgroundColor: '#e74c3c', borderRadius: 10,
-        minWidth: 18, height: 18,
-        alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+        position: 'absolute',
+        top: 0, right: 0,
+        backgroundColor: colors.red,
+        borderRadius: 10,
+        minWidth: 16, height: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 3,
     },
-    badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
-    headerSubtitle: { fontSize: 15, color: '#aaa', textAlign: 'center', lineHeight: 22 },
+    badgeText: {
+        color: 'white',
+        fontSize: 9,
+        fontWeight: 'bold',
+    },
 
+    // ── Carte recherche ──────────────────────────────────
     searchCard: {
-        backgroundColor: '#1e1e1e',
-        marginHorizontal: 16, marginTop: -20,
-        borderRadius: 16, padding: 20,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: '#ffffff',
+        marginHorizontal: spacing.lg,
+        marginTop: -24,
+        borderRadius: radius.lg,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card,
     },
     fieldLabel: {
-        fontSize: 12, fontWeight: '600', color: '#888',
-        marginBottom: 6, marginTop: 14,
-        textTransform: 'uppercase', letterSpacing: 1,
+        fontSize: 11,
+        fontWeight: '700',
+        color: colors.textMuted,
+        marginBottom: 6,
+        marginTop: 14,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     inputContainer: {
-        flexDirection: 'row', alignItems: 'center',
-        borderWidth: 1, borderColor: '#2a2a2a',
-        borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4,
-        backgroundColor: '#252525', gap: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.sm,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 2,
+        backgroundColor: colors.surfaceSecondary,
+        gap: 10,
     },
-    inputContainerActif: { borderColor: '#00b5e2' },
-    input: { flex: 1, padding: 10, fontSize: 15, color: '#eee' },
+    inputContainerActif: {
+        borderColor: colors.primary,
+        borderWidth: 1.5,
+        backgroundColor: colors.primaryLight,
+    },
+    input: {
+        flex: 1,
+        padding: 10,
+        fontSize: 15,
+        color: colors.textPrimary,
+    },
 
+    // ── Inverser ─────────────────────────────────────────
     inverserBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        marginVertical: 8, paddingHorizontal: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 8,
+        paddingHorizontal: 4,
     },
-    inverserLigne: { flex: 1, height: 1, backgroundColor: '#2a2a2a' },
+    inverserLigne: {
+        flex: 1,
+        height: 1,
+        backgroundColor: colors.border,
+    },
     inverserIcone: {
-        backgroundColor: '#252525', borderRadius: 20,
-        width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#00b5e2', marginHorizontal: 10,
+        backgroundColor: '#ffffff',
+        borderRadius: radius.full,
+        width: 34, height: 34,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        borderColor: colors.accent,
+        marginHorizontal: 10,
+        ...shadows.card,
     },
 
-    dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    // ── Date ─────────────────────────────────────────────
+    dateRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     effacerDate: { padding: 6 },
 
+    // ── Suggestions ──────────────────────────────────────
     suggestionsContainer: {
-        backgroundColor: '#252525', borderRadius: 10,
-        borderWidth: 1, borderColor: '#00b5e2',
-        marginTop: 4, overflow: 'hidden',
+        backgroundColor: '#ffffff',
+        borderRadius: radius.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginTop: 4,
+        overflow: 'hidden',
+        ...shadows.card,
     },
     suggestionItem: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        paddingVertical: 12, paddingHorizontal: 14,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.separator,
     },
-    suggestionTexte: { color: '#eee', fontSize: 14 },
+    suggestionTexte: {
+        color: colors.textPrimary,
+        fontSize: 14,
+    },
 
+    // ── Bouton rechercher ─────────────────────────────────
     searchButton: {
-        backgroundColor: '#00b5e2', borderRadius: 10, padding: 15,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        gap: 8, marginTop: 20,
+        backgroundColor: colors.accent,
+        borderRadius: radius.sm,
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        marginTop: 20,
     },
-    searchButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    searchButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 
-    section: { paddingHorizontal: 16, marginTop: 20 },
+    // ── Sections favoris / historique ─────────────────────
+    section: {
+        paddingHorizontal: spacing.lg,
+        marginTop: 20,
+    },
     sectionHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     sectionTitle: {
-        fontSize: 13, fontWeight: '600', color: '#888',
-        textTransform: 'uppercase', letterSpacing: 1,
+        fontSize: 11,
+        fontWeight: '700',
+        color: colors.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 10,
     },
-    effacerText: { fontSize: 13, color: '#e74c3c', fontWeight: '600' },
-
+    effacerText: {
+        fontSize: 13,
+        color: colors.accent,
+        fontWeight: '600',
+    },
     rechercheItem: {
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 12,
-        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        backgroundColor: '#ffffff',
+        borderRadius: radius.sm,
+        padding: spacing.md,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card,
     },
     rechercheInfo: { flex: 1 },
-    rechercheTexte: { fontSize: 14, color: '#ddd', fontWeight: '500' },
-    rechercheDate: { fontSize: 12, color: '#666', marginTop: 2 },
-    rechercheActions: { flexDirection: 'row', gap: 8 },
+    rechercheTexte: {
+        fontSize: 14,
+        color: colors.textPrimary,
+        fontWeight: '500',
+    },
+    rechercheDate: {
+        fontSize: 12,
+        color: colors.textMuted,
+        marginTop: 2,
+    },
+    rechercheActions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
     actionBtn: { padding: 4 },
 });

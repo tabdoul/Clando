@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function DocumentsScreen({ navigation }) {
     const [documents, setDocuments] = useState([]);
@@ -66,17 +67,17 @@ export default function DocumentsScreen({ navigation }) {
 
     const getStatutStyle = (statut) => {
         switch (statut) {
-            case 'VALIDE': return { color: '#2ecc71', label: 'Validé ✓', bg: '#1a3a2a' };
-            case 'REJETE': return { color: '#e74c3c', label: 'Rejeté', bg: '#3a1a1a' };
-            case 'EN_ATTENTE': return { color: '#f39c12', label: 'En attente', bg: '#3a2a1a' };
-            default: return { color: '#666', label: 'Non fourni', bg: '#2a2a2a' };
+            case 'VALIDE': return { color: colors.primary, label: 'Validé ✓', bg: colors.greenLight };
+            case 'REJETE': return { color: colors.red, label: 'Rejeté', bg: colors.redLight };
+            case 'EN_ATTENTE': return { color: '#e65100', label: 'En attente', bg: colors.orangeLight };
+            default: return { color: colors.textMuted, label: 'Non fourni', bg: colors.surfaceSecondary };
         }
     };
 
     const uploaderDocument = async (type) => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
-            Alert.alert('Permission refusée', 'Autorisez l\'accès à la galerie dans les paramètres');
+            Alert.alert('Permission refusée', "Autorisez l'accès à la galerie dans les paramètres");
             return;
         }
 
@@ -116,7 +117,7 @@ export default function DocumentsScreen({ navigation }) {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size={36} color="#00b5e2" />
+                <ActivityIndicator size={36} color={colors.primary} />
             </View>
         );
     }
@@ -125,7 +126,7 @@ export default function DocumentsScreen({ navigation }) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Mes documents</Text>
             </View>
@@ -133,7 +134,7 @@ export default function DocumentsScreen({ navigation }) {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.infoCard}>
-                    <Ionicons name="information-circle-outline" size={24} color="#00b5e2" />
+                    <Ionicons name="information-circle-outline" size={24} color={colors.primary} />
                     <Text style={styles.infoText}>
                         Vos documents seront vérifiés sous 24-48h.
                     </Text>
@@ -148,7 +149,7 @@ export default function DocumentsScreen({ navigation }) {
                         <View key={item.type} style={styles.docCard}>
                             <View style={styles.docHeader}>
                                 <View style={styles.docIconContainer}>
-                                    <Ionicons name={item.icon} size={24} color="#00b5e2" />
+                                    <Ionicons name={item.icon} size={24} color={colors.primary} />
                                 </View>
                                 <View style={styles.docInfo}>
                                     <View style={styles.docTitleRow}>
@@ -205,59 +206,59 @@ export default function DocumentsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     loadingContainer: {
-        flex: 1, backgroundColor: '#121212',
+        flex: 1, backgroundColor: colors.background,
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        backgroundColor: colors.primary,
+        paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 16,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
-    headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#eee' },
+    headerTitle: { fontSize: 22, fontWeight: 'bold', color: 'white' },
     infoCard: {
-        backgroundColor: '#0a2a35', margin: 16, borderRadius: 12,
-        padding: 16, flexDirection: 'row', gap: 12,
-        borderWidth: 1, borderColor: '#00b5e2',
+        backgroundColor: colors.primaryLight, margin: spacing.lg, borderRadius: radius.md,
+        padding: spacing.lg, flexDirection: 'row', gap: 12,
+        borderWidth: 1, borderColor: colors.primary,
     },
-    infoText: { fontSize: 13, color: '#aaa', flex: 1, lineHeight: 18 },
+    infoText: { fontSize: 13, color: colors.primary, flex: 1, lineHeight: 18 },
     docCard: {
-        backgroundColor: '#1e1e1e', marginHorizontal: 16,
-        marginBottom: 12, borderRadius: 14, padding: 16,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, marginHorizontal: spacing.lg,
+        marginBottom: 12, borderRadius: radius.md, padding: spacing.lg,
+        borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
     docHeader: { flexDirection: 'row', gap: 12, marginBottom: 12 },
     docIconContainer: {
         width: 44, height: 44, borderRadius: 22,
-        backgroundColor: '#0a2a35', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center',
     },
     docInfo: { flex: 1 },
     docTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-    docLabel: { fontSize: 14, fontWeight: '600', color: '#eee', flex: 1 },
+    docLabel: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, flex: 1 },
     requisBadge: {
-        backgroundColor: '#3a1a1a', borderRadius: 10,
+        backgroundColor: colors.redLight, borderRadius: 10,
         paddingVertical: 2, paddingHorizontal: 8,
     },
-    requisText: { fontSize: 10, color: '#e74c3c', fontWeight: '600' },
-    docDescription: { fontSize: 12, color: '#666' },
+    requisText: { fontSize: 10, color: colors.red, fontWeight: '600' },
+    docDescription: { fontSize: 12, color: colors.textMuted },
     docFooter: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
     },
     statutBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20 },
     statutText: { fontSize: 12, fontWeight: '600' },
     boutonUpload: {
-        backgroundColor: '#00b5e2', borderRadius: 20,
+        backgroundColor: colors.accent, borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 16,
         flexDirection: 'row', alignItems: 'center', gap: 6,
     },
     boutonUploadText: { color: 'white', fontSize: 13, fontWeight: '600' },
     commentaireCard: {
-        backgroundColor: '#3a1a1a', borderRadius: 8, padding: 10, marginTop: 10,
-        borderWidth: 1, borderColor: '#e74c3c',
+        backgroundColor: colors.redLight, borderRadius: 8, padding: 10, marginTop: 10,
+        borderWidth: 1, borderColor: colors.red,
     },
-    commentaireLabel: { fontSize: 11, color: '#e74c3c', fontWeight: '600', marginBottom: 4 },
-    commentaireTexte: { fontSize: 13, color: '#aaa' },
+    commentaireLabel: { fontSize: 11, color: colors.red, fontWeight: '600', marginBottom: 4 },
+    commentaireTexte: { fontSize: 13, color: colors.textSecondary },
 });

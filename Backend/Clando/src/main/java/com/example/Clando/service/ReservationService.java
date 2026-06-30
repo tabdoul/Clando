@@ -421,6 +421,7 @@ public class ReservationService {
             .prix(Math.round(prixBase * COMMISSION))
             .departPassager(r.getDepartPassager())
             .arriveePassager(r.getArriveePassager())
+            .dateHeureDepart(r.getTrajet().getDateHeureDepart())
             .build();
 }
 }

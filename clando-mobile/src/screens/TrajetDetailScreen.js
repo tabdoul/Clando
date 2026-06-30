@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function TrajetDetailScreen({ route, navigation }) {
     const { trajet, villeDepart, villeArrivee } = route.params;
@@ -112,7 +113,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
         : null;
 
     const renderEtoiles = (note, taille = 14) => [1, 2, 3, 4, 5].map((i) => (
-        <Ionicons key={i} name={i <= note ? 'star' : 'star-outline'} size={taille} color="#f39c12" />
+        <Ionicons key={i} name={i <= note ? 'star' : 'star-outline'} size={taille} color={colors.orange} />
     ));
 
     const estConducteur = currentUserId !== null && trajet.conducteurId === currentUserId;
@@ -125,11 +126,11 @@ export default function TrajetDetailScreen({ route, navigation }) {
 
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerVille} numberOfLines={1}>{trajet.villeDepart}</Text>
-                    <Ionicons name="arrow-forward" size={14} color="#00b5e2" />
+                    <Ionicons name="arrow-forward" size={14} color={colors.accentLight} />
                     <Text style={styles.headerVille} numberOfLines={1}>{trajet.villeArrivee}</Text>
                 </View>
                 <View style={{ width: 32 }} />
@@ -141,7 +142,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     <Text style={styles.dateText}>{formatDate(trajet.dateHeureDepart)}</Text>
                     {trajet.femmesUniquement && (
                         <View style={styles.femmesUniquementBadge}>
-                            <Ionicons name="female" size={13} color="#9b59b6" />
+                            <Ionicons name="female" size={13} color={colors.purple} />
                             <Text style={styles.femmesUniquementText}>Reserve aux femmes uniquement</Text>
                         </View>
                     )}
@@ -178,11 +179,11 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     <View style={styles.card}>
                         <View style={styles.infoRow}>
                             <View style={styles.infoIcone}>
-                                <Ionicons name="people-outline" size={18} color="#00b5e2" />
+                                <Ionicons name="people-outline" size={18} color={colors.primary} />
                             </View>
                             <View style={styles.infoContent}>
                                 <Text style={styles.infoLabel}>Places disponibles</Text>
-                                <Text style={[styles.infoValeur, trajet.placesDisponibles === 1 && { color: '#e74c3c' }]}>
+                                <Text style={[styles.infoValeur, trajet.placesDisponibles === 1 && { color: colors.red }]}>
                                     {`${trajet.placesDisponibles} ${trajet.placesDisponibles > 1 ? 'places disponibles' : 'place disponible'}${trajet.placesDisponibles === 1 ? ' — Derniere place !' : ''}`}
                                 </Text>
                             </View>
@@ -190,7 +191,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <View style={styles.infoIcone}>
-                                <Ionicons name="car-outline" size={18} color="#00b5e2" />
+                                <Ionicons name="car-outline" size={18} color={colors.primary} />
                             </View>
                             <View style={styles.infoContent}>
                                 <Text style={styles.infoLabel}>Vehicule</Text>
@@ -200,7 +201,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                         <View style={styles.separator} />
                         <View style={styles.infoRow}>
                             <View style={styles.infoIcone}>
-                                <Ionicons name="wallet-outline" size={18} color="#2ecc71" />
+                                <Ionicons name="wallet-outline" size={18} color={colors.green} />
                             </View>
                             <View style={styles.infoContent}>
                                 <Text style={styles.infoLabel}>Paiement</Text>
@@ -218,7 +219,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 : `Vous voyagez avec ${passagersAffiches.length} personne${passagersAffiches.length > 1 ? 's' : ''}`}
                         </Text>
                         {loadingPassagers ? (
-                            <ActivityIndicator color="#00b5e2" />
+                            <ActivityIndicator color={colors.primary} />
                         ) : (
                             passagersAffiches.map((item) => {
                                 const initiales = `${(item.passagerPrenom || '?')[0]}${(item.passagerNom || '?')[0]}`.toUpperCase();
@@ -247,7 +248,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                                     interlocuteur: { id: item.passagerId, nom: item.passagerNom, prenom: item.passagerPrenom },
                                                     userId: currentUserId,
                                                 })}>
-                                                <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
+                                                <Ionicons name="chatbubble-outline" size={18} color={colors.primary} />
                                             </TouchableOpacity>
                                         )}
                                     </View>
@@ -275,7 +276,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 <View style={styles.conducteurStats}>
                                     {noteMoyenne ? (
                                         <>
-                                            <Ionicons name="star" size={14} color="#f39c12" />
+                                            <Ionicons name="star" size={14} color={colors.orange} />
                                             <Text style={styles.conducteurNote}>{noteMoyenne}</Text>
                                             <Text style={styles.conducteurNbAvis}>{`(${avis.length} avis)`}</Text>
                                         </>
@@ -285,7 +286,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 </View>
                                 <View style={styles.conducteurBadges}>
                                     <View style={styles.badgeVerifie}>
-                                        <Ionicons name="shield-checkmark-outline" size={12} color="#2ecc71" />
+                                        <Ionicons name="shield-checkmark-outline" size={12} color={colors.green} />
                                         <Text style={styles.badgeVerifieText}>Verifie</Text>
                                     </View>
                                     {trajet.nbTrajetsTerminesConducteur > 0 && (
@@ -309,13 +310,13 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 userId: null,
                                 trajetId: trajet.id
                             })}>
-                            <Ionicons name="chatbubble-outline" size={18} color="#00b5e2" />
+                            <Ionicons name="chatbubble-outline" size={18} color={colors.primary} />
                             <Text style={styles.boutonContacterText}>{`Envoyer un message a ${trajet.conducteurPrenom}`}</Text>
                         </TouchableOpacity>
 
                         {aReservationConfirmee && trajet.conducteurTelephone ? (
                             <View style={styles.telContainer}>
-                                <Ionicons name="call-outline" size={16} color="#00b5e2" />
+                                <Ionicons name="call-outline" size={16} color={colors.primary} />
                                 <Text style={styles.conducteurTel}>{trajet.conducteurTelephone}</Text>
                             </View>
                         ) : !estConducteur ? (
@@ -341,7 +342,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     </View>
 
                     {loadingAvis ? (
-                        <ActivityIndicator size={20} color="#00b5e2" />
+                        <ActivityIndicator size={20} color={colors.primary} />
                     ) : avis.length === 0 ? (
                         <View style={styles.card}>
                             <Text style={styles.aucunAvis}>{"Ce conducteur n'a pas encore recu d'avis"}</Text>
@@ -415,33 +416,30 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                     {`avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}`}
                                 </Text>
 
-                                {/* Trajet passager */}
                                 <View style={styles.modalTrajetPassager}>
                                     <Text style={styles.modalTrajetTitre}>Votre trajet</Text>
                                     <View style={styles.modalTrajetLigne}>
-                                        <Ionicons name="location-outline" size={16} color="#00b5e2" />
+                                        <Ionicons name="location-outline" size={16} color={colors.primary} />
                                         <Text style={styles.modalTrajetTexte}>{departPassager}</Text>
                                     </View>
                                     <View style={styles.modalTrajetSeparateur}>
                                         <View style={styles.modalTrajetBarre} />
-                                        <Ionicons name="arrow-down-outline" size={14} color="#444" />
+                                        <Ionicons name="arrow-down-outline" size={14} color={colors.textMuted} />
                                         <View style={styles.modalTrajetBarre} />
                                     </View>
                                     <View style={styles.modalTrajetLigne}>
-                                        <Ionicons name="location" size={16} color="#2ecc71" />
+                                        <Ionicons name="location" size={16} color={colors.green} />
                                         <Text style={styles.modalTrajetTexte}>{arriveePassager}</Text>
                                     </View>
                                 </View>
 
-                                {/* Info */}
                                 <View style={styles.modalInfo}>
-                                    <Ionicons name="information-circle-outline" size={16} color="#00b5e2" />
+                                    <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
                                     <Text style={styles.modalInfoText}>
                                         Le conducteur doit confirmer votre demande. Une fois confirme, vous aurez 30 minutes pour payer via Orange Money.
                                     </Text>
                                 </View>
 
-                                {/* Prix */}
                                 <View style={styles.modalPrixOriginal}>
                                     <Text style={styles.modalPrixLabel}>Prix du trajet</Text>
                                     <Text style={styles.modalPrixValeur}>
@@ -449,7 +447,6 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                     </Text>
                                 </View>
 
-                                {/* Boutons */}
                                 <View style={[styles.modalBoutons, { marginTop: 20 }]}>
                                     <TouchableOpacity
                                         style={styles.modalBoutonAnnuler}
@@ -479,109 +476,108 @@ export default function TrajetDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
-        backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 16, paddingHorizontal: 20,
+        backgroundColor: colors.primary, paddingTop: 60, paddingBottom: 16, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
     headerCenter: {
         flexDirection: 'row', alignItems: 'center', gap: 6,
         flex: 1, justifyContent: 'center',
     },
-    headerVille: { fontSize: 16, fontWeight: 'bold', color: '#eee', maxWidth: 120 },
-    dateContainer: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-    dateText: { fontSize: 18, fontWeight: 'bold', color: '#eee', textTransform: 'capitalize' },
+    headerVille: { fontSize: 16, fontWeight: 'bold', color: 'white', maxWidth: 120 },
+    dateContainer: { paddingHorizontal: spacing.xl, paddingTop: 16, paddingBottom: 8 },
+    dateText: { fontSize: 18, fontWeight: 'bold', color: colors.textPrimary, textTransform: 'capitalize' },
     femmesUniquementBadge: {
-        marginTop: 8, backgroundColor: '#1a0a2a', borderRadius: 10,
+        marginTop: 8, backgroundColor: colors.purpleLight, borderRadius: 10,
         paddingVertical: 6, paddingHorizontal: 12, flexDirection: 'row',
-        alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#9b59b6', alignSelf: 'flex-start',
+        alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.purple, alignSelf: 'flex-start',
     },
-    femmesUniquementText: { color: '#9b59b6', fontSize: 12, fontWeight: '700' },
-    section: { paddingHorizontal: 16, marginTop: 12 },
+    femmesUniquementText: { color: colors.purple, fontSize: 12, fontWeight: '700' },
+    section: { paddingHorizontal: spacing.lg, marginTop: 12 },
     sectionTitle: {
-        fontSize: 15, fontWeight: '600', color: '#888',
+        fontSize: 15, fontWeight: '600', color: colors.textMuted,
         marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1,
     },
-    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
-    timeline: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
+    card: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, ...shadows.card },
+    timeline: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, ...shadows.card },
     timelineRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
-    timelineHeure: { fontSize: 18, fontWeight: 'bold', color: '#eee', width: 56 },
+    timelineHeure: { fontSize: 18, fontWeight: 'bold', color: colors.textPrimary, width: 56 },
     timelineCenter: { alignItems: 'center', marginHorizontal: 12, width: 16 },
     timelineDot: {
         width: 12, height: 12, borderRadius: 6,
-        backgroundColor: '#00b5e2', borderWidth: 2, borderColor: '#1e1e1e',
+        backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.surface,
     },
-    timelineDotArrivee: { backgroundColor: '#2ecc71' },
-    timelineLine: { width: 2, height: 40, backgroundColor: '#333', marginTop: 4 },
+    timelineDotArrivee: { backgroundColor: colors.accent },
+    timelineLine: { width: 2, height: 40, backgroundColor: colors.border, marginTop: 4 },
     timelineInfo: { flex: 1 },
-    timelineVille: { fontSize: 16, fontWeight: '600', color: '#eee' },
-    timelineItineraire: { fontSize: 12, color: '#00b5e2', marginTop: 2 },
+    timelineVille: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+    timelineItineraire: { fontSize: 12, color: colors.primary, marginTop: 2 },
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
     infoIcone: {
         width: 36, height: 36, borderRadius: 18,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
     },
     infoContent: { flex: 1 },
-    infoLabel: { fontSize: 12, color: '#666', marginBottom: 2 },
-    infoValeur: { fontSize: 14, color: '#ddd', fontWeight: '500' },
-    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 2 },
+    infoLabel: { fontSize: 12, color: colors.textMuted, marginBottom: 2 },
+    infoValeur: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+    separator: { height: 1, backgroundColor: colors.separator, marginVertical: 2 },
     passagerCard: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 12,
-        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a', gap: 12,
+        backgroundColor: colors.surface, borderRadius: radius.sm, padding: 12,
+        marginBottom: 8, borderWidth: 1, borderColor: colors.border, gap: 12,
     },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
     passagerAvatarPlaceholder: {
         width: 44, height: 44, borderRadius: 22,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
     },
-    passagerInitiales: { color: '#888', fontSize: 16, fontWeight: '700' },
+    passagerInitiales: { color: colors.textMuted, fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
-    passagerNom: { color: '#eee', fontSize: 15, fontWeight: '600' },
-    passagerTrajet: { color: '#888', fontSize: 12, marginTop: 2 },
-    passagerBtnChat: { padding: 8, backgroundColor: '#00b5e21A', borderRadius: 20 },
+    passagerNom: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+    passagerTrajet: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+    passagerBtnChat: { padding: 8, backgroundColor: colors.primaryLight, borderRadius: 20 },
     conducteurRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
     conducteurAvatar: {
         width: 60, height: 60, borderRadius: 30,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden', borderWidth: 1, borderColor: '#333',
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
     },
     conducteurAvatarImage: { width: 60, height: 60, borderRadius: 30 },
-    conducteurAvatarText: { color: '#888', fontSize: 20, fontWeight: 'bold' },
+    conducteurAvatarText: { color: colors.textMuted, fontSize: 20, fontWeight: 'bold' },
     conducteurDetails: { flex: 1 },
-    conducteurNom: { fontSize: 16, fontWeight: '700', color: '#eee', marginBottom: 4 },
+    conducteurNom: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
     conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
-    conducteurNote: { fontSize: 14, color: '#f39c12', fontWeight: '600' },
-    conducteurNbAvis: { fontSize: 12, color: '#666' },
+    conducteurNote: { fontSize: 14, color: colors.orange, fontWeight: '600' },
+    conducteurNbAvis: { fontSize: 12, color: colors.textMuted },
     conducteurBadges: { flexDirection: 'row', gap: 6 },
     badgeVerifie: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
-        backgroundColor: '#252525', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8,
+        backgroundColor: colors.greenLight, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8,
     },
-    badgeVerifieText: { color: '#888', fontSize: 11, fontWeight: '600' },
-    badgeTrajets: { backgroundColor: '#252525', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8 },
-    badgeTrajetsText: { color: '#888', fontSize: 11, fontWeight: '600' },
+    badgeVerifieText: { color: colors.green, fontSize: 11, fontWeight: '600' },
+    badgeTrajets: { backgroundColor: colors.surfaceSecondary, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8 },
+    badgeTrajetsText: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
     boutonContacter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
-    boutonContacterText: { color: '#00b5e2', fontSize: 14, fontWeight: '600' },
+    boutonContacterText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
     telContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-    conducteurTel: { fontSize: 14, color: '#00b5e2', fontWeight: '600' },
-    infoSecurite: { fontSize: 12, color: '#555', fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
+    conducteurTel: { fontSize: 14, color: colors.primary, fontWeight: '600' },
+    infoSecurite: { fontSize: 12, color: colors.textDisabled, fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
     avisHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: 10,
     },
     noteMoyenneContainer: {
         flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: '#1e1e1e', borderRadius: 10, padding: 8, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.sm, padding: 8, borderWidth: 1, borderColor: colors.border,
     },
-    noteMoyenneValeur: { fontSize: 16, fontWeight: 'bold', color: '#f39c12' },
+    noteMoyenneValeur: { fontSize: 16, fontWeight: 'bold', color: colors.orange },
     noteMoyenneEtoiles: { flexDirection: 'row', gap: 2 },
-    noteMoyenneTotal: { fontSize: 11, color: '#666' },
+    noteMoyenneTotal: { fontSize: 11, color: colors.textMuted },
     avisItem: {
-        backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14,
-        marginBottom: 8, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
+        marginBottom: 8, borderWidth: 1, borderColor: colors.border,
     },
     avisTop: {
         flexDirection: 'row', justifyContent: 'space-between',
@@ -590,70 +586,69 @@ const styles = StyleSheet.create({
     avisAvatarContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     avisAvatar: {
         width: 32, height: 32, borderRadius: 16,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
     },
-    avisAvatarText: { color: '#888', fontSize: 12, fontWeight: '700' },
-    avisAuteur: { fontSize: 13, fontWeight: '600', color: '#ddd' },
+    avisAvatarText: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
+    avisAuteur: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
     avisEtoiles: { flexDirection: 'row', gap: 2 },
-    avisCommentaire: { fontSize: 13, color: '#aaa', lineHeight: 20, fontStyle: 'italic' },
-    aucunAvis: { fontSize: 14, color: '#666', textAlign: 'center', paddingVertical: 16 },
+    avisCommentaire: { fontSize: 13, color: colors.textSecondary, lineHeight: 20, fontStyle: 'italic' },
+    aucunAvis: { fontSize: 14, color: colors.textMuted, textAlign: 'center', paddingVertical: 16 },
     bottomBar: {
         position: 'absolute', bottom: 15, left: 16, right: 16,
-        backgroundColor: '#1e1e1e', padding: 10,
+        backgroundColor: colors.surface, padding: 10,
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        borderRadius: 16, borderWidth: 0.5, borderColor: '#2a2a2a',
-        shadowColor: '#000', shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.3, shadowRadius: 8, elevation: 10,
+        borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,
+        ...shadows.bottom,
     },
     bottomPrix: { flex: 1 },
-    bottomPrixLabel: { fontSize: 11, color: '#888' },
-    bottomPrixValeur: { fontSize: 20, fontWeight: 'bold', color: '#00b5e2' },
-    bottomPlaces: { fontSize: 11, color: '#666', marginTop: 1 },
+    bottomPrixLabel: { fontSize: 11, color: colors.textMuted },
+    bottomPrixValeur: { fontSize: 20, fontWeight: 'bold', color: colors.primary },
+    bottomPlaces: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
     boutonReserver: {
-        flex: 2, backgroundColor: '#00b5e2', borderRadius: 12,
+        flex: 2, backgroundColor: colors.accent, borderRadius: radius.md,
         padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     },
-    boutonReserverBloque: { backgroundColor: '#5a3a6a' },
+    boutonReserverBloque: { backgroundColor: colors.purple },
     boutonReserverText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalCard: {
-        backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        padding: 24, maxHeight: '90%', borderTopWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: 24, maxHeight: '90%',
     },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#eee', marginBottom: 2 },
-    modalSubtitle: { fontSize: 13, color: '#888', marginBottom: 16 },
-    modalTrajetPassager: { backgroundColor: '#252525', borderRadius: 12, padding: 14, marginBottom: 14 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 2 },
+    modalSubtitle: { fontSize: 13, color: colors.textMuted, marginBottom: 16 },
+    modalTrajetPassager: { backgroundColor: colors.surfaceSecondary, borderRadius: radius.md, padding: 14, marginBottom: 14 },
     modalTrajetTitre: {
-        fontSize: 11, color: '#888', textTransform: 'uppercase',
+        fontSize: 11, color: colors.textMuted, textTransform: 'uppercase',
         letterSpacing: 1, marginBottom: 10, fontWeight: '600',
     },
     modalTrajetLigne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    modalTrajetTexte: { fontSize: 15, fontWeight: '600', color: '#eee' },
+    modalTrajetTexte: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     modalTrajetSeparateur: {
         flexDirection: 'row', alignItems: 'center',
         marginLeft: 26, gap: 4, marginVertical: 6,
     },
-    modalTrajetBarre: { flex: 1, height: 1, backgroundColor: '#333' },
+    modalTrajetBarre: { flex: 1, height: 1, backgroundColor: colors.border },
     modalInfo: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: '#0a2a35', borderRadius: 10, padding: 12, marginBottom: 14,
+        backgroundColor: colors.primaryLight, borderRadius: radius.sm, padding: 12, marginBottom: 14,
     },
-    modalInfoText: { fontSize: 13, color: '#00b5e2', flex: 1, lineHeight: 20 },
+    modalInfoText: { fontSize: 13, color: colors.primary, flex: 1, lineHeight: 20 },
     modalPrixOriginal: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        backgroundColor: '#252525', borderRadius: 10, padding: 12, marginBottom: 14,
+        backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm, padding: 12, marginBottom: 14,
     },
-    modalPrixLabel: { fontSize: 14, color: '#888' },
-    modalPrixValeur: { fontSize: 18, fontWeight: 'bold', color: '#00b5e2' },
+    modalPrixLabel: { fontSize: 14, color: colors.textMuted },
+    modalPrixValeur: { fontSize: 18, fontWeight: 'bold', color: colors.primary },
     modalBoutons: { flexDirection: 'row', gap: 12 },
     modalBoutonAnnuler: {
-        flex: 1, borderWidth: 1, borderColor: '#444',
-        borderRadius: 10, padding: 14, alignItems: 'center',
+        flex: 1, borderWidth: 1, borderColor: colors.border,
+        borderRadius: radius.sm, padding: 14, alignItems: 'center',
     },
-    modalBoutonAnnulerText: { color: '#888', fontSize: 15, fontWeight: '600' },
+    modalBoutonAnnulerText: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
     modalBoutonConfirmer: {
-        flex: 1, backgroundColor: '#00b5e2',
-        borderRadius: 10, padding: 14, alignItems: 'center',
+        flex: 1, backgroundColor: colors.accent,
+        borderRadius: radius.sm, padding: 14, alignItems: 'center',
     },
     modalBoutonConfirmerText: { color: 'white', fontSize: 15, fontWeight: 'bold' },
 });

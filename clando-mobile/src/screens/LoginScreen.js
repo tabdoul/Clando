@@ -5,6 +5,7 @@ import {
     KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import { login, fetchUtilisateurByEmail } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -12,10 +13,6 @@ export default function LoginScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
-        console.log('handleLogin appelé');
-        console.log('email:', email);
-        console.log('motDePasse:', motDePasse);
-
         if (!email || !motDePasse) {
             Alert.alert('Erreur', 'Veuillez remplir tous les champs');
             return;
@@ -26,9 +23,6 @@ export default function LoginScreen({ navigation }) {
             await fetchUtilisateurByEmail(email);
             navigation.replace('Main');
         } catch (error) {
-            console.log('Erreur login:', error.response?.data);
-            console.log('Status:', error.response?.status);
-            console.log('Message:', error.message);
             Alert.alert('Erreur', 'Email ou mot de passe incorrect');
         } finally {
             setLoading(false);
@@ -43,7 +37,7 @@ export default function LoginScreen({ navigation }) {
 
                 <View style={styles.header}>
                     <Text style={styles.title}>Wayvo</Text>
-                    <Text style={styles.subtitle}>Partager Votre route, simpliez votre quotidien</Text>
+                    <Text style={styles.subtitle}>Partagez votre route, simplifiez votre quotidien</Text>
                 </View>
 
                 <View style={styles.form}>
@@ -51,7 +45,7 @@ export default function LoginScreen({ navigation }) {
                     <TextInput
                         style={styles.input}
                         placeholder="exemple@gmail.com"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -62,7 +56,7 @@ export default function LoginScreen({ navigation }) {
                     <TextInput
                         style={styles.input}
                         placeholder="••••••••"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={motDePasse}
                         onChangeText={setMotDePasse}
                         secureTextEntry
@@ -94,70 +88,35 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-    },
-    scrollContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        padding: 24,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
+    scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
+    header: { alignItems: 'center', marginBottom: 40 },
     title: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#00b5e2',
-        letterSpacing: 3,
+        fontSize: 36, fontWeight: 'bold',
+        color: colors.primary, letterSpacing: 3,
     },
-    subtitle: {
-        fontSize: 16,
-        color: '#888',
-        marginTop: 4,
-    },
+    subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 6, textAlign: 'center' },
     form: {
-        backgroundColor: '#1e1e1e',
-        borderRadius: 16,
-        padding: 24,
-        borderWidth: 1,
-        borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.lg,
+        padding: spacing.xl, borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
     label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#aaa',
-        marginBottom: 6,
-        marginTop: 12,
+        fontSize: 14, fontWeight: '600', color: colors.textSecondary,
+        marginBottom: 6, marginTop: 12,
     },
     input: {
-        borderWidth: 1,
-        borderColor: '#2a2a2a',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#252525',
-        color: '#eee',
+        borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+        padding: 12, fontSize: 16,
+        backgroundColor: colors.surfaceSecondary, color: colors.textPrimary,
     },
     button: {
-        backgroundColor: '#00b5e2',
-        borderRadius: 8,
-        padding: 16,
-        alignItems: 'center',
-        marginTop: 24,
+        backgroundColor: colors.accent, borderRadius: radius.sm,
+        padding: 16, alignItems: 'center', marginTop: 24,
     },
     buttonDisabled: { opacity: 0.6 },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    linkButton: {
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    linkText: { color: '#888', fontSize: 14 },
-    link: { color: '#00b5e2', fontWeight: '600' },
+    buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    linkButton: { alignItems: 'center', marginTop: 16 },
+    linkText: { color: colors.textMuted, fontSize: 14 },
+    link: { color: colors.primary, fontWeight: '600' },
 });

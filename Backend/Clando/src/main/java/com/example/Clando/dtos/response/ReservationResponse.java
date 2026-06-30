@@ -34,6 +34,7 @@ public class ReservationResponse {
     private double prix;
     private String departPassager;
     private String arriveePassager;
+    private LocalDateTime dateHeureDepart;
 
     public ReservationResponse() {}
 
@@ -81,6 +82,9 @@ public class ReservationResponse {
 
     public Double getPrixConducteur() { return prixConducteur; } // 
     public void setPrixConducteur(Double v) { this.prixConducteur = v; } // 
+
+    public LocalDateTime getDateHeureDepart() { return dateHeureDepart; }
+    public void setDateHeureDepart(LocalDateTime v) { this.dateHeureDepart = v; }
 
     public int getNbTentatives() { return nbTentatives; }
     public void setNbTentatives(int nbTentatives) { this.nbTentatives = nbTentatives; }
@@ -153,6 +157,7 @@ public class ReservationResponse {
         public Builder prix(double val) { r.prix = val; return this; }
         public Builder departPassager(String val) { r.departPassager = val; return this; }
         public Builder arriveePassager(String val) { r.arriveePassager = val; return this; }
+        public Builder dateHeureDepart(LocalDateTime val) { r.dateHeureDepart = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }

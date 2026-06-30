@@ -5,6 +5,7 @@ import {
     KeyboardAvoidingView, Platform, ScrollView
 } from 'react-native';
 import api from '../services/api';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function RegisterScreen({ navigation }) {
     const [nom, setNom] = useState('');
@@ -48,8 +49,7 @@ export default function RegisterScreen({ navigation }) {
                     <Text style={styles.label}>Nom *</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder=""
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={nom}
                         onChangeText={setNom}
                     />
@@ -57,8 +57,7 @@ export default function RegisterScreen({ navigation }) {
                     <Text style={styles.label}>Prénom *</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder=""
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={prenom}
                         onChangeText={setPrenom}
                     />
@@ -67,7 +66,7 @@ export default function RegisterScreen({ navigation }) {
                     <TextInput
                         style={styles.input}
                         placeholder="exemple@gmail.com"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -78,7 +77,7 @@ export default function RegisterScreen({ navigation }) {
                     <TextInput
                         style={styles.input}
                         placeholder="Minimum 6 caractères"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={motDePasse}
                         onChangeText={setMotDePasse}
                         secureTextEntry
@@ -88,7 +87,7 @@ export default function RegisterScreen({ navigation }) {
                     <TextInput
                         style={styles.input}
                         placeholder="620000000"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textDisabled}
                         value={telephone}
                         onChangeText={setTelephone}
                         keyboardType="phone-pad"
@@ -100,14 +99,14 @@ export default function RegisterScreen({ navigation }) {
                             style={[styles.genreBouton, genre === 'HOMME' && styles.genreBoutonActif]}
                             onPress={() => setGenre('HOMME')}>
                             <Text style={[styles.genreTexte, genre === 'HOMME' && styles.genreTexteActif]}>
-                                 Homme
+                                Homme
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.genreBouton, genre === 'FEMME' && styles.genreBoutonActif]}
                             onPress={() => setGenre('FEMME')}>
                             <Text style={[styles.genreTexte, genre === 'FEMME' && styles.genreTexteActif]}>
-                                 Femme
+                                Femme
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -138,32 +137,40 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
-    scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+    container: { flex: 1, backgroundColor: colors.background },
+    scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
     header: { alignItems: 'center', marginBottom: 32 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#00b5e2' },
-    form: { backgroundColor: '#1e1e1e', borderRadius: 16, padding: 24, borderWidth: 1, borderColor: '#2a2a2a' },
-    label: { fontSize: 14, fontWeight: '600', color: '#aaa', marginBottom: 6, marginTop: 12 },
+    title: { fontSize: 28, fontWeight: 'bold', color: colors.primary },
+    form: {
+        backgroundColor: colors.surface, borderRadius: radius.lg,
+        padding: spacing.xl, borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
+    },
+    label: {
+        fontSize: 14, fontWeight: '600', color: colors.textSecondary,
+        marginBottom: 6, marginTop: 12,
+    },
     input: {
-        borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 8,
-        padding: 12, fontSize: 16, backgroundColor: '#252525', color: '#eee',
+        borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+        padding: 12, fontSize: 16,
+        backgroundColor: colors.surfaceSecondary, color: colors.textPrimary,
     },
     genreContainer: { flexDirection: 'row', gap: 12, marginTop: 4 },
     genreBouton: {
-        flex: 1, padding: 14, borderRadius: 10,
-        borderWidth: 1, borderColor: '#2a2a2a',
-        backgroundColor: '#252525', alignItems: 'center',
+        flex: 1, padding: 14, borderRadius: radius.sm,
+        borderWidth: 1, borderColor: colors.border,
+        backgroundColor: colors.surfaceSecondary, alignItems: 'center',
     },
-    genreBoutonActif: { borderColor: '#00b5e2', backgroundColor: '#0a2a35' },
-    genreTexte: { fontSize: 15, color: '#888', fontWeight: '600' },
-    genreTexteActif: { color: '#00b5e2' },
+    genreBoutonActif: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    genreTexte: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
+    genreTexteActif: { color: colors.primary },
     button: {
-        backgroundColor: '#00b5e2', borderRadius: 8,
+        backgroundColor: colors.accent, borderRadius: radius.sm,
         padding: 16, alignItems: 'center', marginTop: 24,
     },
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     linkButton: { alignItems: 'center', marginTop: 16 },
-    linkText: { color: '#888', fontSize: 14 },
-    link: { color: '#00b5e2', fontWeight: '600' },
+    linkText: { color: colors.textMuted, fontSize: 14 },
+    link: { color: colors.primary, fontWeight: '600' },
 });

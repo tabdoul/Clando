@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, ActivityIndicator,
-    Alert, RefreshControl,Image
+    Alert, RefreshControl, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
-
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function MessagesScreen({ navigation }) {
     const [conversations, setConversations] = useState([]);
@@ -30,33 +30,33 @@ export default function MessagesScreen({ navigation }) {
 
             const response = await api.get(`/messages/conversations/${id}`);
 
-   const grouped = {};
-response.data.forEach(msg => {
-    const resId = msg.reservationId;
-    if (!grouped[resId]) {
-        grouped[resId] = {
-            reservationId: resId,
-            dernierMessage: msg,
-            nbNonLus: 0,
-            interlocuteur: msg.expediteurId === id
-                ? { 
-                    id: msg.destinataireId,
-                    nom: msg.destinataireNom,
-                    prenom: msg.destinatairePrenom,
-                    photo: msg.destinatairePhoto
+            const grouped = {};
+            response.data.forEach(msg => {
+                const resId = msg.reservationId;
+                if (!grouped[resId]) {
+                    grouped[resId] = {
+                        reservationId: resId,
+                        dernierMessage: msg,
+                        nbNonLus: 0,
+                        interlocuteur: msg.expediteurId === id
+                            ? {
+                                id: msg.destinataireId,
+                                nom: msg.destinataireNom,
+                                prenom: msg.destinatairePrenom,
+                                photo: msg.destinatairePhoto
+                            }
+                            : {
+                                id: msg.expediteurId,
+                                nom: msg.expediteurNom,
+                                prenom: msg.expediteurPrenom,
+                                photo: msg.expediteurPhoto
+                            }
+                    };
                 }
-                : { 
-                    id: msg.expediteurId, 
-                    nom: msg.expediteurNom, 
-                    prenom: msg.expediteurPrenom,
-                    photo: msg.expediteurPhoto
+                if (msg.destinataireId === id && !msg.lu) {
+                    grouped[resId].nbNonLus++;
                 }
-        };
-    }
-    if (msg.destinataireId === id && !msg.lu) {
-        grouped[resId].nbNonLus++;
-    }
-});
+            });
 
             setConversations(Object.values(grouped));
         } catch (error) {
@@ -90,7 +90,7 @@ response.data.forEach(msg => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size={36} color="#00b5e2" />
+                <ActivityIndicator size={36} color={colors.primary} />
             </View>
         );
     }
@@ -107,14 +107,14 @@ response.data.forEach(msg => {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#00b5e2"
-                        colors={["#00b5e2"]}
+                        tintColor={colors.primary}
+                        colors={[colors.primary]}
                     />
                 }>
 
                 {conversations.length === 0 && (
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="chatbubble-outline" size={64} color="#444" />
+                        <Ionicons name="chatbubble-outline" size={64} color={colors.border} />
                         <Text style={styles.emptyText}>Aucun message</Text>
                         <Text style={styles.emptySubtext}>
                             Vos conversations apparaîtront ici après une réservation confirmée
@@ -135,17 +135,17 @@ response.data.forEach(msg => {
                             })}>
 
                             <View style={styles.avatar}>
-    {conv.interlocuteur.photo ? (
-        <Image
-            source={{ uri: conv.interlocuteur.photo }}
-            style={styles.avatarImage}
-        />
-    ) : (
-        <Text style={styles.avatarText}>
-            {getInitiales(conv.interlocuteur.nom, conv.interlocuteur.prenom)}
-        </Text>
-    )}
-</View>
+                                {conv.interlocuteur.photo ? (
+                                    <Image
+                                        source={{ uri: conv.interlocuteur.photo }}
+                                        style={styles.avatarImage}
+                                    />
+                                ) : (
+                                    <Text style={styles.avatarText}>
+                                        {getInitiales(conv.interlocuteur.nom, conv.interlocuteur.prenom)}
+                                    </Text>
+                                )}
+                            </View>
 
                             <View style={styles.convInfo}>
                                 <View style={styles.convHeader}>
@@ -182,34 +182,33 @@ response.data.forEach(msg => {
 }
 
 const styles = StyleSheet.create({
-    avatarImage: { width: 48, height: 48, borderRadius: 24 },
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     loadingContainer: {
-        flex: 1, backgroundColor: '#121212',
+        flex: 1, backgroundColor: colors.background,
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        backgroundColor: colors.primary,
+        paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
     },
-    headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#eee' },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'white' },
     emptyContainer: {
         alignItems: 'center', marginTop: 80, paddingHorizontal: 40,
     },
-    emptyText: { fontSize: 18, color: '#666', marginTop: 16 },
+    emptyText: { fontSize: 18, color: colors.textMuted, marginTop: 16 },
     emptySubtext: {
-        fontSize: 14, color: '#444', marginTop: 4,
+        fontSize: 14, color: colors.textDisabled, marginTop: 4,
         textAlign: 'center', lineHeight: 20,
     },
     convItem: {
         flexDirection: 'row', alignItems: 'center',
-        padding: 16, borderBottomWidth: 1,
-        borderBottomColor: '#1e1e1e', gap: 12,
+        padding: spacing.lg, borderBottomWidth: 1,
+        borderBottomColor: colors.separator, gap: 12,
     },
+    avatarImage: { width: 48, height: 48, borderRadius: 24 },
     avatar: {
         width: 48, height: 48, borderRadius: 24,
-        backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
     },
     avatarText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     convInfo: { flex: 1 },
@@ -217,17 +216,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: 4,
     },
-    convNom: { fontSize: 15, fontWeight: '600', color: '#eee' },
-    convNomNonLu: { fontWeight: 'bold', color: '#fff' },
-    convDate: { fontSize: 12, color: '#666' },
+    convNom: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
+    convNomNonLu: { fontWeight: 'bold', color: colors.textPrimary },
+    convDate: { fontSize: 12, color: colors.textMuted },
     convFooter: {
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between',
     },
-    convDernierMessage: { fontSize: 13, color: '#888', flex: 1 },
-    convMessageNonLu: { color: '#eee', fontWeight: '600' },
+    convDernierMessage: { fontSize: 13, color: colors.textMuted, flex: 1 },
+    convMessageNonLu: { color: colors.textPrimary, fontWeight: '600' },
     badgeNonLu: {
-        backgroundColor: '#00b5e2', borderRadius: 10,
+        backgroundColor: colors.accent, borderRadius: 10,
         minWidth: 18, height: 18, alignItems: 'center',
         justifyContent: 'center', paddingHorizontal: 4, marginLeft: 8,
     },

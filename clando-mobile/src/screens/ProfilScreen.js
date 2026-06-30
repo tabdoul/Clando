@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl, Image, Modal
+    TextInput, RefreshControl, Image, Modal, Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import api from '../services/api';
 import { getUserId, logout } from '../services/auth.service';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function ProfilScreen({ navigation }) {
     const [utilisateur, setUtilisateur] = useState(null);
@@ -261,7 +262,7 @@ export default function ProfilScreen({ navigation }) {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size={36} color="#00b5e2" />
+                <ActivityIndicator size={36} color={colors.primary} />
             </View>
         );
     }
@@ -290,7 +291,7 @@ export default function ProfilScreen({ navigation }) {
                     <View style={styles.nomRow}>
                         <Text style={styles.nom}>{utilisateur?.prenom} {utilisateur?.nom}</Text>
                         {utilisateur?.verifie && (
-                            <Ionicons name="checkmark-circle" size={18} color="#00b5e2" />
+                            <Ionicons name="checkmark-circle" size={18} color="white" />
                         )}
                     </View>
                     <Text style={styles.email}>{utilisateur?.email}</Text>
@@ -320,15 +321,14 @@ export default function ProfilScreen({ navigation }) {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#00b5e2"
-                        colors={["#00b5e2"]}
+                        tintColor={colors.primary}
+                        colors={[colors.primary]}
                     />
                 }>
 
                 {/* ===== ONGLET PROFIL ===== */}
                 {ongletActif === 'profil' && (
                     <>
-                        {/* Dashboard */}
                         {stats && stats.nbTrajets > 0 && (
                             <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Mon activite</Text>
@@ -376,7 +376,7 @@ export default function ProfilScreen({ navigation }) {
                                     </View>
                                     <View style={styles.dashboardSeparator} />
                                     <View style={styles.dashboardMembreRow}>
-                                        <Ionicons name="calendar-outline" size={13} color="#555" />
+                                        <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
                                         <Text style={styles.dashboardMembreTexte}>
                                             {`Membre depuis le ${new Date(stats.membreDepuis).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`}
                                         </Text>
@@ -385,7 +385,6 @@ export default function ProfilScreen({ navigation }) {
                             </View>
                         )}
 
-                        {/* Infos personnelles */}
                         <View style={styles.section}>
                             <View style={styles.sectionHeader}>
                                 <Text style={styles.sectionTitle}>Informations</Text>
@@ -412,7 +411,7 @@ export default function ProfilScreen({ navigation }) {
                                                     onChangeText={item.setState}
                                                     keyboardType={item.keyboard}
                                                     autoCapitalize="none"
-                                                    placeholderTextColor="#555"
+                                                    placeholderTextColor={colors.textDisabled}
                                                 />
                                             ) : (
                                                 <Text style={styles.infoValue}>{item.value}</Text>
@@ -423,7 +422,6 @@ export default function ProfilScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* Trajets publiés */}
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Mes trajets publies</Text>
                             <View style={styles.card}>
@@ -449,7 +447,7 @@ export default function ProfilScreen({ navigation }) {
                                                     <TouchableOpacity
                                                         style={styles.btnIcone}
                                                         onPress={() => voirPassagers(t)}>
-                                                        <Ionicons name="people-outline" size={14} color="#888" />
+                                                        <Ionicons name="people-outline" size={14} color={colors.textMuted} />
                                                     </TouchableOpacity>
                                                     {t.trajetDemarre ? (
                                                         <View style={styles.btnEnCours}>
@@ -480,26 +478,23 @@ export default function ProfilScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* Documents */}
-<View style={styles.section}>
-    <Text style={styles.sectionTitle}>Mes documents</Text>
-    <View style={styles.card}>
-        <TouchableOpacity
-            style={styles.navItem}
-            onPress={() => navigation.navigate('Documents')}>
-            <View style={styles.navGauche}>
-                <Ionicons name="folder-open-outline" size={18} color="#555" />
-                <View>
-                    <Text style={styles.navLabel}>Gérer mes documents</Text>
-                </View>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#444" />
-        </TouchableOpacity>
-    </View>
-</View>
-                        
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>Mes documents</Text>
+                            <View style={styles.card}>
+                                <TouchableOpacity
+                                    style={styles.navItem}
+                                    onPress={() => navigation.navigate('Documents')}>
+                                    <View style={styles.navGauche}>
+                                        <Ionicons name="folder-open-outline" size={18} color={colors.textMuted} />
+                                        <View>
+                                            <Text style={styles.navLabel}>Gérer mes documents</Text>
+                                        </View>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
-                        {/* Véhicules */}
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Mes vehicules</Text>
                             <View style={styles.card}>
@@ -517,7 +512,7 @@ export default function ProfilScreen({ navigation }) {
                                                 </Text>
                                             </View>
                                             <TouchableOpacity onPress={() => supprimerVehicule(v.id)}>
-                                                <Ionicons name="trash-outline" size={18} color="#555" />
+                                                <Ionicons name="trash-outline" size={18} color={colors.textMuted} />
                                             </TouchableOpacity>
                                         </View>
                                     </View>
@@ -537,52 +532,51 @@ export default function ProfilScreen({ navigation }) {
                                     style={styles.navItem}
                                     onPress={() => setShowHistorique(!showHistorique)}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="time-outline" size={18} color="#555" />
+                                        <Ionicons name="time-outline" size={18} color={colors.textMuted} />
                                         <Text style={styles.navLabel}>
                                             {`Historique des trajets (${trajetsTermines.length})`}
                                         </Text>
                                     </View>
                                     <Ionicons
                                         name={showHistorique ? 'chevron-down' : 'chevron-forward'}
-                                        size={16} color="#444"
+                                        size={16} color={colors.textDisabled}
                                     />
                                 </TouchableOpacity>
 
                                 {showHistorique && (
-    <View style={styles.sousListe}>
-        {trajetsTermines.length === 0 ? (
-            <Text style={styles.emptyText}>Aucun trajet effectue</Text>
-        ) : (
-            <>
-                {trajetsTermines.slice(0, 5).map((t, index) => (
-                    <View key={t.id.toString()}>
-                        {index > 0 && <View style={styles.separator} />}
-                        <View style={styles.historiqueItem}>
-                            <Text style={styles.trajetVilles}>
-                                {`${t.villeDepart} → ${t.villeArrivee}`}
-                            </Text>
-                            <Text style={styles.trajetDetails}>
-                                {formatDate(t.dateHeureDepart)}
-                            </Text>
-                        </View>
-                    </View>
-                ))}
+                                    <View style={styles.sousListe}>
+                                        {trajetsTermines.length === 0 ? (
+                                            <Text style={styles.emptyText}>Aucun trajet effectue</Text>
+                                        ) : (
+                                            <>
+                                                {trajetsTermines.slice(0, 5).map((t, index) => (
+                                                    <View key={t.id.toString()}>
+                                                        {index > 0 && <View style={styles.separator} />}
+                                                        <View style={styles.historiqueItem}>
+                                                            <Text style={styles.trajetVilles}>
+                                                                {`${t.villeDepart} → ${t.villeArrivee}`}
+                                                            </Text>
+                                                            <Text style={styles.trajetDetails}>
+                                                                {formatDate(t.dateHeureDepart)}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                ))}
 
-                {/* Bouton voir tout dans un modal */}
-                {trajetsTermines.length > 5 && (
-                    <TouchableOpacity
-                        style={styles.voirPlusBtn}
-                        onPress={() => setShowHistoriqueModal(true)}>
-                        <Text style={styles.voirPlusText}>
-                            {`Voir tout (${trajetsTermines.length} trajets)`}
-                        </Text>
-                        <Ionicons name="chevron-forward" size={14} color="#00b5e2" />
-                    </TouchableOpacity>
-                )}
-            </>
-        )}
-    </View>
-)}
+                                                {trajetsTermines.length > 5 && (
+                                                    <TouchableOpacity
+                                                        style={styles.voirPlusBtn}
+                                                        onPress={() => setShowHistoriqueModal(true)}>
+                                                        <Text style={styles.voirPlusText}>
+                                                            {`Voir tout (${trajetsTermines.length} trajets)`}
+                                                        </Text>
+                                                        <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+                                                    </TouchableOpacity>
+                                                )}
+                                            </>
+                                        )}
+                                    </View>
+                                )}
 
                                 <View style={styles.separator} />
 
@@ -590,12 +584,12 @@ export default function ProfilScreen({ navigation }) {
                                     style={styles.navItem}
                                     onPress={() => setShowAvis(!showAvis)}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="star-outline" size={18} color="#555" />
+                                        <Ionicons name="star-outline" size={18} color={colors.textMuted} />
                                         <Text style={styles.navLabel}>{`Avis reçus (${avis.length})`}</Text>
                                     </View>
                                     <Ionicons
                                         name={showAvis ? 'chevron-down' : 'chevron-forward'}
-                                        size={16} color="#444"
+                                        size={16} color={colors.textDisabled}
                                     />
                                 </TouchableOpacity>
 
@@ -645,10 +639,10 @@ export default function ProfilScreen({ navigation }) {
                                     style={styles.navItem}
                                     onPress={() => navigation.navigate('Reservations')}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="ticket-outline" size={18} color="#555" />
+                                        <Ionicons name="ticket-outline" size={18} color={colors.textMuted} />
                                         <Text style={styles.navLabel}>Mes reservations</Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={16} color="#444" />
+                                    <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -657,29 +651,33 @@ export default function ProfilScreen({ navigation }) {
                             <Text style={styles.sectionTitle}>Support</Text>
                             <View style={styles.card}>
                                 <TouchableOpacity
-    style={styles.navItem}
-    onPress={() => navigation.navigate('Aide')}>
-    <View style={styles.navGauche}>
-        <Ionicons name="help-circle-outline" size={18} color="#555" />
-        <Text style={styles.navLabel}>Aide & Support</Text>
-    </View>
-    <Ionicons name="chevron-forward" size={16} color="#444" />
-</TouchableOpacity>
-                                <View style={styles.separator} />
-                                <TouchableOpacity style={styles.navItem}>
+                                    style={styles.navItem}
+                                    onPress={() => navigation.navigate('Aide')}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="document-outline" size={18} color="#555" />
-                                        <Text style={styles.navLabel}>Conditions generales</Text>
+                                        <Ionicons name="help-circle-outline" size={18} color={colors.textMuted} />
+                                        <Text style={styles.navLabel}>Aide & Support</Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={16} color="#444" />
+                                    <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
                                 </TouchableOpacity>
                                 <View style={styles.separator} />
-                                <TouchableOpacity style={styles.navItem}>
+                                <TouchableOpacity
+                                    style={styles.navItem}
+                                    onPress={() => Linking.openURL('https://wayvo-frontend.vercel.app/mentions-legales')}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="shield-outline" size={18} color="#555" />
+                                        <Ionicons name="document-outline" size={18} color={colors.textMuted} />
+                                        <Text style={styles.navLabel}>Conditions generales</Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+                                </TouchableOpacity>
+                                <View style={styles.separator} />
+                                <TouchableOpacity
+                                    style={styles.navItem}
+                                    onPress={() => Linking.openURL('https://wayvo-frontend.vercel.app/confidentialite')}>
+                                    <View style={styles.navGauche}>
+                                        <Ionicons name="shield-outline" size={18} color={colors.textMuted} />
                                         <Text style={styles.navLabel}>Protection des donnees</Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={16} color="#444" />
+                                    <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -688,8 +686,8 @@ export default function ProfilScreen({ navigation }) {
                             <View style={styles.card}>
                                 <TouchableOpacity style={styles.navItem} onPress={handleLogout}>
                                     <View style={styles.navGauche}>
-                                        <Ionicons name="log-out-outline" size={18} color="#e74c3c" />
-                                        <Text style={[styles.navLabel, { color: '#e74c3c' }]}>Deconnexion</Text>
+                                        <Ionicons name="log-out-outline" size={18} color={colors.red} />
+                                        <Text style={[styles.navLabel, { color: colors.red }]}>Deconnexion</Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
@@ -700,48 +698,46 @@ export default function ProfilScreen({ navigation }) {
                 <View style={{ height: 40 }} />
             </ScrollView>
 
-            {/* Modal historique complet */}
-<Modal
-    visible={showHistoriqueModal}
-    transparent
-    animationType="slide"
-    onRequestClose={() => setShowHistoriqueModal(false)}>
-    <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                    {`Historique (${trajetsTermines.length} trajets)`}
-                </Text>
-                <TouchableOpacity onPress={() => setShowHistoriqueModal(false)}>
-                    <Ionicons name="close" size={24} color="#eee" />
-                </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {trajetsTermines.map((t, index) => (
-                    <View key={t.id.toString()}>
-                        {index > 0 && <View style={styles.separator} />}
-                        <View style={styles.historiqueItem}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.trajetVilles}>
-                                    {`${t.villeDepart} → ${t.villeArrivee}`}
-                                </Text>
-                                <Text style={styles.trajetDetails}>
-                                    {formatDate(t.dateHeureDepart)}
-                                </Text>
-                            </View>
-                            <Text style={{ color: '#00b5e2', fontSize: 13, fontWeight: '600' }}>
-                                {`${t.prixConducteur?.toLocaleString()} GNF`}
+            <Modal
+                visible={showHistoriqueModal}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowHistoriqueModal(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>
+                                {`Historique (${trajetsTermines.length} trajets)`}
                             </Text>
+                            <TouchableOpacity onPress={() => setShowHistoriqueModal(false)}>
+                                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                            </TouchableOpacity>
                         </View>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {trajetsTermines.map((t, index) => (
+                                <View key={t.id.toString()}>
+                                    {index > 0 && <View style={styles.separator} />}
+                                    <View style={styles.historiqueItem}>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.trajetVilles}>
+                                                {`${t.villeDepart} → ${t.villeArrivee}`}
+                                            </Text>
+                                            <Text style={styles.trajetDetails}>
+                                                {formatDate(t.dateHeureDepart)}
+                                            </Text>
+                                        </View>
+                                        <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '600' }}>
+                                            {`${t.prixConducteur?.toLocaleString()} GNF`}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                            <View style={{ height: 20 }} />
+                        </ScrollView>
                     </View>
-                ))}
-                <View style={{ height: 20 }} />
-            </ScrollView>
-        </View>
-    </View>
-</Modal>
+                </View>
+            </Modal>
 
-            {/* Modal passagers */}
             <Modal
                 visible={showPassagers}
                 transparent
@@ -759,17 +755,17 @@ export default function ProfilScreen({ navigation }) {
                                 )}
                             </View>
                             <TouchableOpacity onPress={() => setShowPassagers(false)}>
-                                <Ionicons name="close" size={24} color="#eee" />
+                                <Ionicons name="close" size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
                         </View>
 
                         {loadingPassagers ? (
-                            <ActivityIndicator color="#00b5e2" size="large" style={{ marginTop: 20 }} />
+                            <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: 20 }} />
                         ) : (
                             <ScrollView style={{ marginTop: 10 }}>
                                 {passagersTrajet.length === 0 ? (
                                     <View style={styles.modalVide}>
-                                        <Ionicons name="people-outline" size={48} color="#333" />
+                                        <Ionicons name="people-outline" size={48} color={colors.border} />
                                         <Text style={styles.modalVideText}>Aucun passager confirme</Text>
                                     </View>
                                 ) : (
@@ -811,7 +807,7 @@ export default function ProfilScreen({ navigation }) {
                                                         },
                                                         userId: null
                                                     })}>
-                                                    <Ionicons name="chatbubble-outline" size={16} color="#00b5e2" />
+                                                    <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
                                                 </TouchableOpacity>
                                             </View>
                                         );
@@ -827,128 +823,129 @@ export default function ProfilScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
-    loadingContainer: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
+    container: { flex: 1, backgroundColor: colors.background },
+    loadingContainer: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
 
     header: {
-        backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20,
+        backgroundColor: colors.primary, paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 16,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     avatarContainer: { position: 'relative' },
     avatar: {
         width: 60, height: 60, borderRadius: 30,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#333',
+        backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
     },
     avatarImage: { width: 60, height: 60, borderRadius: 30 },
     avatarEdit: {
         position: 'absolute', bottom: 0, right: 0,
-        backgroundColor: '#00b5e2', borderRadius: 10,
+        backgroundColor: colors.accent, borderRadius: 10,
         width: 18, height: 18, alignItems: 'center', justifyContent: 'center',
     },
-    avatarText: { color: '#888', fontSize: 22, fontWeight: 'bold' },
+    avatarText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
     headerInfo: { flex: 1 },
     nomRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    nom: { fontSize: 20, fontWeight: 'bold', color: '#eee' },
-    email: { fontSize: 14, color: '#666', marginTop: 2 },
-    miniBio: { fontSize: 14, color: '#555', fontStyle: 'italic', marginTop: 3 },
+    nom: { fontSize: 20, fontWeight: 'bold', color: 'white' },
+    email: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
+    miniBio: { fontSize: 14, color: 'rgba(255,255,255,0.65)', fontStyle: 'italic', marginTop: 3 },
 
     onglets: {
-        flexDirection: 'row', backgroundColor: '#1a1a1a',
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+        flexDirection: 'row', backgroundColor: colors.surface,
+        borderBottomWidth: 1, borderBottomColor: colors.separator,
     },
     onglet: { flex: 1, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-    ongletActif: { borderBottomWidth: 2, borderBottomColor: '#00b5e2' },
-    ongletText: { fontSize: 15, fontWeight: '600', color: '#555' },
-    ongletTextActif: { color: '#00b5e2' },
+    ongletActif: { borderBottomWidth: 2, borderBottomColor: colors.accent },
+    ongletText: { fontSize: 15, fontWeight: '600', color: colors.textMuted },
+    ongletTextActif: { color: colors.accent },
 
-    section: { paddingHorizontal: 16, marginTop: 18 },
+    section: { paddingHorizontal: spacing.lg, marginTop: 18 },
     sectionHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: 10,
     },
     sectionTitle: {
-        fontSize: 13, fontWeight: '600', color: '#555',
+        fontSize: 13, fontWeight: '600', color: colors.textMuted,
         textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,
     },
-    editButton: { fontSize: 15, color: '#00b5e2', fontWeight: '600' },
+    editButton: { fontSize: 15, color: colors.primary, fontWeight: '600' },
 
     card: {
-        backgroundColor: '#1e1e1e', borderRadius: 14,
-        padding: 16, borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderRadius: radius.md,
+        padding: spacing.lg, borderWidth: 1, borderColor: colors.border,
+        ...shadows.card,
     },
-    separator: { height: 1, backgroundColor: '#2a2a2a', marginVertical: 4 },
-    emptyText: { fontSize: 15, color: '#555', textAlign: 'center', paddingVertical: 8 },
+    separator: { height: 1, backgroundColor: colors.separator, marginVertical: 4 },
+    emptyText: { fontSize: 15, color: colors.textMuted, textAlign: 'center', paddingVertical: 8 },
 
     infoRow: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', paddingVertical: 8,
     },
-    infoLabel: { fontSize: 13, color: '#666', flex: 1 },
-    infoValue: { fontSize: 13, color: '#ddd', flex: 2, textAlign: 'right' },
+    infoLabel: { fontSize: 13, color: colors.textMuted, flex: 1 },
+    infoValue: { fontSize: 13, color: colors.textPrimary, flex: 2, textAlign: 'right' },
     editInput: {
-        flex: 2, fontSize: 13, color: '#eee', textAlign: 'right',
-        borderBottomWidth: 1, borderBottomColor: '#333', paddingVertical: 2,
+        flex: 2, fontSize: 13, color: colors.textPrimary, textAlign: 'right',
+        borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 2,
     },
 
     dashboardCard: {
-        backgroundColor: '#1e1e1e', borderRadius: 14,
-        borderWidth: 1, borderColor: '#2a2a2a', overflow: 'hidden',
+        backgroundColor: colors.surface, borderRadius: radius.md,
+        borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+        ...shadows.card,
     },
     dashboardRow: { flexDirection: 'row', alignItems: 'center' },
     dashboardStat: { flex: 1, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8 },
-    dashboardValeur: { fontSize: 20, fontWeight: 'bold', color: '#00b5e2', marginBottom: 3 },
-    dashboardLabel: { fontSize: 10, color: '#555', textAlign: 'center' },
-    dashboardDivider: { width: 1, height: 44, backgroundColor: '#2a2a2a' },
-    dashboardSeparator: { height: 1, backgroundColor: '#2a2a2a' },
+    dashboardValeur: { fontSize: 20, fontWeight: 'bold', color: colors.primary, marginBottom: 3 },
+    dashboardLabel: { fontSize: 10, color: colors.textMuted, textAlign: 'center' },
+    dashboardDivider: { width: 1, height: 44, backgroundColor: colors.separator },
+    dashboardSeparator: { height: 1, backgroundColor: colors.separator },
     dashboardMembreRow: {
         flexDirection: 'row', alignItems: 'center',
-        gap: 8, paddingVertical: 10, paddingHorizontal: 16,
+        gap: 8, paddingVertical: 10, paddingHorizontal: spacing.lg,
     },
-    dashboardMembreTexte: { fontSize: 12, color: '#555' },
+    dashboardMembreTexte: { fontSize: 12, color: colors.textMuted },
 
     trajetItem: { paddingVertical: 8, gap: 6 },
     trajetItemInfo: { gap: 3 },
-    trajetVilles: { fontSize: 14, fontWeight: '600', color: '#ddd' },
-    trajetDetails: { fontSize: 12, color: '#555' },
+    trajetVilles: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+    trajetDetails: { fontSize: 12, color: colors.textMuted },
     trajetBoutons: { flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' },
 
     btnIcone: {
-        borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 8,
+        borderWidth: 1, borderColor: colors.border, borderRadius: 8,
         paddingVertical: 6, paddingHorizontal: 10,
     },
-    btnDemarrer: { backgroundColor: '#00b5e2', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
+    btnDemarrer: { backgroundColor: colors.accent, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
     btnDemarrerText: { color: 'white', fontSize: 12, fontWeight: '600' },
-    btnEnCours: { backgroundColor: '#252525', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
-    btnEnCoursText: { color: '#888', fontSize: 12 },
+    btnEnCours: { backgroundColor: colors.surfaceSecondary, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
+    btnEnCoursText: { color: colors.textMuted, fontSize: 12 },
     btnTerminer: {
-        backgroundColor: '#252525', borderRadius: 8, paddingVertical: 6,
-        paddingHorizontal: 10, borderWidth: 1, borderColor: '#333',
+        backgroundColor: colors.surfaceSecondary, borderRadius: 8, paddingVertical: 6,
+        paddingHorizontal: 10, borderWidth: 1, borderColor: colors.border,
     },
-    btnTerminerText: { color: '#ddd', fontSize: 12 },
+    btnTerminerText: { color: colors.textPrimary, fontSize: 12 },
     btnAnnuler: {
-        borderWidth: 1, borderColor: '#e74c3c', borderRadius: 8,
+        borderWidth: 1, borderColor: colors.red, borderRadius: 8,
         paddingVertical: 6, paddingHorizontal: 10,
     },
-    btnAnnulerText: { color: '#e74c3c', fontSize: 12 },
+    btnAnnulerText: { color: colors.red, fontSize: 12 },
 
     vehiculeItem: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', paddingVertical: 8,
     },
-    vehiculeNom: { fontSize: 14, fontWeight: '600', color: '#ddd' },
-    vehiculeDetails: { fontSize: 12, color: '#555', marginTop: 2 },
+    vehiculeNom: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+    vehiculeDetails: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
 
     navItem: {
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between', paddingVertical: 12,
     },
     navGauche: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    navLabel: { fontSize: 14, color: '#ddd' },
+    navLabel: { fontSize: 14, color: colors.textPrimary },
 
     sousListe: {
-        backgroundColor: '#252525', borderRadius: 10,
+        backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm,
         padding: 12, marginTop: 8, marginBottom: 4,
     },
     historiqueItem: { paddingVertical: 8, gap: 3 },
@@ -957,50 +954,50 @@ const styles = StyleSheet.create({
     avisAuteurRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     avisAvatar: {
         width: 32, height: 32, borderRadius: 16,
-        backgroundColor: '#252525', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
     },
-    avisAvatarText: { color: '#888', fontSize: 12, fontWeight: '700' },
-    avisAuteur: { fontSize: 13, fontWeight: '600', color: '#ddd' },
-    avisDate: { fontSize: 11, color: '#555', marginTop: 1 },
-    avisCommentaire: { fontSize: 13, color: '#888', fontStyle: 'italic', lineHeight: 18 },
-    avisSansCommentaire: { fontSize: 12, color: '#444', fontStyle: 'italic' },
+    avisAvatarText: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
+    avisAuteur: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+    avisDate: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
+    avisCommentaire: { fontSize: 13, color: colors.textSecondary, fontStyle: 'italic', lineHeight: 18 },
+    avisSansCommentaire: { fontSize: 12, color: colors.textDisabled, fontStyle: 'italic' },
 
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalCard: {
-        backgroundColor: '#1e1e1e', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        padding: 24, maxHeight: '70%', borderTopWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: 24, maxHeight: '70%',
     },
     modalHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'flex-start', marginBottom: 16,
     },
     voirPlusBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingTop: 10, marginTop: 6,
-    borderTopWidth: 1, borderTopColor: '#2a2a2a',
-},
-voirPlusText: { fontSize: 13, color: '#00b5e2', fontWeight: '600' },
-    modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#eee' },
-    modalSubtitle: { fontSize: 12, color: '#666', marginTop: 3 },
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 6, paddingTop: 10, marginTop: 6,
+        borderTopWidth: 1, borderTopColor: colors.separator,
+    },
+    voirPlusText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
+    modalTitle: { fontSize: 16, fontWeight: 'bold', color: colors.textPrimary },
+    modalSubtitle: { fontSize: 12, color: colors.textMuted, marginTop: 3 },
     modalVide: { alignItems: 'center', paddingVertical: 32, gap: 8 },
-    modalVideText: { color: '#555', fontSize: 14 },
+    modalVideText: { color: colors.textMuted, fontSize: 14 },
 
     passagerCard: {
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        backgroundColor: '#252525', borderRadius: 10, padding: 10, marginBottom: 8,
+        backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm, padding: 10, marginBottom: 8,
     },
     passagerAvatar: { width: 40, height: 40, borderRadius: 20 },
     passagerAvatarPlaceholder: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: '#1e1e1e', alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#333',
+        backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: colors.border,
     },
-    passagerInitiales: { color: '#888', fontSize: 14, fontWeight: '700' },
+    passagerInitiales: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
     passagerInfos: { flex: 1 },
-    passagerNom: { color: '#eee', fontSize: 14, fontWeight: '600' },
-    passagerDetail: { color: '#666', fontSize: 12, marginTop: 2 },
+    passagerNom: { color: colors.textPrimary, fontSize: 14, fontWeight: '600' },
+    passagerDetail: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
     passagerBtnChat: {
-        padding: 6, backgroundColor: '#252525',
-        borderRadius: 16, borderWidth: 1, borderColor: '#333',
+        padding: 6, backgroundColor: colors.surface,
+        borderRadius: 16, borderWidth: 1, borderColor: colors.border,
     },
 });

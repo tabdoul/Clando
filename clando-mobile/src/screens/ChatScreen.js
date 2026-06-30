@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
+import { colors, spacing, radius } from '../../constants/theme';
 
 export default function ChatScreen({ route, navigation }) {
     const { reservationId, interlocuteur } = route.params;
@@ -47,30 +48,30 @@ export default function ChatScreen({ route, navigation }) {
             if (loading) setLoading(false);
         }
     };
-const envoyer = async () => {
-    if (!contenu.trim()) return;
-    if (!currentUserId) {
-        Alert.alert('Erreur', 'Veuillez vous reconnecter');
-        return;
-    }
 
-    const messageTemp = contenu;
-    setContenu('');
+    const envoyer = async () => {
+        if (!contenu.trim()) return;
+        if (!currentUserId) {
+            Alert.alert('Erreur', 'Veuillez vous reconnecter');
+            return;
+        }
 
-    try {
-        await api.post('/messages', {
-            contenu: messageTemp,
-            expediteurId: currentUserId,
-            destinataireId: interlocuteur.id,
-            reservationId
-        });
-        chargerMessages();
-    } catch (error) {
-        console.log('Erreur:', error.message);
-        Alert.alert('Erreur', "Impossible d'envoyer le message");
-        setContenu(messageTemp);
-    }
-};
+        const messageTemp = contenu;
+        setContenu('');
+
+        try {
+            await api.post('/messages', {
+                contenu: messageTemp,
+                expediteurId: currentUserId,
+                destinataireId: interlocuteur.id,
+                reservationId
+            });
+            chargerMessages();
+        } catch (error) {
+            Alert.alert('Erreur', "Impossible d'envoyer le message");
+            setContenu(messageTemp);
+        }
+    };
 
     const formatHeure = (dateString) => {
         const date = new Date(dateString);
@@ -98,7 +99,7 @@ const envoyer = async () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size={36} color="#00b5e2" />
+                <ActivityIndicator size={36} color={colors.primary} />
             </View>
         );
     }
@@ -110,7 +111,7 @@ const envoyer = async () => {
 
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#eee" />
+                    <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
                 <View style={styles.avatar}>
                     {interlocuteur.photo ? (
@@ -142,7 +143,7 @@ const envoyer = async () => {
                 <TextInput
                     style={styles.input}
                     placeholder="Votre message..."
-                    placeholderTextColor="#666"
+                    placeholderTextColor={colors.textDisabled}
                     value={contenu}
                     onChangeText={setContenu}
                     multiline
@@ -160,54 +161,53 @@ const envoyer = async () => {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: colors.background },
     loadingContainer: {
-        flex: 1, backgroundColor: '#121212',
+        flex: 1, backgroundColor: colors.background,
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: '#1a1a1a',
-        paddingTop: 60, paddingBottom: 16, paddingHorizontal: 16,
+        backgroundColor: colors.primary,
+        paddingTop: 60, paddingBottom: 16, paddingHorizontal: spacing.lg,
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
     },
     backButton: { padding: 4 },
     avatar: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: '#00b5e2', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
     },
     avatarImage: { width: 40, height: 40, borderRadius: 20 },
     avatarText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
-    headerNom: { fontSize: 16, fontWeight: '600', color: '#eee' },
-    messagesList: { padding: 16, gap: 8 },
+    headerNom: { fontSize: 16, fontWeight: '600', color: 'white' },
+    messagesList: { padding: spacing.lg, gap: 8 },
     messageWrapper: { marginBottom: 8 },
     messageWrapperMoi: { alignItems: 'flex-end' },
     messageWrapperAutre: { alignItems: 'flex-start' },
-    messageBubble: { maxWidth: '75%', borderRadius: 16, padding: 12 },
-    bubbleMoi: { backgroundColor: '#00b5e2', borderBottomRightRadius: 4 },
+    messageBubble: { maxWidth: '75%', borderRadius: radius.lg, padding: 12 },
+    bubbleMoi: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
     bubbleAutre: {
-        backgroundColor: '#1e1e1e', borderBottomLeftRadius: 4,
-        borderWidth: 1, borderColor: '#2a2a2a',
+        backgroundColor: colors.surface, borderBottomLeftRadius: 4,
+        borderWidth: 1, borderColor: colors.border,
     },
     messageTexte: { fontSize: 15, lineHeight: 20 },
     texteMoi: { color: 'white' },
-    texteAutre: { color: '#ddd' },
+    texteAutre: { color: colors.textPrimary },
     messageHeure: { fontSize: 10, marginTop: 4, textAlign: 'right' },
-    heureMoi: { color: 'rgba(255,255,255,0.6)' },
-    heureAutre: { color: '#666' },
+    heureMoi: { color: 'rgba(255,255,255,0.7)' },
+    heureAutre: { color: colors.textMuted },
     inputContainer: {
         flexDirection: 'row', alignItems: 'flex-end', padding: 12,
-        backgroundColor: '#1a1a1a', borderTopWidth: 1,
-        borderTopColor: '#2a2a2a', gap: 10,
+        backgroundColor: colors.surface, borderTopWidth: 1,
+        borderTopColor: colors.separator, gap: 10,
     },
     input: {
-        flex: 1, backgroundColor: '#252525', borderRadius: 20,
-        paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#eee',
-        maxHeight: 100, borderWidth: 1, borderColor: '#2a2a2a',
+        flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: 20,
+        paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.textPrimary,
+        maxHeight: 100, borderWidth: 1, borderColor: colors.border,
     },
     sendButton: {
-        backgroundColor: '#00b5e2', width: 44, height: 44,
+        backgroundColor: colors.accent, width: 44, height: 44,
         borderRadius: 22, alignItems: 'center', justifyContent: 'center',
     },
 });
