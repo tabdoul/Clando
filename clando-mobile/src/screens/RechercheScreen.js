@@ -15,8 +15,7 @@ import { colors, spacing, radius, shadows } from '../../constants/theme';
 export default function RechercheScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');
     const [villeArrivee, setVilleArrivee] = useState('');
-    const [dateDepart, setDateDepart] = useState(null);
-    const [dateSaisie, setDateSaisie] = useState(false);
+    const [dateSaisie, setDateSaisie] = useState(true);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
     const [nbNotifications, setNbNotifications] = useState(0);
@@ -24,6 +23,7 @@ export default function RechercheScreen({ navigation }) {
     const [favoris, setFavoris] = useState([]);
     const [champActif, setChampActif] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
+    const [dateDepart, setDateDepart] = useState(new Date());
 
     useEffect(() => {
         chargerNotifications();

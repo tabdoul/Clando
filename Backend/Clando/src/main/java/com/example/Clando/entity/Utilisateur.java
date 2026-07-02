@@ -1,6 +1,7 @@
 package com.example.Clando.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime; 
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -23,6 +24,12 @@ public class Utilisateur {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
+    private String resetCode; // ✅ une seule fois
+
+    @Column
+    private LocalDateTime resetCodeExpiration; // ✅ ajouté
+
     @NotBlank
     @Column(nullable = false)
     private String nom;
@@ -41,6 +48,7 @@ public class Utilisateur {
 
     private String telephone;
     private String photo;
+
     @Column(length = 500)
     private String miniBio;
 
@@ -51,8 +59,9 @@ public class Utilisateur {
     private boolean verifie = false;
 
     private String expoPushToken;
+
     @Column
-    private String genre; // HOMME, FEMME, AUTRE
+    private String genre;
 
     @OneToMany(mappedBy = "conducteur", cascade = CascadeType.ALL)
     private List<Vehicule> vehicules;
@@ -94,6 +103,12 @@ public class Utilisateur {
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
 
+    public String getResetCode() { return resetCode; }
+    public void setResetCode(String resetCode) { this.resetCode = resetCode; }
+
+    public LocalDateTime getResetCodeExpiration() { return resetCodeExpiration; }
+    public void setResetCodeExpiration(LocalDateTime resetCodeExpiration) { this.resetCodeExpiration = resetCodeExpiration; }
+
     public String getPhoto() { return photo; }
     public void setPhoto(String photo) { this.photo = photo; }
 
@@ -102,24 +117,21 @@ public class Utilisateur {
 
     public String getGenre() { return genre; }
     public void setGenre(String genre) { this.genre = genre; }
-    
+
     public String getExpoPushToken() { return expoPushToken; }
     public void setExpoPushToken(String expoPushToken) { this.expoPushToken = expoPushToken; }
 
     public LocalDate getDateInscription() { return dateInscription; }
     public void setDateInscription(LocalDate dateInscription) { this.dateInscription = dateInscription; }
-    
 
     public boolean isVerifie() { return verifie; }
     public void setVerifie(boolean verifie) { this.verifie = verifie; }
-    
 
     public List<Vehicule> getVehicules() { return vehicules; }
     public List<Trajet> getTrajetsConduits() { return trajetsConduits; }
     public List<Reservation> getReservations() { return reservations; }
     public List<Avis> getAvisRediges() { return avisRediges; }
     public List<Avis> getAvisRecus() { return avisRecus; }
-    
 
     public static Builder builder() { return new Builder(); }
 
@@ -136,4 +148,4 @@ public class Utilisateur {
         public Builder genre(String v) { u.genre = v; return this; }
         public Utilisateur build() { return u; }
     }
-} 
+}

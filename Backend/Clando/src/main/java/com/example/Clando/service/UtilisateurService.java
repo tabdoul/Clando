@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,13 +21,16 @@ public class UtilisateurService {
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordEncoder passwordEncoder;
     private final CloudinaryService cloudinaryService;
+    private final EmailService emailService; // ✅ ajouté
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository,
                                PasswordEncoder passwordEncoder,
-                               CloudinaryService cloudinaryService) {
+                               CloudinaryService cloudinaryService,
+                               EmailService emailService) { // ✅ ajouté
         this.utilisateurRepository = utilisateurRepository;
         this.passwordEncoder = passwordEncoder;
         this.cloudinaryService = cloudinaryService;
+        this.emailService = emailService; // ✅ ajouté
     }
 
     public UtilisateurResponse creer(UtilisateurRequest request) {
@@ -39,10 +44,50 @@ public class UtilisateurService {
                 .email(request.getEmail())
                 .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
                 .telephone(request.getTelephone())
-                .genre(request.getGenre()) // ✅ point avant genre
+                .genre(request.getGenre())
                 .build();
 
         return toResponse(utilisateurRepository.save(utilisateur));
+    }
+
+    // ✅ Demande de reset — envoie le code par email
+    public void demanderResetPassword(String email) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Aucun compte associé à cet email"));
+
+        String code = String.format("%06d", new Random().nextInt(999999));
+        utilisateur.setResetCode(code);
+        utilisateur.setResetCodeExpiration(LocalDateTime.now().plusMinutes(15));
+        utilisateurRepository.save(utilisateur);
+
+        emailService.envoyerCodeReset(email, code);
+    }
+
+    // ✅ Vérification du code
+    public void verifierCode(String email, String code) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Email introuvable"));
+
+        if (utilisateur.getResetCode() == null || !utilisateur.getResetCode().equals(code)) {
+            throw new RuntimeException("Code incorrect");
+        }
+
+        if (utilisateur.getResetCodeExpiration().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Code expiré, veuillez faire une nouvelle demande");
+        }
+    }
+
+    // ✅ Reset du mot de passe
+    public void resetPassword(String email, String code, String nouveauMotDePasse) {
+        verifierCode(email, code);
+
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Email introuvable"));
+
+        utilisateur.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+        utilisateur.setResetCode(null);
+        utilisateur.setResetCodeExpiration(null);
+        utilisateurRepository.save(utilisateur);
     }
 
     public UtilisateurResponse getById(Long id) {
@@ -103,7 +148,7 @@ public class UtilisateurService {
                 .miniBio(u.getMiniBio())
                 .photo(u.getPhoto())
                 .verifie(u.isVerifie())
-                .genre(u.getGenre()) 
+                .genre(u.getGenre())
                 .build();
     }
 }

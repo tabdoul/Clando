@@ -20,6 +20,8 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import TrajetDetailScreen from './src/screens/TrajetDetailScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -60,7 +62,6 @@ export default function App() {
         return () => subscription.remove();
     }, []);
 
-    // ✅ Traite le deep link et navigue vers Réservations
     const handleDeepLink = (url) => {
         if (!url) return;
         console.log('Deep link reçu:', url);
@@ -144,6 +145,8 @@ export default function App() {
                 <Stack.Screen name="Documents" component={DocumentsScreen} />
                 <Stack.Screen name="Aide" component={AideScreen} />
                 <Stack.Screen name="TrajetDetail" component={TrajetDetailScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

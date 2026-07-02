@@ -29,6 +29,8 @@ export default function LoginScreen({ navigation }) {
         }
     };
 
+    
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -80,6 +82,12 @@ export default function LoginScreen({ navigation }) {
                             <Text style={styles.link}>{"S'inscrire"}</Text>
                         </Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+    style={styles.forgotBtn}
+    onPress={() => navigation.navigate('ForgotPassword')}>
+    <Text style={styles.forgotTexte}>Mot de passe oublié ?</Text>
+</TouchableOpacity>
                 </View>
 
             </ScrollView>
