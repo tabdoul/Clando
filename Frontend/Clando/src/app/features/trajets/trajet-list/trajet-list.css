@@ -1,245 +1,91 @@
-.page { background: #f8f9fa; min-height: 100vh; }
-
-/* Hero Search */
-.search-hero {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a1628 100%);
-    padding: 60px 20px 80px;
-    text-align: center;
+/* ── Header résultats ───────────────────────────── */
+app-trajet-list .mat-mdc-card,
+app-trajet-list mat-card {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    box-shadow: none !important;
 }
-
-.search-hero h1 {
-    color: white;
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.search-hero p {
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 32px;
-    font-size: 1rem;
-}
-
-.search-card {
-    max-width: 750px;
+.results-hero {
+    background: #ffffff;
+    padding: 32px 20px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 28px !important;
-    border-radius: 16px !important;
+    gap: 16px;
 }
 
-.search-grid {
+.results-hero h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+}
+
+.results-hero h1 mat-icon {
+    color: #182d5a;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.results-hero p {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.btn-modifier {
+    color: #182d5a !important;
+    border-color: #182d5a !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Formulaire compact ─────────────────────────── */
+.search-compact {
+    background: #f9f9f9;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 20px;
+}
+
+.search-compact .search-grid {
+    max-width: 860px;
+    margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 12px;
-    margin-bottom: 16px;
+    align-items: center;
 }
 
-.btn-search {
-    width: 100%;
-    height: 48px;
-    font-size: 1rem !important;
-    background: #00b5e2 !important;
+.search-compact .btn-search {
+    height: 56px;
+    background: #182d5a !important;
     color: white !important;
     border-radius: 8px !important;
 }
 
-/* Résultats */
-.results {
-    max-width: 860px;
-    margin: -24px auto 40px;
-    padding: 0 16px;
-}
 
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    background: white;
-    padding: 16px 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.results-header h2 { margin: 0; font-size: 1.1rem; color: #333; }
-
-.loading {
-    text-align: center;
-    padding: 40px;
-    color: #888;
-}
-
-/* Carte trajet */
-.trajet-card {
-    margin-bottom: 16px;
-    padding: 20px !important;
-    border-radius: 14px !important;
-    border: 1px solid #e8e8e8 !important;
-    transition: box-shadow 0.2s, transform 0.2s;
-    cursor: pointer;
-}
-
-.trajet-card:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
-    transform: translateY(-2px);
-}
-
-.trajet-complet { opacity: 0.6; }
-
-.trajet-femmes { border-left: 4px solid #9c27b0 !important; }
-
-.badge-femmes {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #f3e5f5;
-    color: #9c27b0;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.82rem;
-    margin-bottom: 16px;
-    width: fit-content;
-}
-
-.trajet-content {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.trajet-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex: 1;
-}
-
-.trajet-heure { text-align: center; min-width: 52px; }
-
-.heure { font-size: 1.4rem; font-weight: 700; color: #1a1a1a; }
-.date { font-size: 0.8rem; color: #888; }
-
-.trajet-route { flex: 1; }
-
-.itineraire {
-    display: block;
-    font-size: 0.75rem;
-    color: #00b5e2;
-    font-style: italic;
-    margin-bottom: 6px;
-    text-align: center;
-}
-
-.route-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.ville-nom { font-weight: 600; color: #1a1a1a; white-space: nowrap; }
-
-.line {
-    flex: 1;
-    height: 2px;
-    background: #e0e0e0;
-    position: relative;
-    display: flex;
-    align-items: center;
+@media (max-width: 768px){
+  .search-compact .search-grid{
+    grid-template-columns: 1fr;
+  }
+  .search-compact .btn-search {
+    width: 100%;
+  }
+  .results-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap : 12px;
+  }
+  .results-hero h1 {
+    width: 100%;
     justify-content: center;
-}
-
-.car-icon { color: #00b5e2; font-size: 18px !important; background: white; }
-
-/* Conducteur */
-.trajet-conducteur {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-left: 1px solid #f0f0f0;
-    border-right: 1px solid #f0f0f0;
-    padding: 0 20px;
-}
-
-.avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: #e3f6fc;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
-.avatar mat-icon { color: #00b5e2; }
-
-.conducteur-nom { font-weight: 500; font-size: 0.9rem; color: #1a1a1a; }
-.conducteur-vehicule { font-size: 0.78rem; color: #888; }
-.conducteur-note { font-size: 0.78rem; color: #f39c12; }
-
-.places {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: #888;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    margin-left: 12px;
-}
-
-.places mat-icon { font-size: 16px !important; }
-
-/* Prix */
-.trajet-prix {
-    text-align: right;
-    min-width: 140px;
-}
-
-.prix { font-size: 1.5rem; font-weight: 700; color: #00b5e2; }
-.prix-label { font-size: 0.78rem; color: #888; margin-bottom: 12px; }
-
-.badge-complet {
-    background: #ffebee;
-    color: #e53935;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
-}
-
-.btn-voir {
-    background: #00b5e2 !important;
-    color: white !important;
-    border-radius: 20px !important;
-    font-size: 0.85rem !important;
-}
-
-/* Empty */
-.empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: #888;
-}
-
-.empty mat-icon { font-size: 64px !important; color: #ddd; display: block; margin-bottom: 16px; }
-.empty h3 { color: #999; margin-bottom: 8px; }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .search-grid { grid-template-columns: 1fr; }
-
-    .trajet-content { flex-direction: column; align-items: flex-start; }
-
-    .trajet-conducteur {
-        border: none;
-        border-top: 1px solid #f0f0f0;
-        padding: 12px 0 0;
-        width: 100%;
-    }
-
-    .trajet-prix {
-        text-align: left;
-        border-top: 1px solid #f0f0f0;
-        padding-top: 12px;
-        width: 100%;
-    }
+  }
 }

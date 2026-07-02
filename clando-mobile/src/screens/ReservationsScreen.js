@@ -349,9 +349,13 @@ export default function ReservationsScreen({ navigation }) {
     const reservationsEnCours = reservations.filter(r =>
         ['EN_ATTENTE', 'CONFIRMEE'].includes(r.statut)
     );
-    const reservationsHistorique = reservations.filter(r =>
-        ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut)
-    );
+    const reservationsHistorique = reservations
+    .filter(r => ['TERMINEE', 'ANNULEE', 'REFUSEE'].includes(r.statut))
+    .sort((a, b) => {
+        const dateA = new Date(a.dateHeureDepart || a.dateReservation);
+        const dateB = new Date(b.dateHeureDepart || b.dateReservation);
+        return dateB - dateA; // ✅ plus récent en premier
+    });
     const listeActive = ongletActif === 'encours' ? reservationsEnCours : reservationsHistorique;
 
     return (

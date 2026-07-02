@@ -120,11 +120,10 @@
             </div>
 
             <!-- Sidebar -->
-            <!-- Sidebar -->
 <div class="sidebar">
     <div class="card card-prix">
         <div class="prix-valeur">{{ trajet.prixConducteur | number }} GNF</div>
-        <div class="prix-label">par place · +13% frais au paiement</div>
+        <div class="prix-label">par place · + frais au paiement</div>
 
         <div class="prix-info">
             <mat-icon>info_outline</mat-icon>
@@ -142,7 +141,6 @@
                        (ngModelChange)="filtrerDepart($event)"
                        [matAutocomplete]="autoDepart"
                        placeholder="Ex: Kissosso">
-                <mat-icon matSuffix>my_location</mat-icon>
                 <mat-autocomplete #autoDepart="matAutocomplete">
                     <mat-option *ngFor="let q of quartiersDepart" [value]="q">{{ q }}</mat-option>
                 </mat-autocomplete>

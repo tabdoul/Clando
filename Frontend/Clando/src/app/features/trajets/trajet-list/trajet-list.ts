@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -21,11 +21,11 @@ import { QUARTIERS_CONAKRY } from '../../../shared/models/constants/quartiers';
 @Component({
     selector: 'app-trajet-list',
     standalone: true,
+    encapsulation: ViewEncapsulation.None, 
     imports: [
         CommonModule,
         ReactiveFormsModule,
         RouterLink,
-        MatCardModule,
         MatButtonModule,
         MatIconModule,
         MatFormFieldModule,
@@ -45,8 +45,12 @@ export class TrajetListComponent implements OnInit {
     searchForm: FormGroup;
     loading = false;
     rechercheLancee = false;
+    showFiltres = false;
 
-    // Autocomplete
+    toggleFiltres() {
+        this.showFiltres = !this.showFiltres;
+    }
+
     quartiersDepart: string[] = [];
     quartiersArrivee: string[] = [];
 
@@ -67,13 +71,10 @@ export class TrajetListComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Autocomplete départ
         this.chargerTrajets();
         this.searchForm.get('villeDepart')?.valueChanges.subscribe(val => {
             this.quartiersDepart = this.filtrerQuartiers(val);
         });
-
-        // Autocomplete arrivée
         this.searchForm.get('villeArrivee')?.valueChanges.subscribe(val => {
             this.quartiersArrivee = this.filtrerQuartiers(val);
         });
@@ -108,31 +109,30 @@ export class TrajetListComponent implements OnInit {
     }
 
     rechercher(): void {
-    const { villeDepart, villeArrivee } = this.searchForm.value;
-    this.rechercheLancee = true;
-    this.loading = true;
+        const { villeDepart, villeArrivee } = this.searchForm.value;
+        this.rechercheLancee = true;
+        this.loading = true;
 
-    if (!villeDepart || !villeArrivee) {
-        this.chargerTrajets();
-        return;
-    }
-
-    this.trajetService.rechercher(
-        villeDepart.trim().toLowerCase(),
-        villeArrivee.trim().toLowerCase()
-    ).subscribe({
-        next: (data: any) => {
-            
-            this.trajets = data.content || data;
-            this.loading = false;
-            this.cdr.detectChanges();
-        },
-        error: (err) => {
-            console.log('Erreur recherche:', err);
-            this.loading = false;
-            this.cdr.detectChanges();
-            this.snackBar.open('Erreur lors de la recherche', 'Fermer', { duration: 3000 });
+        if (!villeDepart || !villeArrivee) {
+            this.chargerTrajets();
+            return;
         }
-    });
-}
+
+        this.trajetService.rechercher(
+            villeDepart.trim().toLowerCase(),
+            villeArrivee.trim().toLowerCase()
+        ).subscribe({
+            next: (data: any) => {
+                this.trajets = data.content || data;
+                this.loading = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.log('Erreur recherche:', err);
+                this.loading = false;
+                this.cdr.detectChanges();
+                this.snackBar.open('Erreur lors de la recherche', 'Fermer', { duration: 3000 });
+            }
+        });
+    }
 }

@@ -18,13 +18,16 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UtilisateurService utilisateurService;
     private final ReservationService reservationService;
+    private final NotificationService notificationService; // ✅ ajouté
 
     public MessageService(MessageRepository messageRepository,
                           UtilisateurService utilisateurService,
-                          ReservationService reservationService) {
+                          ReservationService reservationService,
+                          NotificationService notificationService) { 
         this.messageRepository = messageRepository;
         this.utilisateurService = utilisateurService;
         this.reservationService = reservationService;
+        this.notificationService = notificationService; 
     }
 
     public MessageResponse envoyer(MessageRequest request) {
@@ -39,7 +42,23 @@ public class MessageService {
                 .reservation(reservation)
                 .build();
 
-        return toResponse(messageRepository.save(message));
+        Message saved = messageRepository.save(message);
+
+        //  Notification push au destinataire à chaque message
+        String token = destinataire.getExpoPushToken();
+        if (token != null && !token.isBlank()) {
+            String contenuTronque = request.getContenu().length() > 80
+                ? request.getContenu().substring(0, 80) + "..."
+                : request.getContenu();
+
+            notificationService.envoyerNotification(
+                token,
+                expediteur.getPrenom() + " " + expediteur.getNom(),
+                contenuTronque
+            );
+        }
+
+        return toResponse(saved);
     }
 
     public List<MessageResponse> getByReservation(Long reservationId) {
@@ -71,21 +90,21 @@ public class MessageService {
         });
     }
 
-   public MessageResponse toResponse(Message m) {
-    return MessageResponse.builder()
-            .id(m.getId())
-            .contenu(m.getContenu())
-            .expediteurId(m.getExpediteur().getId())
-            .expediteurNom(m.getExpediteur().getNom())
-            .expediteurPrenom(m.getExpediteur().getPrenom())
-            .expediteurPhoto(m.getExpediteur().getPhoto())
-            .destinataireId(m.getDestinataire().getId())
-            .destinataireNom(m.getDestinataire().getNom())
-            .destinatairePrenom(m.getDestinataire().getPrenom())
-            .destinatairePhoto(m.getDestinataire().getPhoto())
-            .reservationId(m.getReservation().getId())
-            .dateEnvoi(m.getDateEnvoi())
-            .lu(m.isLu())
-            .build();
-}
+    public MessageResponse toResponse(Message m) {
+        return MessageResponse.builder()
+                .id(m.getId())
+                .contenu(m.getContenu())
+                .expediteurId(m.getExpediteur().getId())
+                .expediteurNom(m.getExpediteur().getNom())
+                .expediteurPrenom(m.getExpediteur().getPrenom())
+                .expediteurPhoto(m.getExpediteur().getPhoto())
+                .destinataireId(m.getDestinataire().getId())
+                .destinataireNom(m.getDestinataire().getNom())
+                .destinatairePrenom(m.getDestinataire().getPrenom())
+                .destinatairePhoto(m.getDestinataire().getPhoto())
+                .reservationId(m.getReservation().getId())
+                .dateEnvoi(m.getDateEnvoi())
+                .lu(m.isLu())
+                .build();
+    }
 }

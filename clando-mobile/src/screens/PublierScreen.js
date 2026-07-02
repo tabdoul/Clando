@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    Platform,Keyboard
+    Platform, Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
 import { QUARTIERS_CONAKRY } from '../../constants/QUARTIERS_CONAKRY';
+import { colors, spacing, radius, shadows } from '../../constants/theme';
 
 export default function PublierScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');
@@ -30,10 +31,9 @@ export default function PublierScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [femmesUniquement, setFemmesUniquement] = useState(false);
     const [utilisateur, setUtilisateur] = useState(null);
-
-    // Autocomplete
     const [champActif, setChampActif] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
+    const [trajetsRecents, setTrajetsRecents] = useState([]);
 
     const itineraires = ['Autoroute', 'Route du Prince', 'Corniche'];
 
@@ -45,23 +45,46 @@ export default function PublierScreen({ navigation }) {
         try {
             const userId = await getUserId();
             if (!userId) return;
-            const [vehiculesRes, userRes] = await Promise.all([
+            const [vehiculesRes, userRes, trajetsRes] = await Promise.all([
                 api.get(`/vehicules/conducteur/${userId}`),
-                api.get(`/utilisateurs/${userId}`)
+                api.get(`/utilisateurs/${userId}`),
+                api.get(`/trajets/conducteur/${userId}`)
             ]);
             setVehicules(vehiculesRes.data);
             setUtilisateur(userRes.data);
             if (vehiculesRes.data.length > 0) setVehiculeSelectionne(vehiculesRes.data[0]);
+
+            // ✅ Trajets récents uniques (départ/arrivée)
+            const vus = new Set();
+            const recents = trajetsRes.data
+                .sort((a, b) => new Date(b.dateHeureDepart) - new Date(a.dateHeureDepart))
+                .filter(t => {
+                    const cle = `${t.villeDepart}-${t.villeArrivee}`;
+                    if (vus.has(cle)) return false;
+                    vus.add(cle);
+                    return true;
+                })
+                .slice(0, 3);
+            setTrajetsRecents(recents);
         } catch (error) {}
+    };
+
+    const reutiliserTrajet = (trajet) => {
+        setVilleDepart(trajet.villeDepart);
+        setVilleArrivee(trajet.villeArrivee);
+        setPrix(trajet.prixConducteur?.toString() || '');
+        setPlaces(trajet.placesDisponibles?.toString() || '');
+        setItineraire(trajet.itineraire || '');
+        if (trajet.vehiculeId) {
+            const v = vehicules.find(v => v.id === trajet.vehiculeId);
+            if (v) setVehiculeSelectionne(v);
+        }
     };
 
     const filtrerSuggestions = (texte) => {
         if (!texte || texte.length < 2) { setSuggestions([]); return; }
         const normalise = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const resultats = QUARTIERS_CONAKRY.filter(q =>
-            normalise(q).includes(normalise(texte))
-        ).slice(0, 6);
-        setSuggestions(resultats);
+        setSuggestions(QUARTIERS_CONAKRY.filter(q => normalise(q).includes(normalise(texte))).slice(0, 6));
     };
 
     const onChangeDepart = (texte) => {
@@ -81,6 +104,7 @@ export default function PublierScreen({ navigation }) {
         else if (champActif === 'arrivee') setVilleArrivee(quartier);
         setChampActif(null);
         setSuggestions([]);
+        Keyboard.dismiss();
     };
 
     const ajouterVehicule = async () => {
@@ -114,7 +138,6 @@ export default function PublierScreen({ navigation }) {
             Alert.alert('Erreur', 'Veuillez selectionner un vehicule');
             return;
         }
-
         setLoading(true);
         try {
             const userId = await getUserId();
@@ -124,8 +147,7 @@ export default function PublierScreen({ navigation }) {
             const dateFormatee = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
 
             await api.post('/trajets', {
-                villeDepart,
-                villeArrivee,
+                villeDepart, villeArrivee,
                 dateHeureDepart: dateFormatee,
                 prix: parseFloat(prix),
                 placesDisponibles: parseInt(places),
@@ -143,6 +165,7 @@ export default function PublierScreen({ navigation }) {
                     setPrix(''); setPlaces(''); setItineraire('');
                     setFemmesUniquement(false);
                     setVehiculeSelectionne(vehicules.length > 0 ? vehicules[0] : null);
+                    chargerDonnees();
                 }
             }]);
         } catch (error) {
@@ -179,19 +202,57 @@ export default function PublierScreen({ navigation }) {
                 <Text style={styles.headerTitle}>Publier un trajet</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled">
+
+                {/* ✅ Trajets récents */}
+                {trajetsRecents.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Reprendre un trajet récent</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                            <View style={styles.recentsRow}>
+                                {trajetsRecents.map((t) => (
+                                    <TouchableOpacity
+                                        key={t.id.toString()}
+                                        style={styles.recentCard}
+                                        onPress={() => reutiliserTrajet(t)}>
+                                        <View style={styles.recentRoute}>
+                                            <View style={styles.recentDot} />
+                                            <View style={styles.recentLigne} />
+                                            <Ionicons name="car" size={14} color={colors.primary} />
+                                            <View style={styles.recentLigne} />
+                                            <View style={[styles.recentDot, { backgroundColor: colors.accent }]} />
+                                        </View>
+                                        <Text style={styles.recentVilles} numberOfLines={1}>
+                                            {t.villeDepart} → {t.villeArrivee}
+                                        </Text>
+                                        <Text style={styles.recentPrix}>
+                                            {t.prixConducteur?.toLocaleString()} GNF
+                                        </Text>
+                                        <View style={styles.recentBtnContainer}>
+                                            <Text style={styles.recentBtn}>Réutiliser</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </ScrollView>
+                    </View>
+                )}
+
+                {/* Informations du trajet */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Informations du trajet</Text>
                     <View style={styles.card}>
 
                         {/* Depart */}
-                        <Text style={styles.fieldLabel}>Depart</Text>
+                        <Text style={styles.fieldLabel}>Départ</Text>
                         <View style={[styles.inputContainer, champActif === 'depart' && styles.inputContainerActif]}>
-                            <Ionicons name="location-outline" size={18} color="#888" />
+                            <Ionicons name="radio-button-on" size={16} color={colors.primary} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Quartier de depart"
-                                placeholderTextColor="#666"
+                                placeholder="Quartier de départ"
+                                placeholderTextColor={colors.textDisabled}
                                 value={villeDepart}
                                 onChangeText={onChangeDepart}
                                 onFocus={() => { setChampActif('depart'); filtrerSuggestions(villeDepart); }}
@@ -199,7 +260,7 @@ export default function PublierScreen({ navigation }) {
                             />
                             {villeDepart.length > 0 && (
                                 <TouchableOpacity onPress={() => { setVilleDepart(''); setSuggestions([]); }}>
-                                    <Ionicons name="close-circle" size={18} color="#666" />
+                                    <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -207,7 +268,7 @@ export default function PublierScreen({ navigation }) {
                             <View style={styles.suggestionsContainer}>
                                 {suggestions.map((q) => (
                                     <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
-                                        <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                        <Ionicons name="location-outline" size={14} color={colors.primary} />
                                         <Text style={styles.suggestionTexte}>{q}</Text>
                                     </TouchableOpacity>
                                 ))}
@@ -215,13 +276,13 @@ export default function PublierScreen({ navigation }) {
                         )}
 
                         {/* Arrivee */}
-                        <Text style={styles.fieldLabel}>Arrivee</Text>
+                        <Text style={styles.fieldLabel}>Arrivée</Text>
                         <View style={[styles.inputContainer, champActif === 'arrivee' && styles.inputContainerActif]}>
-                            <Ionicons name="location" size={18} color="#888" />
+                            <Ionicons name="location" size={16} color={colors.accent} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Quartier d'arrivee"
-                                placeholderTextColor="#666"
+                                placeholder="Quartier d'arrivée"
+                                placeholderTextColor={colors.textDisabled}
                                 value={villeArrivee}
                                 onChangeText={onChangeArrivee}
                                 onFocus={() => { setChampActif('arrivee'); filtrerSuggestions(villeArrivee); }}
@@ -229,7 +290,7 @@ export default function PublierScreen({ navigation }) {
                             />
                             {villeArrivee.length > 0 && (
                                 <TouchableOpacity onPress={() => { setVilleArrivee(''); setSuggestions([]); }}>
-                                    <Ionicons name="close-circle" size={18} color="#666" />
+                                    <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -237,7 +298,7 @@ export default function PublierScreen({ navigation }) {
                             <View style={styles.suggestionsContainer}>
                                 {suggestions.map((q) => (
                                     <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
-                                        <Ionicons name="location-outline" size={14} color="#00b5e2" />
+                                        <Ionicons name="location-outline" size={14} color={colors.primary} />
                                         <Text style={styles.suggestionTexte}>{q}</Text>
                                     </TouchableOpacity>
                                 ))}
@@ -245,17 +306,27 @@ export default function PublierScreen({ navigation }) {
                         )}
 
                         {/* Date */}
-                        <Text style={styles.fieldLabel}>Date de depart</Text>
-                        <TouchableOpacity style={styles.inputContainer} onPress={() => {Keyboard.dismiss(); setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
-                            <Ionicons name="calendar-outline" size={18} color="#888" />
-                            <Text style={[styles.input, !dateDepart && styles.placeholder]}>{formatDate(dateDepart)}</Text>
+                        <Text style={styles.fieldLabel}>Date de départ</Text>
+                        <TouchableOpacity
+                            style={styles.inputContainer}
+                            onPress={() => { Keyboard.dismiss(); setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
+                            <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+                            <Text style={[styles.input, !dateDepart && styles.placeholder]}>
+                                {formatDate(dateDepart)}
+                            </Text>
+                            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
                         </TouchableOpacity>
 
                         {/* Heure */}
-                        <Text style={styles.fieldLabel}>Heure de depart</Text>
-                        <TouchableOpacity style={styles.inputContainer} onPress={() => { setChampActif(null); setSuggestions([]); setShowTimePicker(true); }}>
-                            <Ionicons name="time-outline" size={18} color="#888" />
-                            <Text style={[styles.input, !heure && styles.placeholder]}>{formatHeure(heure)}</Text>
+                        <Text style={styles.fieldLabel}>Heure de départ</Text>
+                        <TouchableOpacity
+                            style={styles.inputContainer}
+                            onPress={() => { setChampActif(null); setSuggestions([]); setShowTimePicker(true); }}>
+                            <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+                            <Text style={[styles.input, !heure && styles.placeholder]}>
+                                {formatHeure(heure)}
+                            </Text>
+                            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
                         </TouchableOpacity>
 
                         {showDatePicker && (
@@ -264,7 +335,7 @@ export default function PublierScreen({ navigation }) {
                                 mode="date"
                                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                                 minimumDate={new Date()}
-                                themeVariant="dark"
+                                themeVariant="light"
                                 onChange={(event, date) => { setShowDatePicker(false); if (date) setDateDepart(date); }}
                             />
                         )}
@@ -273,7 +344,7 @@ export default function PublierScreen({ navigation }) {
                                 value={heure || new Date()}
                                 mode="time"
                                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                themeVariant="dark"
+                                themeVariant="light"
                                 onChange={(event, date) => { setShowTimePicker(false); if (date) setHeure(date); }}
                             />
                         )}
@@ -283,21 +354,35 @@ export default function PublierScreen({ navigation }) {
                             <View style={styles.halfField}>
                                 <Text style={styles.fieldLabel}>Prix (GNF)</Text>
                                 <View style={styles.inputContainer}>
-                                    <Ionicons name="cash-outline" size={18} color="#888" />
-                                    <TextInput style={styles.input} placeholder="50000" placeholderTextColor="#666" value={prix} onChangeText={setPrix} keyboardType="numeric" />
+                                    <Ionicons name="cash-outline" size={16} color={colors.textMuted} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="50000"
+                                        placeholderTextColor={colors.textDisabled}
+                                        value={prix}
+                                        onChangeText={setPrix}
+                                        keyboardType="numeric"
+                                    />
                                 </View>
                             </View>
                             <View style={styles.halfField}>
                                 <Text style={styles.fieldLabel}>Places</Text>
                                 <View style={styles.inputContainer}>
-                                    <Ionicons name="people-outline" size={18} color="#888" />
-                                    <TextInput style={styles.input} placeholder="3" placeholderTextColor="#666" value={places} onChangeText={setPlaces} keyboardType="numeric" />
+                                    <Ionicons name="people-outline" size={16} color={colors.textMuted} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="3"
+                                        placeholderTextColor={colors.textDisabled}
+                                        value={places}
+                                        onChangeText={setPlaces}
+                                        keyboardType="numeric"
+                                    />
                                 </View>
                             </View>
                         </View>
 
                         {/* Itineraire */}
-                        <Text style={styles.fieldLabel}>Itineraire (optionnel)</Text>
+                        <Text style={styles.fieldLabel}>Itinéraire (optionnel)</Text>
                         <View style={styles.itineraireContainer}>
                             {itineraires.map((it) => (
                                 <TouchableOpacity
@@ -311,6 +396,7 @@ export default function PublierScreen({ navigation }) {
                             ))}
                         </View>
 
+                        {/* Femmes uniquement */}
                         {utilisateur?.genre === 'FEMME' && (
                             <TouchableOpacity
                                 style={styles.femmesUniquementContainer}
@@ -326,52 +412,65 @@ export default function PublierScreen({ navigation }) {
 
                 {/* Vehicule */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Vehicule</Text>
+                    <Text style={styles.sectionTitle}>Véhicule</Text>
                     <View style={styles.vehiculesGrid}>
                         {vehicules.map((v) => (
                             <TouchableOpacity
                                 key={v.id.toString()}
                                 style={[styles.vehiculeCard, vehiculeSelectionne?.id === v.id && styles.vehiculeCardSelected]}
                                 onPress={() => setVehiculeSelectionne(v)}>
-                                <Ionicons name="car-outline" size={28} color={vehiculeSelectionne?.id === v.id ? '#00b5e2' : '#666'} />
-                                <Text style={[styles.vehiculeNom, vehiculeSelectionne?.id === v.id && { color: '#00b5e2' }]}>
+                                <Ionicons
+                                    name="car-outline"
+                                    size={28}
+                                    color={vehiculeSelectionne?.id === v.id ? colors.primary : colors.textMuted}
+                                />
+                                <Text style={[styles.vehiculeNom, vehiculeSelectionne?.id === v.id && { color: colors.primary }]}>
                                     {v.marque} {v.modele}
                                 </Text>
                                 <Text style={styles.vehiculeImmat}>{v.immatriculation}</Text>
-                                {vehiculeSelectionne?.id === v.id && <Ionicons name="checkmark-circle" size={18} color="#00b5e2" style={{ marginTop: 4 }} />}
+                                {vehiculeSelectionne?.id === v.id && (
+                                    <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginTop: 4 }} />
+                                )}
                             </TouchableOpacity>
                         ))}
-                        <TouchableOpacity style={styles.ajouterVehiculeCard} onPress={() => setShowNouveauVehicule(!showNouveauVehicule)}>
-                            <Ionicons name="add-circle-outline" size={28} color="#00b5e2" />
+                        <TouchableOpacity
+                            style={styles.ajouterVehiculeCard}
+                            onPress={() => setShowNouveauVehicule(!showNouveauVehicule)}>
+                            <Ionicons name="add-circle-outline" size={28} color={colors.accent} />
                             <Text style={styles.ajouterVehiculeText}>Ajouter</Text>
                         </TouchableOpacity>
                     </View>
 
                     {showNouveauVehicule && (
                         <View style={styles.card}>
-                            <Text style={styles.fieldLabel}>Marque</Text>
-                            <View style={styles.inputContainer}>
-                                <TextInput style={styles.input} placeholder="Toyota" placeholderTextColor="#666" value={marque} onChangeText={setMarque} />
-                            </View>
-                            <Text style={styles.fieldLabel}>Modele</Text>
-                            <View style={styles.inputContainer}>
-                                <TextInput style={styles.input} placeholder="Corolla" placeholderTextColor="#666" value={modele} onChangeText={setModele} />
-                            </View>
-                            <Text style={styles.fieldLabel}>Immatriculation</Text>
-                            <View style={styles.inputContainer}>
-                                <TextInput style={styles.input} placeholder="GN-1234-A" placeholderTextColor="#666" value={immatriculation} onChangeText={setImmatriculation} />
-                            </View>
-                            <Text style={styles.fieldLabel}>Nombre de places</Text>
-                            <View style={styles.inputContainer}>
-                                <TextInput style={styles.input} placeholder="4" placeholderTextColor="#666" value={nbPlaces} onChangeText={setNbPlaces} keyboardType="numeric" />
-                            </View>
+                            {[
+                                { label: 'Marque', value: marque, set: setMarque, placeholder: 'Toyota' },
+                                { label: 'Modèle', value: modele, set: setModele, placeholder: 'Corolla' },
+                                { label: 'Immatriculation', value: immatriculation, set: setImmatriculation, placeholder: 'GN-1234-A' },
+                                { label: 'Nombre de places', value: nbPlaces, set: setNbPlaces, placeholder: '4', numeric: true },
+                            ].map((item) => (
+                                <View key={item.label}>
+                                    <Text style={styles.fieldLabel}>{item.label}</Text>
+                                    <View style={styles.inputContainer}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder={item.placeholder}
+                                            placeholderTextColor={colors.textDisabled}
+                                            value={item.value}
+                                            onChangeText={item.set}
+                                            keyboardType={item.numeric ? 'numeric' : 'default'}
+                                        />
+                                    </View>
+                                </View>
+                            ))}
                             <TouchableOpacity style={styles.boutonAjouter} onPress={ajouterVehicule}>
-                                <Text style={styles.boutonAjouterText}>Enregistrer le vehicule</Text>
+                                <Text style={styles.boutonAjouterText}>Enregistrer le véhicule</Text>
                             </TouchableOpacity>
                         </View>
                     )}
                 </View>
 
+                {/* Bouton publier */}
                 <View style={styles.section}>
                     <TouchableOpacity
                         style={[styles.boutonPublier, loading && { opacity: 0.7 }]}
@@ -394,43 +493,290 @@ export default function PublierScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
-    header: { backgroundColor: '#1a1a1a', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
-    headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#eee' },
-    section: { paddingHorizontal: 16, marginTop: 20 },
-    sectionTitle: { fontSize: 13, fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
-    card: { backgroundColor: '#1e1e1e', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#2a2a2a' },
-    fieldLabel: { fontSize: 12, fontWeight: '600', color: '#888', marginBottom: 6, marginTop: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: '#252525', gap: 10 },
-    inputContainerActif: { borderColor: '#00b5e2' },
-    input: { flex: 1, padding: 10, fontSize: 15, color: '#eee' },
-    placeholder: { color: '#666' },
-
-    // Suggestions
-    suggestionsContainer: { backgroundColor: '#252525', borderRadius: 10, borderWidth: 1, borderColor: '#00b5e2', marginTop: 4, overflow: 'hidden' },
-    suggestionItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
-    suggestionTexte: { color: '#eee', fontSize: 14 },
-
-    row: { flexDirection: 'row', gap: 12 },
+    container: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+    header: {
+        backgroundColor: colors.primary,
+        paddingTop: 60,
+        paddingBottom: 20,
+        paddingHorizontal: spacing.xl,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    section: {
+        paddingHorizontal: spacing.lg,
+        marginTop: 20,
+    },
+    sectionTitle: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: colors.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 10,
+    },
+    card: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card,
+    },
+    fieldLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: colors.textMuted,
+        marginBottom: 6,
+        marginTop: 14,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.sm,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 2,
+        backgroundColor: colors.surfaceSecondary,
+        gap: 10,
+    },
+    inputContainerActif: {
+        borderColor: colors.primary,
+        borderWidth: 1.5,
+        backgroundColor: colors.primaryLight,
+    },
+    input: {
+        flex: 1,
+        padding: 10,
+        fontSize: 15,
+        color: colors.textPrimary,
+    },
+    placeholder: {
+        color: colors.textDisabled,
+    },
+    suggestionsContainer: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginTop: 4,
+        overflow: 'hidden',
+        ...shadows.card,
+    },
+    suggestionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingVertical: 11,
+        paddingHorizontal: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.separator,
+    },
+    suggestionTexte: {
+        color: colors.textPrimary,
+        fontSize: 14,
+    },
+    row: {
+        flexDirection: 'row',
+        gap: 12,
+    },
     halfField: { flex: 1 },
-    itineraireContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-    itineraireBadge: { borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#252525' },
-    itineraireBadgeSelected: { borderColor: '#00b5e2', backgroundColor: '#0a2a35' },
-    itineraireBadgeText: { color: '#888', fontSize: 13 },
-    itineraireBadgeTextSelected: { color: '#00b5e2', fontWeight: '600' },
-    femmesUniquementContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16, padding: 12, backgroundColor: '#1a1a2a', borderRadius: 10, borderWidth: 1, borderColor: '#9b59b6' },
-    checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#888', alignItems: 'center', justifyContent: 'center' },
-    checkboxActif: { backgroundColor: '#9b59b6', borderColor: '#9b59b6' },
-    femmesUniquementText: { fontSize: 14, color: '#eee', fontWeight: '600', flex: 1 },
-    vehiculesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-    vehiculeCard: { backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2a2a2a', minWidth: '45%', flex: 1 },
-    vehiculeCardSelected: { borderColor: '#00b5e2', backgroundColor: '#0a2a35' },
-    vehiculeNom: { fontSize: 13, fontWeight: '600', color: '#ddd', marginTop: 6, textAlign: 'center' },
-    vehiculeImmat: { fontSize: 11, color: '#666', marginTop: 2 },
-    ajouterVehiculeCard: { backgroundColor: '#1e1e1e', borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2a2a2a', borderStyle: 'dashed', minWidth: '45%', flex: 1, justifyContent: 'center' },
-    ajouterVehiculeText: { color: '#00b5e2', fontSize: 13, marginTop: 6 },
-    boutonAjouter: { backgroundColor: '#00b5e2', borderRadius: 10, padding: 12, alignItems: 'center', marginTop: 12 },
-    boutonAjouterText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
-    boutonPublier: { backgroundColor: '#00b5e2', borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-    boutonPublierText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    itineraireContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 4,
+    },
+    itineraireBadge: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.full,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: colors.surfaceSecondary,
+    },
+    itineraireBadgeSelected: {
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
+    },
+    itineraireBadgeText: {
+        color: colors.textMuted,
+        fontSize: 13,
+    },
+    itineraireBadgeTextSelected: {
+        color: colors.primary,
+        fontWeight: '600',
+    },
+    femmesUniquementContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 16,
+        padding: 12,
+        backgroundColor: colors.purpleLight,
+        borderRadius: radius.sm,
+        borderWidth: 1,
+        borderColor: colors.purple,
+    },
+    checkbox: {
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkboxActif: {
+        backgroundColor: colors.purple,
+        borderColor: colors.purple,
+    },
+    femmesUniquementText: {
+        fontSize: 14,
+        color: colors.purple,
+        fontWeight: '600',
+        flex: 1,
+    },
+    vehiculesGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 12,
+    },
+    vehiculeCard: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.md,
+        padding: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
+        minWidth: '45%',
+        flex: 1,
+        ...shadows.card,
+    },
+    vehiculeCardSelected: {
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
+    },
+    vehiculeNom: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    vehiculeImmat: {
+        fontSize: 11,
+        color: colors.textMuted,
+        marginTop: 2,
+    },
+    ajouterVehiculeCard: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.md,
+        padding: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderStyle: 'dashed',
+        minWidth: '45%',
+        flex: 1,
+        justifyContent: 'center',
+    },
+    ajouterVehiculeText: {
+        color: colors.accent,
+        fontSize: 13,
+        marginTop: 6,
+    },
+    boutonAjouter: {
+        backgroundColor: colors.accent,
+        borderRadius: radius.sm,
+        padding: 12,
+        alignItems: 'center',
+        marginTop: 12,
+    },
+    boutonAjouterText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    boutonPublier: {
+        backgroundColor: colors.accent,
+        borderRadius: radius.md,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    boutonPublierText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
+    // ── Trajets récents ───────────────────────────────────
+    recentsRow: {
+        flexDirection: 'row',
+        gap: 12,
+        paddingBottom: 4,
+    },
+    recentCard: {
+        backgroundColor: colors.surface,
+        borderRadius: radius.md,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: colors.border,
+        minWidth: 180,
+        ...shadows.card,
+    },
+    recentRoute: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginBottom: 8,
+    },
+    recentDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: colors.primary,
+    },
+    recentLigne: {
+        flex: 1,
+        height: 1,
+        backgroundColor: colors.border,
+        maxWidth: 24,
+    },
+    recentVilles: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: 4,
+    },
+    recentPrix: {
+        fontSize: 12,
+        color: colors.accent,
+        fontWeight: '700',
+        marginBottom: 10,
+    },
+    recentBtnContainer: {
+        backgroundColor: colors.primaryLight,
+        borderRadius: radius.full,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        alignSelf: 'flex-start',
+    },
+    recentBtn: {
+        fontSize: 12,
+        color: colors.primary,
+        fontWeight: '600',
+    },
 });
