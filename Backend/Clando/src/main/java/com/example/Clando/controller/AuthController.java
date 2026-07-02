@@ -35,14 +35,12 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
-    // ✅ Login avec JWT
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         try {
             String email = body.get("email");
             String motDePasse = body.get("motDePasse");
 
-            // ✅ Authentification via Spring Security
             authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, motDePasse)
             );
@@ -50,7 +48,6 @@ public class AuthController {
             // ✅ Génère le JWT
             String token = jwtService.genererToken(email);
 
-            // ✅ Récupère les infos utilisateur
             Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
@@ -68,7 +65,6 @@ public class AuthController {
         }
     }
 
-    // ✅ Forgot password
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
         try {
@@ -81,7 +77,6 @@ public class AuthController {
         }
     }
 
-    // ✅ Verify reset code
     @PostMapping("/verify-reset-code")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> body) {
         try {

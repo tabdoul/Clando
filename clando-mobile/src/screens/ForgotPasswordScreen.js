@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
-    StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+    StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import api from '../services/api';
 import { colors, spacing, radius, shadows } from '../../constants/theme';
 
@@ -13,6 +14,7 @@ export default function ForgotPasswordScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const envoyer = async () => {
+        Keyboard.dismiss();
         if (!email || !email.includes('@')) {
             Alert.alert('Erreur', 'Veuillez saisir une adresse email valide');
             return;
@@ -70,6 +72,8 @@ export default function ForgotPasswordScreen({ navigation }) {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoCorrect={false}
+                            returnKeyType="send"
+                            onSubmitEditing={envoyer} 
                         />
                         {email.length > 0 && (
                             <TouchableOpacity onPress={() => setEmail('')}>
