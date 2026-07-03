@@ -36,14 +36,14 @@ public class EmailService {
             "to", new Object[]{
                 Map.of("email", email)
             },
-            "subject", "WayVo — Réinitialisation de votre mot de passe",
+            "subject", "Wayvo — Réinitialisation de votre mot de passe",
             "textContent",
                 "Bonjour,\n\n" +
-                "Vous avez demandé la réinitialisation de votre mot de passe WayVo.\n\n" +
+                "Vous avez demandé la réinitialisation de votre mot de passe Wayvo.\n\n" +
                 "Votre code de vérification est : " + code + "\n\n" +
                 "Ce code est valable 15 minutes.\n\n" +
                 "Si vous n'avez pas fait cette demande, ignorez ce message.\n\n" +
-                "L'équipe WayVo"
+                "L'équipe Wayvo"
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);

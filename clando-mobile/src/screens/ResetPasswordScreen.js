@@ -3,7 +3,8 @@ import React, { useState, useRef } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, Alert, ActivityIndicator,
-    KeyboardAvoidingView, Platform
+    KeyboardAvoidingView, Platform,
+    Keyboard
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
@@ -53,6 +54,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
     };
 
     const reinitialiser = async () => {
+        Keyboard.dismiss();
         if (!nouveauMotDePasse || nouveauMotDePasse.length < 6) {
             Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
             return;
@@ -189,6 +191,8 @@ export default function ResetPasswordScreen({ route, navigation }) {
                                     value={nouveauMotDePasse}
                                     onChangeText={setNouveauMotDePasse}
                                     secureTextEntry={!showMdp}
+                                    returnKeyType="next"
+                                    onSubmitEditing={() => Keyboard.dismiss()}
                                 />
                                 <TouchableOpacity onPress={() => setShowMdp(!showMdp)}>
                                     <Ionicons
@@ -211,6 +215,8 @@ export default function ResetPasswordScreen({ route, navigation }) {
                                     value={confirmerMotDePasse}
                                     onChangeText={setConfirmerMotDePasse}
                                     secureTextEntry={!showConfirm}
+                                    returnKeyType="done"
+                                    onSubmitEditing={reinitialiser}
                                 />
                                 <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
                                     <Ionicons
