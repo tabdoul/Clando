@@ -28,7 +28,8 @@ public class DocumentService {
         this.documentRepository = documentRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.cloudinaryService = cloudinaryService;
-        this.notificationService = notificationService;
+        this.notificationService = notificationService; 
+    }
 
     public DocumentResponse uploader(Long utilisateurId,
                                      Document.TypeDocument type,
@@ -84,7 +85,7 @@ public class DocumentService {
                 notificationService.envoyerNotification(
                     token,
                     "Document validé ✅",
-                    "Votre " + formatTypeDocument(typeDoc) + " a été vérifié et validé par l'équipe Wayvo."
+                    "Votre " + formatTypeDocument(typeDoc) + " a été vérifié et validé par l'équipe Wayo."
                 );
             } else {
                 String motif = (commentaire != null && !commentaire.isBlank())
