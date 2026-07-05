@@ -180,35 +180,34 @@ export default function MessagesScreen({ navigation }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     loadingContainer: {
-        flex: 1, backgroundColor: colors.background,
+        flex: 1, backgroundColor: '#ffffff',
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#182D5A',
         paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
     },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'white' },
     emptyContainer: {
         alignItems: 'center', marginTop: 80, paddingHorizontal: 40,
     },
-    emptyText: { fontSize: 18, color: colors.textMuted, marginTop: 16 },
+    emptyText: { fontSize: 18, color: '#888888', marginTop: 16 },
     emptySubtext: {
-        fontSize: 14, color: colors.textDisabled, marginTop: 4,
+        fontSize: 14, color: '#cccccc', marginTop: 4,
         textAlign: 'center', lineHeight: 20,
     },
     convItem: {
         flexDirection: 'row', alignItems: 'center',
         padding: spacing.lg, borderBottomWidth: 1,
-        borderBottomColor: colors.separator, gap: 12,
+        borderBottomColor: '#EEF2F7', gap: 12,
     },
     avatarImage: { width: 48, height: 48, borderRadius: 24 },
     avatar: {
         width: 48, height: 48, borderRadius: 24,
-        backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#182D5A', alignItems: 'center', justifyContent: 'center',
     },
     avatarText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     convInfo: { flex: 1 },
@@ -216,17 +215,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: 4,
     },
-    convNom: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-    convNomNonLu: { fontWeight: 'bold', color: colors.textPrimary },
-    convDate: { fontSize: 12, color: colors.textMuted },
+    convNom: { fontSize: 15, fontWeight: '600', color: '#1a1a1a' },
+    convNomNonLu: { fontWeight: 'bold', color: '#1a1a1a' },
+    convDate: { fontSize: 12, color: '#888888' },
     convFooter: {
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between',
     },
-    convDernierMessage: { fontSize: 13, color: colors.textMuted, flex: 1 },
-    convMessageNonLu: { color: colors.textPrimary, fontWeight: '600' },
+    convDernierMessage: { fontSize: 13, color: '#888888', flex: 1 },
+    convMessageNonLu: { color: '#1a1a1a', fontWeight: '600' },
     badgeNonLu: {
-        backgroundColor: colors.accent, borderRadius: 10,
+        backgroundColor: '#182D5A', borderRadius: 10,
         minWidth: 18, height: 18, alignItems: 'center',
         justifyContent: 'center', paddingHorizontal: 4, marginLeft: 8,
     },

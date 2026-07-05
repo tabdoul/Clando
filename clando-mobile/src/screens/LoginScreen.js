@@ -96,35 +96,41 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor:'#ffffff' },
     scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
     header: { alignItems: 'center', marginBottom: 40 },
     title: {
         fontSize: 36, fontWeight: 'bold',
-        color: colors.primary, letterSpacing: 3,
+        color: '#182D5A', letterSpacing: 3,
     },
-    subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 6, textAlign: 'center' },
+    subtitle: { fontSize: 14, color:'#888888', marginTop: 6, textAlign: 'center' },
     form: {
-        backgroundColor: colors.surface, borderRadius: radius.lg,
-        padding: spacing.xl, borderWidth: 1, borderColor: colors.border,
+        backgroundColor:'#ffffff', borderRadius:20,
+        padding: spacing.xl, borderWidth: 1, borderColor: '#EEF2F7',
         ...shadows.card,
     },
-    label: {
-        fontSize: 14, fontWeight: '600', color: colors.textSecondary,
-        marginBottom: 6, marginTop: 12,
-    },
+    label: { 
+        fontSize: 11, fontWeight: '700', color: '#182D5A', marginBottom: 6, marginTop: 12 , textTransform: 'uppercase', letterSpacing: 0.8,
+},
     input: {
-        borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+        borderWidth: 1, borderColor:'#EEF2F7', borderRadius: radius.sm,
         padding: 12, fontSize: 16,
         backgroundColor: colors.surfaceSecondary, color: colors.textPrimary,
     },
     button: {
-        backgroundColor: colors.accent, borderRadius: radius.sm,
+        backgroundColor:'#182D5A', borderRadius: radius.sm,
         padding: 16, alignItems: 'center', marginTop: 24,
     },
     buttonDisabled: { opacity: 0.6 },
     buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
     linkButton: { alignItems: 'center', marginTop: 16 },
     linkText: { color: colors.textMuted, fontSize: 14 },
-    link: { color: colors.primary, fontWeight: '600' },
+    link: { color: '#182D5A', fontWeight: '600' },
+    forgotTexte: { 
+    color: '#182D5A', 
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 12,
+    fontWeight: '500',
+},
 });

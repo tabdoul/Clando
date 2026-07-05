@@ -237,69 +237,72 @@ export default function NotificationsScreen({ navigation }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    loadingContainer: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
+    container: { flex: 1, backgroundColor: '#ffffff' },
+    loadingContainer: { flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' },
     header: {
-        backgroundColor: colors.primary, paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
+        backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 12,
     },
     backButton: { padding: 4 },
     headerTitle: { fontSize: 20, fontWeight: 'bold', color: 'white', flex: 1 },
-    badge: { backgroundColor: colors.red, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
+    badge: { backgroundColor: '#E52424', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
     badgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
 
     emptyContainer: { alignItems: 'center', marginTop: 80, paddingHorizontal: 40 },
-    emptyText: { fontSize: 18, color: colors.textMuted, marginTop: 16 },
-    emptySubtext: { fontSize: 14, color: colors.textDisabled, marginTop: 4, textAlign: 'center', lineHeight: 20 },
+    emptyText: { fontSize: 18, color: '#888888', marginTop: 16 },
+    emptySubtext: { fontSize: 14, color: '#cccccc', marginTop: 4, textAlign: 'center', lineHeight: 20 },
 
     cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
     card: {
-        backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.lg,
-        borderWidth: 1, borderColor: colors.border,
-        ...shadows.card,
+        backgroundColor: '#ffffff', borderRadius: 16, padding: spacing.lg,
+        borderWidth: 1, borderColor: '#EEF2F7',
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
 
     cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
     avatarContainer: { width: 46, height: 46, borderRadius: 23, overflow: 'hidden' },
     avatar: {
         width: 46, height: 46, borderRadius: 23,
-        backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: colors.border,
+        backgroundColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 1, borderColor: '#D8E4F0',
     },
     avatarImage: { width: 46, height: 46, borderRadius: 23 },
-    avatarText: { color: colors.textMuted, fontSize: 15, fontWeight: 'bold' },
+    avatarText: { color: '#182D5A', fontSize: 15, fontWeight: 'bold' },
     passagerInfo: { flex: 1 },
-    passagerNom: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-    passagerSubtitle: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-    demandeDate: { fontSize: 11, color: colors.textDisabled, marginTop: 2 },
+    passagerNom: { fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
+    passagerSubtitle: { fontSize: 12, color: '#888888', marginTop: 2 },
+    demandeDate: { fontSize: 11, color: '#cccccc', marginTop: 2 },
 
-    separator: { height: 1, backgroundColor: colors.separator, marginVertical: 12 },
+    separator: { height: 1, backgroundColor: '#EEF2F7', marginVertical: 12 },
 
     trajetConducteur: { marginBottom: 10 },
     trajetLigne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    trajetDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-    trajetDotArrivee: { backgroundColor: colors.accent },
-    trajetVille: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, flex: 1 },
+    trajetDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#182D5A' },
+    trajetDotArrivee: { backgroundColor: '#182D5A', opacity: 0.5 },
+    trajetVille: { fontSize: 15, fontWeight: '600', color: '#1a1a1a', flex: 1 },
     trajetConnecteur: {
         flexDirection: 'row', alignItems: 'center',
         marginLeft: 3, gap: 4, marginVertical: 4,
     },
-    trajetConnecteurLigne: { flex: 1, height: 1, backgroundColor: colors.separator },
+    trajetConnecteurLigne: { flex: 1, height: 1, backgroundColor: '#EEF2F7' },
 
     trajetPassagerContainer: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: colors.surfaceSecondary, borderRadius: radius.sm, padding: 10, marginBottom: 10,
+        backgroundColor: '#EEF2F7', borderRadius: radius.sm, padding: 10, marginBottom: 10,
     },
-    trajetPassagerTexte: { fontSize: 13, color: colors.textMuted, flex: 1, lineHeight: 20 },
-    trajetPassagerGras: { color: colors.textPrimary, fontWeight: '600' },
+    trajetPassagerTexte: { fontSize: 13, color: '#888888', flex: 1, lineHeight: 20 },
+    trajetPassagerGras: { color: '#1a1a1a', fontWeight: '600' },
 
     detailsBloc: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-    detailText: { fontSize: 13, color: colors.textMuted },
+    detailText: { fontSize: 13, color: '#888888' },
 
     boutonAccepter: {
-        backgroundColor: colors.accent, borderRadius: radius.sm, padding: 13,
+        backgroundColor: '#182D5A', borderRadius: 12, padding: 13,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
         gap: 8, marginBottom: 8,
     },
@@ -308,9 +311,9 @@ const styles = StyleSheet.create({
     boutonsSecondaires: { flexDirection: 'row', gap: 8 },
 
     boutonRefuser: {
-        flex: 1, borderWidth: 1, borderColor: colors.red, borderRadius: radius.sm,
+        flex: 1, borderWidth: 1, borderColor: '#E52424', borderRadius: 12,
         paddingVertical: 10, flexDirection: 'row',
         alignItems: 'center', justifyContent: 'center', gap: 6,
     },
-    boutonRefuserText: { color: colors.red, fontSize: 13, fontWeight: '600' },
+    boutonRefuserText: { color: '#E52424', fontSize: 13, fontWeight: '600' },
 });

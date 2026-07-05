@@ -204,61 +204,64 @@ export default function DocumentsScreen({ navigation }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     loadingContainer: {
-        flex: 1, backgroundColor: colors.background,
+        flex: 1, backgroundColor: '#ffffff',
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#182D5A',
         paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl,
         flexDirection: 'row', alignItems: 'center', gap: 16,
     },
     backButton: { padding: 4 },
     headerTitle: { fontSize: 22, fontWeight: 'bold', color: 'white' },
     infoCard: {
-        backgroundColor: colors.primaryLight, margin: spacing.lg, borderRadius: radius.md,
+        backgroundColor: '#EEF2F7', margin: spacing.lg, borderRadius: 14,
         padding: spacing.lg, flexDirection: 'row', gap: 12,
-        borderWidth: 1, borderColor: colors.primary,
+        borderWidth: 1, borderColor: '#D8E4F0',
     },
-    infoText: { fontSize: 13, color: colors.primary, flex: 1, lineHeight: 18 },
+    infoText: { fontSize: 13, color: '#182D5A', flex: 1, lineHeight: 18 },
     docCard: {
-        backgroundColor: colors.surface, marginHorizontal: spacing.lg,
-        marginBottom: 12, borderRadius: radius.md, padding: spacing.lg,
-        borderWidth: 1, borderColor: colors.border,
-        ...shadows.card,
+        backgroundColor: '#ffffff', marginHorizontal: spacing.lg,
+        marginBottom: 12, borderRadius: 16, padding: spacing.lg,
+        borderWidth: 1, borderColor: '#EEF2F7',
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
     docHeader: { flexDirection: 'row', gap: 12, marginBottom: 12 },
     docIconContainer: {
         width: 44, height: 44, borderRadius: 22,
-        backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center',
     },
     docInfo: { flex: 1 },
     docTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-    docLabel: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, flex: 1 },
+    docLabel: { fontSize: 14, fontWeight: '600', color: '#1a1a1a', flex: 1 },
     requisBadge: {
-        backgroundColor: colors.redLight, borderRadius: 10,
+        backgroundColor: '#ffebee', borderRadius: 10,
         paddingVertical: 2, paddingHorizontal: 8,
     },
-    requisText: { fontSize: 10, color: colors.red, fontWeight: '600' },
-    docDescription: { fontSize: 12, color: colors.textMuted },
+    requisText: { fontSize: 10, color: '#E52424', fontWeight: '600' },
+    docDescription: { fontSize: 12, color: '#888888' },
     docFooter: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
     },
     statutBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 20 },
     statutText: { fontSize: 12, fontWeight: '600' },
     boutonUpload: {
-        backgroundColor: colors.accent, borderRadius: 20,
+        backgroundColor: '#182D5A', borderRadius: 20,
         paddingVertical: 8, paddingHorizontal: 16,
         flexDirection: 'row', alignItems: 'center', gap: 6,
     },
     boutonUploadText: { color: 'white', fontSize: 13, fontWeight: '600' },
     commentaireCard: {
-        backgroundColor: colors.redLight, borderRadius: 8, padding: 10, marginTop: 10,
-        borderWidth: 1, borderColor: colors.red,
+        backgroundColor: '#ffebee', borderRadius: 8, padding: 10, marginTop: 10,
+        borderWidth: 1, borderColor: '#E52424',
     },
-    commentaireLabel: { fontSize: 11, color: colors.red, fontWeight: '600', marginBottom: 4 },
-    commentaireTexte: { fontSize: 13, color: colors.textSecondary },
+    commentaireLabel: { fontSize: 11, color: '#E52424', fontWeight: '600', marginBottom: 4 },
+    commentaireTexte: { fontSize: 13, color: '#888888' },
 });

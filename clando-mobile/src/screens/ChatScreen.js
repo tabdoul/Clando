@@ -159,15 +159,14 @@ export default function ChatScreen({ route, navigation }) {
         </KeyboardAvoidingView>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     loadingContainer: {
-        flex: 1, backgroundColor: colors.background,
+        flex: 1, backgroundColor: '#ffffff',
         justifyContent: 'center', alignItems: 'center'
     },
     header: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#182D5A',
         paddingTop: 60, paddingBottom: 16, paddingHorizontal: spacing.lg,
         flexDirection: 'row', alignItems: 'center', gap: 12,
     },
@@ -185,29 +184,29 @@ const styles = StyleSheet.create({
     messageWrapperMoi: { alignItems: 'flex-end' },
     messageWrapperAutre: { alignItems: 'flex-start' },
     messageBubble: { maxWidth: '75%', borderRadius: radius.lg, padding: 12 },
-    bubbleMoi: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
+    bubbleMoi: { backgroundColor: '#182D5A', borderBottomRightRadius: 4 },
     bubbleAutre: {
-        backgroundColor: colors.surface, borderBottomLeftRadius: 4,
-        borderWidth: 1, borderColor: colors.border,
+        backgroundColor: '#ffffff', borderBottomLeftRadius: 4,
+        borderWidth: 1, borderColor: '#EEF2F7',
     },
     messageTexte: { fontSize: 15, lineHeight: 20 },
     texteMoi: { color: 'white' },
-    texteAutre: { color: colors.textPrimary },
+    texteAutre: { color: '#1a1a1a' },
     messageHeure: { fontSize: 10, marginTop: 4, textAlign: 'right' },
     heureMoi: { color: 'rgba(255,255,255,0.7)' },
-    heureAutre: { color: colors.textMuted },
+    heureAutre: { color: '#888888' },
     inputContainer: {
         flexDirection: 'row', alignItems: 'flex-end', padding: 12,
-        backgroundColor: colors.surface, borderTopWidth: 1,
-        borderTopColor: colors.separator, gap: 10,
+        backgroundColor: '#ffffff', borderTopWidth: 1,
+        borderTopColor: '#EEF2F7', gap: 10,
     },
     input: {
-        flex: 1, backgroundColor: colors.surfaceSecondary, borderRadius: 20,
-        paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.textPrimary,
-        maxHeight: 100, borderWidth: 1, borderColor: colors.border,
+        flex: 1, backgroundColor: '#FAFAFA', borderRadius: 20,
+        paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1a1a1a',
+        maxHeight: 100, borderWidth: 1, borderColor: '#EEF2F7',
     },
     sendButton: {
-        backgroundColor: colors.accent, width: 44, height: 44,
+        backgroundColor: '#182D5A', width: 44, height: 44,
         borderRadius: 22, alignItems: 'center', justifyContent: 'center',
     },
 });

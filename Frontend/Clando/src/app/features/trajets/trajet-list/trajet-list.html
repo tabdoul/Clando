@@ -1,137 +1,146 @@
-import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatAutocompleteModule } from '@angular/material/autocomplete'; 
-import { TrajetService } from '../../../core/services/trajet.service';
-import { ReservationService } from '../../../core/services/reservation.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Trajet } from '../../../shared/models/trajet.model';
-import { QUARTIERS_CONAKRY } from '../../../shared/models/constants/quartiers';
+<div class="page">
 
-@Component({
-    selector: 'app-trajet-list',
-    standalone: true,
-    encapsulation: ViewEncapsulation.None,
-    imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        RouterLink,
-        MatButtonModule,
-        MatIconModule,
-        MatFormFieldModule,   // ✅
-        MatInputModule,       // ✅
-        MatSnackBarModule,
-        MatChipsModule,
-        MatDatepickerModule,
-        MatNativeDateModule,
-        MatAutocompleteModule // ✅
-    ],
-    templateUrl: './trajet-list.html',
-    styleUrl: './trajet-list.css'
-})
-export class TrajetListComponent implements OnInit {
+    <!-- Header résultats -->
+    <div class="results-hero">
+        <div class="results-hero-content">
+            <h1 *ngIf="searchForm.get('villeDepart')?.value && searchForm.get('villeArrivee')?.value">
+                {{ searchForm.get('villeDepart')?.value }}
+                <mat-icon>arrow_forward</mat-icon>
+                {{ searchForm.get('villeArrivee')?.value }}
+            </h1>
+            <h1 *ngIf="!searchForm.get('villeDepart')?.value">Tous les trajets disponibles</h1>
+            <p>{{ trajets.length }} trajet(s) trouvé(s)</p>
+        </div>
+        <button mat-stroked-button (click)="toggleFiltres()" class="btn-modifier">
+            <mat-icon>tune</mat-icon> Modifier la recherche
+        </button>
+    </div>
 
-    trajets: Trajet[] = [];
-    searchForm: FormGroup;
-    loading = false;
-    rechercheLancee = false;
-    showFiltres = false;
+    <!-- Formulaire compact masqué par défaut -->
+    <div class="search-compact" *ngIf="showFiltres">
+        <form [formGroup]="searchForm" (ngSubmit)="rechercher()">
+            <div class="search-grid">
+                <mat-form-field appearance="outline">
+                    <mat-label>Départ</mat-label>
+                    <input matInput formControlName="villeDepart" [matAutocomplete]="autoDepart">
+                    <mat-icon matSuffix>my_location</mat-icon>
+                    <mat-autocomplete #autoDepart="matAutocomplete">
+                        <mat-option *ngFor="let q of quartiersDepart" [value]="q">{{ q }}</mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
 
-    toggleFiltres() {
-        this.showFiltres = !this.showFiltres;
-    }
+                <mat-form-field appearance="outline">
+                    <mat-label>Arrivée</mat-label>
+                    <input matInput formControlName="villeArrivee" [matAutocomplete]="autoArrivee">
+                    <mat-icon matSuffix>location_on</mat-icon>
+                    <mat-autocomplete #autoArrivee="matAutocomplete">
+                        <mat-option *ngFor="let q of quartiersArrivee" [value]="q">{{ q }}</mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
 
-    quartiersDepart: string[] = [];
-    quartiersArrivee: string[] = [];
+                <mat-form-field appearance="outline">
+                    <mat-label>Date</mat-label>
+                    <input matInput [matDatepicker]="picker" formControlName="dateDepart">
+                    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                </mat-form-field>
 
-    constructor(
-        private trajetService: TrajetService,
-        private reservationService: ReservationService,
-        private authService: AuthService,
-        private fb: FormBuilder,
-        private snackBar: MatSnackBar,
-        private cdr: ChangeDetectorRef
-    ) {
-        this.searchForm = this.fb.group({
-            villeDepart: [''],
-            villeArrivee: [''],
-            dateDepart: [''],
-            nbPassagers: [1]
-        });
-    }
+                <button mat-raised-button type="submit" class="btn-search">
+                    <mat-icon>search</mat-icon> Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
 
-    ngOnInit(): void {
-        this.chargerTrajets();
-        this.searchForm.get('villeDepart')?.valueChanges.subscribe(val => {
-            this.quartiersDepart = this.filtrerQuartiers(val);
-        });
-        this.searchForm.get('villeArrivee')?.valueChanges.subscribe(val => {
-            this.quartiersArrivee = this.filtrerQuartiers(val);
-        });
-    }
+    <!-- Résultats -->
+    <div class="results">
 
-    filtrerQuartiers(val: string): string[] {
-        if (!val || val.length < 2) return [];
-        const recherche = val.toLowerCase().trim();
-        return QUARTIERS_CONAKRY.filter(q =>
-            q.toLowerCase().includes(recherche)
-        ).slice(0, 6);
-    }
+        <div *ngIf="loading" class="loading">
+            <mat-icon>directions_car</mat-icon>
+            <p>Chargement...</p>
+        </div>
 
-    chargerTrajets(): void {
-        this.loading = true;
-        this.trajetService.getAll().subscribe({
-            next: (data) => {
-                const maintenant = new Date();
-                this.trajets = data.filter(t =>
-                    t.statut === 'OUVERT' &&
-                    new Date(t.dateHeureDepart) > maintenant
-                );
-                this.loading = false;
-                this.cdr.detectChanges();
-            },
-            error: () => {
-                this.loading = false;
-                this.cdr.detectChanges();
-                this.snackBar.open('Erreur lors du chargement des trajets', 'Fermer', { duration: 3000 });
-            }
-        });
-    }
+        <!-- ✅ div au lieu de mat-card -->
+        <div *ngFor="let trajet of trajets"
+             class="trajet-card"
+             [class.trajet-complet]="trajet.statut !== 'OUVERT'"
+             [class.trajet-femmes]="trajet.femmesUniquement">
 
-    rechercher(): void {
-        const { villeDepart, villeArrivee } = this.searchForm.value;
-        this.rechercheLancee = true;
-        this.loading = true;
+            <div *ngIf="trajet.femmesUniquement" class="badge-femmes">
+                <mat-icon>female</mat-icon> Trajet réservé aux femmes
+            </div>
 
-        if (!villeDepart || !villeArrivee) {
-            this.chargerTrajets();
-            return;
-        }
+            <div class="trajet-content">
 
-        this.trajetService.rechercher(
-            villeDepart.trim().toLowerCase(),
-            villeArrivee.trim().toLowerCase()
-        ).subscribe({
-            next: (data: any) => {
-                this.trajets = data.content || data;
-                this.loading = false;
-                this.cdr.detectChanges();
-            },
-            error: (err) => {
-                console.log('Erreur recherche:', err);
-                this.loading = false;
-                this.cdr.detectChanges();
-                this.snackBar.open('Erreur lors de la recherche', 'Fermer', { duration: 3000 });
-            }
-        });
-    }
-  }
+                <!-- Gauche : heure + route -->
+                <div class="trajet-left">
+                    <div class="trajet-heure">
+                        <div class="heure">{{ trajet.dateHeureDepart | date:'HH:mm' }}</div>
+                        <div class="date">{{ trajet.dateHeureDepart | date:'dd MMM' }}</div>
+                    </div>
+                    <div class="trajet-route">
+                        <span *ngIf="trajet.itineraire" class="itineraire">
+                            {{ trajet.itineraire }}
+                        </span>
+                        <div class="route-line">
+                            <span class="ville-nom">{{ trajet.villeDepart }}</span>
+                            <div class="line">
+                                <mat-icon class="car-icon">directions_car</mat-icon>
+                            </div>
+                            <span class="ville-nom">{{ trajet.villeArrivee }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Centre : conducteur -->
+                <div class="trajet-conducteur">
+                    <div class="avatar">
+                        <img *ngIf="trajet.conducteurPhoto"
+                             [src]="trajet.conducteurPhoto"
+                             alt="photo conducteur"/>
+                        <mat-icon *ngIf="!trajet.conducteurPhoto">person</mat-icon>
+                    </div>
+                    <div class="conducteur-infos">
+                        <div class="conducteur-nom">
+                            {{ trajet.conducteurPrenom }} {{ trajet.conducteurNom }}
+                        </div>
+                        <div class="conducteur-vehicule">
+                            {{ trajet.vehiculeMarque }} {{ trajet.vehiculeModele }}
+                        </div>
+                        <div class="conducteur-note" *ngIf="trajet.noteMoyenneConducteur">
+                            ⭐ {{ trajet.noteMoyenneConducteur }}/5
+                        </div>
+                    </div>
+                    <div class="places">
+                        <mat-icon>event_seat</mat-icon>
+                        {{ trajet.placesDisponibles }} place(s)
+                    </div>
+                </div>
+
+                <!-- Droite : prix + bouton -->
+                <div class="trajet-prix">
+                    <div class="prix">{{ trajet.prixConducteur | number }} GNF</div>
+                    <div class="prix-label">par place</div>
+                    <span *ngIf="trajet.statut === 'COMPLET'" class="badge-complet">
+                        Complet
+                    </span>
+                    <a *ngIf="trajet.statut === 'OUVERT'"
+                       mat-raised-button
+                       [routerLink]="['/trajets', trajet.id]"
+                       class="btn-voir">
+                        Voir le trajet
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- État vide -->
+        <div *ngIf="!loading && trajets.length === 0" class="empty">
+            <mat-icon>directions_car</mat-icon>
+            <h3>Aucun trajet trouvé</h3>
+            <p>Essayez d'autres dates ou destinations</p>
+        </div>
+
+    </div>
+</div>

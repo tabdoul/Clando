@@ -577,87 +577,90 @@ export default function ReservationsScreen({ navigation }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    loadingContainer: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
+    container: { flex: 1, backgroundColor: '#ffffff' },
+    loadingContainer: { flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' },
     header: {
-        backgroundColor: colors.primary, paddingTop: 60, paddingBottom: 20,
+        backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20,
         paddingHorizontal: spacing.xl,
     },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'white' },
 
     onglets: {
-        flexDirection: 'row', backgroundColor: colors.surface,
-        borderBottomWidth: 1, borderBottomColor: colors.separator,
+        flexDirection: 'row', backgroundColor: '#ffffff',
+        borderBottomWidth: 1, borderBottomColor: '#EEF2F7',
     },
     onglet: {
         flex: 1, paddingVertical: 14, alignItems: 'center',
         justifyContent: 'center', flexDirection: 'row', gap: 6,
     },
-    ongletActif: { borderBottomWidth: 2, borderBottomColor: colors.accent },
-    ongletText: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-    ongletTextActif: { color: colors.accent },
+    ongletActif: { borderBottomWidth: 2, borderBottomColor: '#182D5A' },
+    ongletText: { fontSize: 14, fontWeight: '600', color: '#888888' },
+    ongletTextActif: { color: '#182D5A' },
     ongletBadge: {
-        backgroundColor: colors.accent, borderRadius: 10,
+        backgroundColor: '#182D5A', borderRadius: 10,
         minWidth: 18, height: 18, alignItems: 'center',
         justifyContent: 'center', paddingHorizontal: 4,
     },
     ongletBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
 
     emptyContainer: { alignItems: 'center', marginTop: 80 },
-    emptyText: { fontSize: 18, color: colors.textMuted, marginTop: 16 },
+    emptyText: { fontSize: 18, color: '#888888', marginTop: 16 },
     emptySubtext: {
-        fontSize: 14, color: colors.textDisabled, marginTop: 4,
+        fontSize: 14, color: '#cccccc', marginTop: 4,
         textAlign: 'center', paddingHorizontal: 40,
     },
 
     cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
     card: {
-        backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
-        borderWidth: 1, borderColor: colors.border, borderLeftWidth: 3,
-        ...shadows.card,
+        backgroundColor: '#ffffff', borderRadius: 16, padding: 14,
+        borderWidth: 1, borderColor: '#EEF2F7', borderLeftWidth: 3,
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
     },
     cardHeader: {
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between', marginBottom: 8,
     },
     trajetRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
-    ville: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
+    ville: { fontSize: 15, fontWeight: '600', color: '#1a1a1a' },
     statutBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20 },
     statutText: { fontSize: 11, fontWeight: '600' },
 
     trajetPassager: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-    trajetPassagerText: { fontSize: 12, color: colors.textMuted },
+    trajetPassagerText: { fontSize: 12, color: '#888888' },
 
     metaRow: {
         flexDirection: 'row', alignItems: 'center',
         gap: 5, marginBottom: 8, flexWrap: 'wrap',
     },
-    metaText: { fontSize: 12, color: colors.textMuted },
-    metaDot: { color: colors.border, fontSize: 12 },
+    metaText: { fontSize: 12, color: '#888888' },
+    metaDot: { color: '#EEF2F7', fontSize: 12 },
 
     paiementOk: {
         flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: colors.greenLight, borderRadius: 8, padding: 8, marginBottom: 10,
+        backgroundColor: '#e8f5e9', borderRadius: 8, padding: 8, marginBottom: 10,
     },
-    paiementOkText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+    paiementOkText: { fontSize: 12, color: '#182D5A', fontWeight: '600' },
 
     enAttenteTexte: {
-        fontSize: 13, color: colors.textMuted, marginBottom: 10,
-        backgroundColor: colors.surfaceSecondary, borderRadius: 8, padding: 10,
+        fontSize: 13, color: '#888888', marginBottom: 10,
+        backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10,
     },
 
     messageBloc: {
         flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: colors.surfaceSecondary, borderRadius: 8, padding: 10, marginTop: 8,
+        backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10, marginTop: 8,
     },
-    messageBlocText: { fontSize: 13, color: colors.textMuted, flex: 1 },
+    messageBlocText: { fontSize: 13, color: '#888888', flex: 1 },
 
     actions: { marginTop: 4 },
 
     btnPayer: {
-        backgroundColor: colors.accent, borderRadius: 10, padding: 12,
+        backgroundColor: '#182D5A', borderRadius: 10, padding: 12,
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'center', gap: 8, marginBottom: 8,
     },
@@ -666,81 +669,81 @@ const styles = StyleSheet.create({
     actionsSecondaires: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
 
     btnSm: {
-        flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+        flex: 1, borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 8,
         paddingVertical: 8, flexDirection: 'row',
         alignItems: 'center', justifyContent: 'center', gap: 4,
         minWidth: '45%',
     },
-    btnSmDanger: { borderColor: colors.red },
-    btnSmAccent: { backgroundColor: colors.accent, borderColor: colors.accent },
+    btnSmDanger: { borderColor: '#E52424' },
+    btnSmAccent: { backgroundColor: '#182D5A', borderColor: '#182D5A' },
     btnSmText: { fontSize: 12, fontWeight: '600' },
 
     btnAnnuler: {
-        borderWidth: 1, borderColor: colors.red,
+        borderWidth: 1, borderColor: '#E52424',
         borderRadius: 10, padding: 10, alignItems: 'center',
     },
-    btnAnnulerText: { color: colors.red, fontSize: 13, fontWeight: '600' },
+    btnAnnulerText: { color: '#E52424', fontSize: 13, fontWeight: '600' },
 
     btnAvis: {
-        borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10,
+        borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 10, padding: 10,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     },
-    btnAvisText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+    btnAvisText: { color: '#888888', fontSize: 13, fontWeight: '600' },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalCard: {
-        backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
         padding: 24, maxHeight: '85%',
     },
     modalHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'flex-start', marginBottom: 20,
     },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: colors.textPrimary },
-    modalSubtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' },
+    modalSubtitle: { fontSize: 13, color: '#888888', marginTop: 4 },
     modalVide: { alignItems: 'center', paddingVertical: 40, gap: 12 },
-    modalVideText: { color: colors.textMuted, fontSize: 15 },
+    modalVideText: { color: '#888888', fontSize: 15 },
 
     passagerCard: {
         flexDirection: 'row', alignItems: 'center', gap: 12,
-        backgroundColor: colors.surfaceSecondary, borderRadius: 12, padding: 12, marginBottom: 8,
+        backgroundColor: '#EEF2F7', borderRadius: 12, padding: 12, marginBottom: 8,
     },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
     passagerAvatarPlaceholder: {
-        width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceSecondary,
+        width: 44, height: 44, borderRadius: 22, backgroundColor: '#EEF2F7',
         alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: colors.border,
+        borderWidth: 1, borderColor: '#D8E4F0',
     },
-    passagerInitiales: { color: colors.textMuted, fontSize: 16, fontWeight: '700' },
+    passagerInitiales: { color: '#182D5A', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
-    passagerNom: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
+    passagerNom: { color: '#1a1a1a', fontSize: 15, fontWeight: '600' },
 
-    paiementDetail: { backgroundColor: colors.surfaceSecondary, borderRadius: 12, padding: 16, marginBottom: 16 },
+    paiementDetail: { backgroundColor: '#EEF2F7', borderRadius: 12, padding: 16, marginBottom: 16 },
     paiementDetailLigne: {
         flexDirection: 'row', justifyContent: 'space-between',
         alignItems: 'center', paddingVertical: 6,
     },
-    paiementDetailLabel: { fontSize: 13, color: colors.textMuted },
-    paiementDetailValeur: { fontSize: 13, color: colors.textPrimary, textAlign: 'right' },
-    paiementDetailSeparator: { height: 1, backgroundColor: colors.border, marginVertical: 6 },
+    paiementDetailLabel: { fontSize: 13, color: '#888888' },
+    paiementDetailValeur: { fontSize: 13, color: '#1a1a1a', textAlign: 'right' },
+    paiementDetailSeparator: { height: 1, backgroundColor: '#D8E4F0', marginVertical: 6 },
     paiementInfo: {
         flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: colors.surfaceSecondary, borderRadius: 10, padding: 12, marginBottom: 16,
+        backgroundColor: '#EEF2F7', borderRadius: 10, padding: 12, marginBottom: 16,
     },
-    paiementInfoTexte: { fontSize: 13, color: colors.textMuted, flex: 1, lineHeight: 20 },
+    paiementInfoTexte: { fontSize: 13, color: '#888888', flex: 1, lineHeight: 20 },
     paiementLabel: {
-        fontSize: 12, fontWeight: '600', color: colors.textMuted,
+        fontSize: 12, fontWeight: '600', color: '#888888',
         marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
     },
     paiementInput: {
         flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: colors.surfaceSecondary, borderRadius: 10,
+        backgroundColor: '#EEF2F7', borderRadius: 10,
         paddingHorizontal: 14, paddingVertical: 4,
-        borderWidth: 1, borderColor: colors.border, marginBottom: 20,
+        borderWidth: 1, borderColor: '#D8E4F0', marginBottom: 20,
     },
-    paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: colors.textPrimary },
+    paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#1a1a1a' },
     boutonConfirmerPaiement: {
-        backgroundColor: colors.accent, borderRadius: 12, padding: 16,
+        backgroundColor: '#182D5A', borderRadius: 12, padding: 16,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     },
     boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },

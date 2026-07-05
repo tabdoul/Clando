@@ -266,11 +266,10 @@ export default function ResetPasswordScreen({ route, navigation }) {
         </KeyboardAvoidingView>
     );
 }
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     header: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#182D5A',
         paddingTop: 60,
         paddingBottom: 20,
         paddingHorizontal: spacing.xl,
@@ -289,7 +288,7 @@ const styles = StyleSheet.create({
         width: 88,
         height: 88,
         borderRadius: 44,
-        backgroundColor: colors.primaryLight,
+        backgroundColor: '#EEF2F7',
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 32,
@@ -298,40 +297,42 @@ const styles = StyleSheet.create({
     titre: {
         fontSize: 22,
         fontWeight: '700',
-        color: colors.textPrimary,
+        color: '#1a1a1a',
         textAlign: 'center',
         marginBottom: 12,
     },
     description: {
         fontSize: 14,
-        color: colors.textMuted,
+        color: '#888888',
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 32,
     },
     emailHighlight: {
-        color: colors.primary,
+        color: '#182D5A',
         fontWeight: '600',
     },
     card: {
-        backgroundColor: colors.surface,
-        borderRadius: radius.lg,
+        backgroundColor: '#ffffff',
+        borderRadius: 20,
         padding: spacing.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#EEF2F7',
         width: '100%',
-        ...shadows.card,
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 6,
     },
     fieldLabel: {
         fontSize: 11,
         fontWeight: '700',
-        color: colors.textMuted,
+        color: '#182D5A',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 10,
     },
-
-    // Code à 6 chiffres
     codeContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -342,29 +343,27 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 52,
         borderWidth: 1.5,
-        borderColor: colors.border,
-        borderRadius: radius.sm,
+        borderColor: '#EEF2F7',
+        borderRadius: 10,
         fontSize: 22,
         fontWeight: '700',
-        color: colors.textPrimary,
-        backgroundColor: colors.surfaceSecondary,
+        color: '#1a1a1a',
+        backgroundColor: '#FAFAFA',
         textAlign: 'center',
     },
     codeInputRempli: {
-        borderColor: colors.primary,
-        backgroundColor: colors.primaryLight,
+        borderColor: '#182D5A',
+        backgroundColor: '#EEF2F7',
     },
-
-    // Champs mot de passe
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.sm,
+        borderColor: '#EEF2F7',
+        borderRadius: 10,
         paddingHorizontal: spacing.md,
         paddingVertical: 2,
-        backgroundColor: colors.surfaceSecondary,
+        backgroundColor: '#FAFAFA',
         gap: 10,
         marginBottom: 4,
     },
@@ -372,7 +371,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 12,
         fontSize: 15,
-        color: colors.textPrimary,
+        color: '#1a1a1a',
     },
     matchIndicator: {
         flexDirection: 'row',
@@ -381,8 +380,8 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     bouton: {
-        backgroundColor: colors.accent,
-        borderRadius: radius.sm,
+        backgroundColor: '#182D5A',
+        borderRadius: 14,
         padding: 15,
         flexDirection: 'row',
         alignItems: 'center',
@@ -401,11 +400,11 @@ const styles = StyleSheet.create({
     },
     renvoyerTexte: {
         fontSize: 13,
-        color: colors.textMuted,
+        color: '#888888',
         textAlign: 'center',
     },
     renvoyerLien: {
-        color: colors.primary,
+        color: '#182D5A',
         fontWeight: '600',
     },
 });

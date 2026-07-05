@@ -1,30 +1,34 @@
 <section class="hero">
     <div class="hero-content">
         <div class="hero-badge">
-            <img src="icon.png" alt="Wayvo">
-        </div>
-        <h1>Roulez ensemble,<br><span class="hero-accent">Payer moins</span></h1>
+    <p class="logo-texte">Way<span class="logo-accent">vo</span></p>
+</div>
+        <h1>Bougez ensemble,<br><span class="hero-accent">payez moins</span></h1>
         <p class="hero-subtitle">
-            Trouver un trajet en un instant. Partagez les frais, gagnez du temps et faites route ensemble, en toute sécurité
+            Le covoiturage quotidien à Conakry — simple, sécurisé et abordable.
+            Partagez les frais et faites le trajet ensemble.
         </p>
         <div class="hero-actions">
-            <a mat-stroked-button routerLink="/telecharger" class="btn-secondary">
-                <mat-icon>phone_android</mat-icon> Télécharger l'app
+            <a mat-raised-button routerLink="/telecharger" class="btn-primary">
+                <mat-icon>android</mat-icon> Télécharger l'app
+            </a>
+            <a mat-stroked-button routerLink="/trajets" class="btn-secondary">
+                <mat-icon>search</mat-icon> Voir les trajets disponibles
             </a>
         </div>
         <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-value">Orange Money</span>
+                <span class="stat-label">Paiement mobile</span>
+            </div>
+            <div class="stat-divider"></div>
             <div class="stat">
                 <span class="stat-value">100%</span>
                 <span class="stat-label">Sécurisé</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat">
-                <span class="stat-value">OM</span>
-                <span class="stat-label">Orange Money</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat">
-                <span class="stat-value">0</span>
+                <span class="stat-value">0 GNF</span>
                 <span class="stat-label">Frais cachés</span>
             </div>
         </div>
@@ -32,61 +36,138 @@
 
     <div class="hero-visual">
         <div class="search-card">
-            <h3 class="search-card-title">Trouver un trajet</h3>
+            <h3 class="search-card-title">
+                <mat-icon>directions_car</mat-icon>
+                Trouver un trajet
+            </h3>
             <div class="search-fields">
                 <div class="search-row">
                     <div class="search-field">
-                        <mat-icon>radio_button_checked</mat-icon>
-                        <input type="text" placeholder="Départ" [(ngModel)]="villeDepart"/>
+                        <mat-icon class="field-icon depart-icon">radio_button_checked</mat-icon>
+                        <input
+                            type="text"
+                            placeholder="D'où partez-vous ?"
+                            [(ngModel)]="villeDepart"
+                            (ngModelChange)="onDepartChange()"
+                            [matAutocomplete]="autoDepart"
+                            class="field-input"
+                        />
+                        <mat-autocomplete #autoDepart="matAutocomplete">
+                            <mat-option *ngFor="let q of suggestionsDepart" [value]="q">
+                                <mat-icon style="font-size:14px; color:#c0522a; vertical-align:middle; margin-right:6px;">location_on</mat-icon>
+                                {{ q }}
+                            </mat-option>
+                        </mat-autocomplete>
                     </div>
                     <button class="swap-btn" (click)="inverser()">
                         <mat-icon>swap_horiz</mat-icon>
                     </button>
                     <div class="search-field">
-                        <mat-icon class="icon-arrive">location_on</mat-icon>
-                        <input type="text" placeholder="Arrivée" [(ngModel)]="villeArrivee"/>
+                        <mat-icon class="field-icon arrivee-icon">location_on</mat-icon>
+                        <input
+                            type="text"
+                            placeholder="Où allez-vous ?"
+                            [(ngModel)]="villeArrivee"
+                            (ngModelChange)="onArriveeChange()"
+                            [matAutocomplete]="autoArrivee"
+                            class="field-input"
+                        />
+                        <mat-autocomplete #autoArrivee="matAutocomplete">
+                            <mat-option *ngFor="let q of suggestionsArrivee" [value]="q">
+                                <mat-icon style="font-size:14px; color:#c0522a; vertical-align:middle; margin-right:6px;">location_on</mat-icon>
+                                {{ q }}
+                            </mat-option>
+                        </mat-autocomplete>
                     </div>
                 </div>
+
                 <div class="search-row">
                     <div class="search-field">
-                        <mat-icon>calendar_today</mat-icon>
-                        <input type="date" [(ngModel)]="dateDepart" [min]="today"/>
+                        <mat-icon class="field-icon">calendar_today</mat-icon>
+                        <input type="date" [(ngModel)]="dateDepart" [min]="today" class="field-input"/>
                     </div>
                     <div class="search-field">
-                        <mat-icon>person</mat-icon>
-                        <input type="number" placeholder="1 passager" min="1" max="9" [(ngModel)]="nbPassagers"/>
+                        <mat-icon class="field-icon">person</mat-icon>
+                        <input type="number" placeholder="1 passager" min="1" max="9" [(ngModel)]="nbPassagers" class="field-input"/>
                     </div>
                 </div>
+
                 <button class="search-btn" (click)="rechercher()">
-                    RECHERCHER
+                    <mat-icon>search</mat-icon>
+                    RECHERCHER UN TRAJET
                 </button>
+            </div>
+
+            <div class="trajets-populaires">
+                <p class="populaires-titre">Trajets populaires :</p>
+                <div class="populaires-tags">
+                    <button class="tag" (click)="villeDepart='Kissosso'; villeArrivee='Kaloum'">Kissosso → Kaloum</button>
+                    <button class="tag" (click)="villeDepart='Ratoma'; villeArrivee='Kaloum'">Ratoma → Kaloum</button>
+                    <button class="tag" (click)="villeDepart='Bambeto'; villeArrivee='Kaloum'">Bambeto → Kaloum</button>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Le reste du HTML reste exactement identique -->
+<!-- Bandeau confiance -->
+<div class="trust-bar">
+    <div class="trust-bar-inner">
+        <div class="trust-item">
+            <mat-icon>verified_user</mat-icon>
+            <span>Conducteurs vérifiés</span>
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+            <mat-icon>phone_iphone</mat-icon>
+            <span>Paiement Orange Money</span>
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+            <mat-icon>female</mat-icon>
+            <span>Trajets femmes disponibles</span>
+        </div>
+        <div class="trust-divider"></div>
+        <div class="trust-item">
+            <mat-icon>location_on</mat-icon>
+            <span>Suivi en temps réel</span>
+        </div>
+    </div>
+</div>
+
 <!-- Comment ça marche -->
 <section class="section">
     <div class="section-container">
-        <h2 class="section-title">Comment ça marche ?</h2>
+        <div class="section-header">
+            <h2 class="section-title">Comment ça marche ?</h2>
+            <p class="section-desc">En 3 étapes simples, trouvez votre trajet et faites le chemin ensemble</p>
+        </div>
         <div class="steps">
             <div class="step">
-                <div class="step-icon">🔍</div>
+                <div class="step-number">1</div>
+                <div class="step-icon-wrap">
+                    <mat-icon class="step-mat-icon">search</mat-icon>
+                </div>
                 <h3>Recherchez</h3>
-                <p>Entrez votre point de départ et d'arrivée pour trouver des trajets disponibles</p>
+                <p>Entrez votre quartier de départ et d'arrivée pour voir les trajets disponibles</p>
             </div>
-            <div class="step-arrow">→</div>
+            <div class="step-arrow"><mat-icon>arrow_forward</mat-icon></div>
             <div class="step">
-                <div class="step-icon">✅</div>
+                <div class="step-number">2</div>
+                <div class="step-icon-wrap">
+                    <mat-icon class="step-mat-icon">check_circle</mat-icon>
+                </div>
                 <h3>Réservez</h3>
                 <p>Choisissez votre trajet et payez en toute sécurité via Orange Money</p>
             </div>
-            <div class="step-arrow">→</div>
+            <div class="step-arrow"><mat-icon>arrow_forward</mat-icon></div>
             <div class="step">
-                <div class="step-icon">🚗</div>
-                <h3>Voyagez</h3>
-                <p>Retrouvez votre conducteur et profitez du trajet en bonne compagnie</p>
+                <div class="step-number">3</div>
+                <div class="step-icon-wrap">
+                    <mat-icon class="step-mat-icon">directions_car</mat-icon>
+                </div>
+                <h3>Faites le trajet</h3>
+                <p>Retrouvez votre conducteur et faites le trajet ensemble en bonne compagnie</p>
             </div>
         </div>
     </div>
@@ -95,37 +176,52 @@
 <!-- Avantages -->
 <section class="section section-gray">
     <div class="section-container">
-        <h2 class="section-title">Pourquoi choisir Wayvo ?</h2>
+        <div class="section-header">
+            <h2 class="section-title">Pourquoi choisir Wayvo ?</h2>
+            <p class="section-desc">La plateforme de covoiturage pensée pour Conakry</p>
+        </div>
         <div class="features-grid">
             <div class="feature-card">
-                <mat-icon class="feature-icon">security</mat-icon>
-                <h3>Trajets vérifiés</h3>
-                <p>Chaque conducteur doit fournir permis de conduire et pièce d'identité vérifiés</p>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">verified_user</mat-icon>
+                </div>
+                <h3>Conducteurs vérifiés</h3>
+                <p>CNI et permis de conduire vérifiés pour chaque conducteur sur la plateforme</p>
             </div>
             <div class="feature-card">
-                <mat-icon class="feature-icon">payments</mat-icon>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">payments</mat-icon>
+                </div>
                 <h3>Paiement sécurisé</h3>
-                <p>Paiement via Orange Money, carte bancaire ou Soutra Money</p>
+                <p>Paiement exclusivement via Orange Money — simple, rapide et sécurisé</p>
             </div>
             <div class="feature-card">
-                <mat-icon class="feature-icon">star</mat-icon>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">star</mat-icon>
+                </div>
                 <h3>Avis fiables</h3>
-                <p>Notez vos conducteurs et consultez les avis de la communauté</p>
+                <p>Notez vos conducteurs après chaque trajet et consultez les avis de la communauté</p>
             </div>
             <div class="feature-card">
-                <mat-icon class="feature-icon">female</mat-icon>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">female</mat-icon>
+                </div>
                 <h3>Trajets femmes</h3>
-                <p>Des trajets réservés aux femmes pour voyager en toute sérénité</p>
+                <p>Des trajets exclusivement réservés aux femmes pour voyager en toute sérénité</p>
             </div>
             <div class="feature-card">
-                <mat-icon class="feature-icon">location_on</mat-icon>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">location_on</mat-icon>
+                </div>
                 <h3>Suivi en temps réel</h3>
-                <p>Suivez la position de votre conducteur directement depuis l'app</p>
+                <p>Suivez la position de votre conducteur directement depuis l'application</p>
             </div>
             <div class="feature-card">
-                <mat-icon class="feature-icon">savings</mat-icon>
+                <div class="feature-icon-wrap">
+                    <mat-icon class="feature-icon">savings</mat-icon>
+                </div>
                 <h3>Économisez</h3>
-                <p>Partagez les frais de route et réduisez le coût de vos déplacements</p>
+                <p>Partagez les frais de route et réduisez le coût de vos déplacements quotidiens</p>
             </div>
         </div>
     </div>
@@ -133,21 +229,17 @@
 
 <!-- CTA -->
 <section class="section section-dark">
-    <div class="section-container" style="text-align: center;">
-        <h2 style="color: white; font-size: 2rem; margin-bottom: 16px;">
-            Prêt à voyager avec Wayvo ?
-        </h2>
-        <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 32px;">
-            Téléchargez l'application et commencez à voyager dès aujourd'hui
-        </p>
-        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-            <a mat-raised-button routerLink="/telecharger"
-               style="background: white; color: #00b5e2; padding: 12px 32px; font-size: 1rem;">
-                <mat-icon>android</mat-icon> Télécharger l'APK Android
+    <div class="section-container cta-container">
+        <div class="cta-text">
+            <h2>Prêt à faire le trajet avec Wayvo ?</h2>
+            <p>Téléchargez l'application et commencez dès aujourd'hui</p>
+        </div>
+        <div class="cta-actions">
+            <a mat-raised-button routerLink="/telecharger" class="btn-cta-primary">
+                <mat-icon>android</mat-icon> Télécharger l'APK
             </a>
-            <a mat-stroked-button routerLink="/trajets"
-               style="color: white; border-color: white; padding: 12px 32px; font-size: 1rem;">
-                <mat-icon>search</mat-icon> Voir les trajets disponibles
+            <a mat-stroked-button routerLink="/trajets" class="btn-cta-outline">
+                <mat-icon>search</mat-icon> Voir les trajets
             </a>
         </div>
     </div>
@@ -156,17 +248,20 @@
 <!-- Footer -->
 <footer class="footer">
     <div class="footer-content">
-        <div class="footer-brand">
-            <mat-icon>directions_car</mat-icon>
-            <span>Wayvo</span>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <mat-icon>directions_car</mat-icon>
+                <span>Wayvo</span>
+            </div>
+            <p class="footer-tagline">Bougez ensemble, sans stress</p>
         </div>
         <div class="footer-links">
             <a routerLink="/mentions-legales">Mentions légales</a>
             <a routerLink="/mentions-legales">CGU</a>
-            <a routerLink="/mentions-legales">Politique de confidentialité</a>
+            <a routerLink="/confidentialite">Politique de confidentialité</a>
             <a routerLink="/trajets">Trajets</a>
             <a routerLink="/telecharger">Télécharger</a>
         </div>
-        <p class="footer-copy">© 2026 Wayvo</p>
+        <p class="footer-copy">© 2026 Wayvo — Conakry, Guinée</p>
     </div>
 </footer>

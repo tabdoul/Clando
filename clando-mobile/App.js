@@ -25,7 +25,7 @@ import AideScreen from './src/screens/AideScreen';
 import TrajetDetailScreen from './src/screens/TrajetDetailScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
-import OnboardingScreen from './src/screens/OnboardingScreen'; // ✅
+import OnboardingScreen from './src/screens/OnboardingScreen'; 
 
 const Stack = createStackNavigator();
 

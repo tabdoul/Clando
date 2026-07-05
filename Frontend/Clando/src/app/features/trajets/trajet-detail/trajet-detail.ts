@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef,ViewEncapsulation  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -18,6 +18,7 @@ import { Trajet } from '../../../shared/models/trajet.model';
 @Component({
     selector: 'app-trajet-detail',
     standalone: true,
+    encapsulation: ViewEncapsulation.None,
     imports: [
         CommonModule,
         FormsModule,

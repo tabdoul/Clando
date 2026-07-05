@@ -137,14 +137,13 @@ export default function SOSScreen({ navigation }) {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: '#ffffff',
     },
     header: {
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#182D5A',
         paddingTop: 60,
         paddingBottom: 20,
         paddingHorizontal: 20,
@@ -152,16 +151,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#2a2a2a',
+        borderBottomColor: '#D8E4F0',
     },
     backButton: { padding: 4 },
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#eee',
+        color: 'white',
     },
     sosBanner: {
-        backgroundColor: '#c0392b',
+        backgroundColor: '#E52424',
         margin: 16,
         borderRadius: 14,
         padding: 16,
@@ -186,15 +185,20 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     card: {
-        backgroundColor: '#1e1e1e',
-        borderRadius: 12,
+        backgroundColor: '#ffffff',
+        borderRadius: 14,
         padding: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderLeftWidth: 3,
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: '#EEF2F7',
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
     },
     cardLeft: {
         flexDirection: 'row',
@@ -213,12 +217,12 @@ const styles = StyleSheet.create({
     cardService: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#eee',
+        color: '#1a1a1a',
         marginBottom: 2,
     },
     cardDescription: {
         fontSize: 12,
-        color: '#888',
+        color: '#888888',
         lineHeight: 16,
     },
     boutonAppeler: {
@@ -236,17 +240,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     conseilContainer: {
-        backgroundColor: '#1e1e1e',
+        backgroundColor: '#ffffff',
         margin: 16,
         borderRadius: 14,
         padding: 16,
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: '#EEF2F7',
+        shadowColor: '#182D5A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
     },
     conseilTitre: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#eee',
+        color: '#1a1a1a',
         marginBottom: 12,
     },
     conseilItem: {
@@ -257,7 +266,7 @@ const styles = StyleSheet.create({
     },
     conseilTexte: {
         fontSize: 13,
-        color: '#888',
+        color: '#888888',
         flex: 1,
         lineHeight: 18,
     },

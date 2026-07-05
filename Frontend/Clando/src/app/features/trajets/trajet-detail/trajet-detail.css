@@ -1,5 +1,6 @@
+/* ── Page ───────────────────────────────────────── */
 .page {
-    background: #f5f5f5;
+    background: #ffffff;
     min-height: 100vh;
     padding: 32px 20px;
 }
@@ -19,7 +20,8 @@
     margin-bottom: 24px;
     transition: color 0.2s;
 }
-.retour:hover { color: #1a1a1a; }
+
+.retour:hover { color: #c0522a; }
 .retour mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
 .detail-layout {
@@ -31,13 +33,13 @@
 
 .colonne-principale { display: flex; flex-direction: column; gap: 16px; }
 
-/* Carte générique */
+/* ── Carte générique ────────────────────────────── */
 .card {
     background: white;
     border-radius: 14px;
     padding: 24px;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #edddd0;
+    box-shadow: 0 2px 8px rgba(192,82,42,0.06);
 }
 
 .card-label {
@@ -49,7 +51,7 @@
     margin: 0 0 16px;
 }
 
-/* Badge femmes */
+/* ── Badge femmes ───────────────────────────────── */
 .badge-femmes {
     display: flex;
     align-items: center;
@@ -63,7 +65,7 @@
     font-weight: 600;
 }
 
-/* Trajet route */
+/* ── Trajet route ───────────────────────────────── */
 .trajet-route {
     display: flex;
     align-items: center;
@@ -72,8 +74,20 @@
 }
 
 .ville { text-align: center; }
-.ville-nom { display: block; font-size: 1.6rem; font-weight: 700; color: #1a1a1a; }
-.ville-label { display: block; font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+
+.ville-nom {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.ville-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-top: 4px;
+}
 
 .route-ligne {
     flex: 1;
@@ -82,19 +96,21 @@
     gap: 8px;
     margin: 0 16px;
 }
-.route-bar { flex: 1; height: 1px; background: #e0e0e0; }
-.route-icon { color: #00b5e2; }
+
+.route-bar { flex: 1; height: 1px; background: #edddd0; }
+
+.route-icon { color: #c0522a !important; }
 
 .itineraire {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #00b5e2;
+    color: #c0522a;
     font-size: 0.85rem;
     margin-bottom: 20px;
 }
 
-/* Infos */
+/* ── Infos ──────────────────────────────────────── */
 .info-liste { display: flex; flex-direction: column; gap: 16px; }
 
 .info-item {
@@ -103,13 +119,17 @@
     gap: 14px;
 }
 
-.info-item mat-icon { color: #bbb; margin-top: 2px; font-size: 20px; }
+.info-item mat-icon {
+    color: #c0522a;
+    margin-top: 2px;
+    font-size: 20px;
+}
 
 .info-label { display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 2px; }
 .info-valeur { display: block; font-size: 0.95rem; color: #1a1a1a; font-weight: 500; }
 .info-valeur.rouge { color: #e53935; }
 
-/* Conducteur */
+/* ── Conducteur ─────────────────────────────────── */
 .conducteur-row {
     display: flex;
     align-items: center;
@@ -117,19 +137,23 @@
 }
 
 .conducteur-avatar {
-    width: 56px; height: 56px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: #f5f5f5;
-    border: 1px solid #e0e0e0;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
+    background: #fdf0ea;
+    border: 1px solid #edddd0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
 }
+
 .conducteur-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.conducteur-avatar mat-icon { color: #bbb; font-size: 28px; }
+.conducteur-avatar mat-icon { color: #c0522a; font-size: 28px; }
 
 .conducteur-info { display: flex; flex-direction: column; gap: 8px; }
 .conducteur-nom { font-size: 1rem; font-weight: 600; color: #1a1a1a; }
-
 .conducteur-badges { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .badge-note, .badge-trajets, .badge-verifie, .badge-nouveau {
@@ -144,12 +168,12 @@
 
 .badge-note { background: #fff8e1; color: #f57f17; }
 .badge-note mat-icon { font-size: 13px; width: 13px; height: 13px; color: #f39c12; }
-.badge-trajets { background: #f5f5f5; color: #666; }
-.badge-verifie { background: #e8f5e9; color: #2e7d32; }
-.badge-verifie mat-icon { font-size: 13px; width: 13px; height: 13px; color: #2ecc71; }
+.badge-trajets { background: #fdf0ea; color: #c0522a; }
+.badge-verifie { background: #fdf0ea; color: #8b3a1c; }
+.badge-verifie mat-icon { font-size: 13px; width: 13px; height: 13px; color: #c0522a; }
 .badge-nouveau { background: #f5f5f5; color: #aaa; }
 
-/* Sidebar */
+/* ── Sidebar ────────────────────────────────────── */
 .sidebar { position: sticky; top: 20px; }
 
 .card-prix { text-align: center; }
@@ -157,39 +181,65 @@
 .prix-valeur {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #00b5e2;
+    color: #c0522a;
     line-height: 1;
 }
+
 .prix-label { color: #aaa; font-size: 0.85rem; margin: 4px 0 20px; }
 
 .prix-info {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    background: #f5f5f5;
+    background: #fdf0ea;
     border-radius: 10px;
     padding: 12px;
     margin-bottom: 20px;
     text-align: left;
+    border: 1px solid #edddd0;
 }
-.prix-info mat-icon { color: #bbb; font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-.prix-info span { font-size: 0.8rem; color: #888; line-height: 1.5; }
 
+.prix-info mat-icon { color: #c0522a; font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.prix-info span { font-size: 0.8rem; color: #8b3a1c; line-height: 1.5; }
+
+/* ── Champs passager ────────────────────────────── */
+.trajet-passager-fields {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.trajet-passager-label {
+    font-size: 12px;
+    color: #888;
+    margin: 0 0 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── Bouton réserver ────────────────────────────── */
 .btn-reserver {
     width: 100%;
-    background: #00b5e2 !important;
+    background: #c0522a !important;
     color: white !important;
     padding: 14px 0 !important;
     font-size: 0.95rem !important;
     border-radius: 10px !important;
     margin-bottom: 12px;
+    box-shadow: 0 4px 14px rgba(192,82,42,0.3) !important;
+}
+
+.btn-reserver:hover {
+    background: #8b3a1c !important;
 }
 
 .btn-reserver:disabled {
     background: #e0e0e0 !important;
     color: #aaa !important;
+    box-shadow: none !important;
 }
 
+/* ── Badge complet ──────────────────────────────── */
 .badge-complet {
     display: flex;
     align-items: center;
@@ -203,10 +253,18 @@
     margin-bottom: 12px;
 }
 
+/* ── Login hint ─────────────────────────────────── */
 .login-hint { font-size: 0.82rem; color: #aaa; margin-top: 8px; }
-.login-hint a { color: #00b5e2; text-decoration: none; }
 
-/* Loading */
+.login-hint a {
+    color: #c0522a;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-hint a:hover { color: #8b3a1c; }
+
+/* ── Loading ────────────────────────────────────── */
 .loading {
     display: flex;
     flex-direction: column;
@@ -216,24 +274,20 @@
     color: #888;
     gap: 12px;
 }
-.trajet-passager-fields {
-    margin-bottom: 16px;
-    text-align: left;
+
+.loading mat-icon {
+    font-size: 56px;
+    width: 56px;
+    height: 56px;
+    color: #edddd0;
 }
 
-.trajet-passager-label {
-    font-size: 12px;
-    color: #aaa;
-    margin: 0 0 4px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.loading mat-icon { font-size: 56px; width: 56px; height: 56px; color: #ddd; }
 .loading p { font-size: 1rem; color: #888; margin: 0; }
 
+/* ── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
     .detail-layout { grid-template-columns: 1fr; }
     .sidebar { position: static; }
     .ville-nom { font-size: 1.2rem; }
+    .page { padding: 20px 16px; }
 }

@@ -9,7 +9,32 @@ body {
     color: #1a1a1a;
     font-family: 'Segoe UI', sans-serif;
 }
+/* ── Material fields terracotta trajet-detail ───── */
+app-trajet-detail .mat-mdc-form-field.mat-focused .mdc-floating-label {
+    color: #c0522a !important;
+}
 
+app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__leading,
+app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__notch,
+app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__trailing {
+    border-color: #c0522a !important;
+}
+
+app-trajet-detail .mat-mdc-option:hover,
+app-trajet-detail .mat-mdc-option.mat-mdc-option-active {
+    background: #fdf0ea !important;
+}
+
+/* ── Material fields terracotta trajet-list ─────── */
+app-trajet-list .mat-mdc-form-field.mat-focused .mdc-floating-label {
+    color: #c0522a !important;
+}
+
+app-trajet-list .mdc-text-field--focused .mdc-notched-outline__leading,
+app-trajet-list .mdc-text-field--focused .mdc-notched-outline__notch,
+app-trajet-list .mdc-text-field--focused .mdc-notched-outline__trailing {
+    border-color: #c0522a !important;
+}
 /* Inputs */
 input, textarea, select { color: #1a1a1a !important; }
 input.mat-mdc-input-element,
@@ -70,7 +95,284 @@ textarea.mat-mdc-input-element { color: #1a1a1a !important; }
 
 .avatar img {
     width: 100%;
-    height: 100%;  
+    height: 100%;
     object-fit: cover;
     display: block;
+}
+app-root mat-toolbar {
+    background-color: #c0522a !important;
+}
+/* ══════════════════════════════════════════════════
+   TRAJET LIST — styles globaux
+   ══════════════════════════════════════════════════ */
+
+app-trajet-list .page {
+    background: #ffffff;
+    min-height: 100vh;
+}
+
+app-trajet-list .results-hero {
+    background: #ffffff;
+    padding: 32px 20px 20px;
+    border-bottom: 1px solid #edddd0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 860px;
+    margin: 0 auto;
+    gap: 16px;
+}
+
+app-trajet-list .results-hero h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+}
+
+app-trajet-list .results-hero h1 mat-icon {
+    color: #c0522a;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+app-trajet-list .results-hero p { color: #888; font-size: 0.9rem; margin: 0; }
+
+app-trajet-list .btn-modifier {
+    color: #c0522a !important;
+    border-color: #c0522a !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+app-trajet-list .search-compact {
+    background: #fdf8f6;
+    border-bottom: 1px solid #edddd0;
+    padding: 16px 20px;
+}
+
+app-trajet-list .search-compact .search-grid {
+    max-width: 860px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+
+app-trajet-list .search-compact .btn-search {
+    height: 56px;
+    background: #c0522a !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+
+app-trajet-list .results {
+    max-width: 860px;
+    margin: 24px auto 40px;
+    padding: 0 16px;
+}
+
+app-trajet-list .loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+}
+
+app-trajet-list .loading mat-icon {
+    font-size: 48px !important;
+    color: #c0522a;
+    display: block;
+    margin-bottom: 12px;
+}
+
+app-trajet-list .trajet-card {
+    background: #ffffff;
+    margin-bottom: 16px;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid #edddd0;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+
+app-trajet-list .trajet-card:hover {
+    box-shadow: 0 6px 24px rgba(192,82,42,0.12);
+    transform: translateY(-2px);
+    border-color: #d4a090;
+}
+
+app-trajet-list .trajet-complet { opacity: 0.6; }
+app-trajet-list .trajet-femmes { border-left: 4px solid #9c27b0; }
+
+app-trajet-list .badge-femmes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f3e5f5;
+    color: #9c27b0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    width: fit-content;
+}
+
+app-trajet-list .trajet-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+app-trajet-list .trajet-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+app-trajet-list .trajet-heure { text-align: center; min-width: 52px; }
+
+app-trajet-list .heure { font-size: 1.4rem; font-weight: 700; color: #c0522a; }
+app-trajet-list .date { font-size: 0.8rem; color: #888; }
+
+app-trajet-list .trajet-route { flex: 1; }
+
+app-trajet-list .itineraire {
+    display: block;
+    font-size: 0.75rem;
+    color: #c0522a;
+    font-style: italic;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+app-trajet-list .route-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+app-trajet-list .ville-nom { font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+
+app-trajet-list .line {
+    flex: 1;
+    height: 2px;
+    background: #edddd0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+app-trajet-list .car-icon { color: #c0522a !important; font-size: 18px !important; background: white; }
+
+app-trajet-list .trajet-conducteur {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 1px solid #edddd0;
+    border-right: 1px solid #edddd0;
+    padding: 0 20px;
+}
+
+app-trajet-list .avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    border-radius: 50%;
+    background: #fdf0ea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #edddd0;
+    flex-shrink: 0;
+}
+
+app-trajet-list .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+app-trajet-list .avatar mat-icon { color: #c0522a; }
+
+app-trajet-list .conducteur-infos { flex: 1; }
+app-trajet-list .conducteur-nom { font-weight: 500; font-size: 0.9rem; color: #1a1a1a; }
+app-trajet-list .conducteur-vehicule { font-size: 0.78rem; color: #888; }
+app-trajet-list .conducteur-note { font-size: 0.78rem; color: #f39c12; }
+
+app-trajet-list .places {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #c0522a;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    margin-left: 12px;
+    font-weight: 600;
+}
+
+app-trajet-list .places mat-icon { font-size: 16px !important; color: #c0522a; }
+
+app-trajet-list .trajet-prix { text-align: right; min-width: 140px; }
+
+app-trajet-list .prix { font-size: 1.5rem; font-weight: 700; color: #c0522a; }
+app-trajet-list .prix-label { font-size: 0.78rem; color: #888; margin-bottom: 12px; }
+
+app-trajet-list .badge-complet {
+    background: #ffebee;
+    color: #e53935;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+app-trajet-list .btn-voir {
+    background: #c0522a !important;
+    color: white !important;
+    border-radius: 20px !important;
+    font-size: 0.85rem !important;
+}
+
+app-trajet-list .btn-voir:hover { background: #8b3a1c !important; }
+
+app-trajet-list .empty { text-align: center; padding: 60px 20px; color: #888; }
+
+app-trajet-list .empty mat-icon {
+    font-size: 64px !important;
+    color: #edddd0;
+    display: block;
+    margin-bottom: 16px;
+}
+
+app-trajet-list .empty h3 { color: #999; margin-bottom: 8px; }
+
+@media (max-width: 768px) {
+    app-trajet-list .search-compact .search-grid { grid-template-columns: 1fr; }
+    app-trajet-list .search-compact .btn-search { width: 100%; }
+    app-trajet-list .results-hero { flex-direction: column; align-items: flex-start; gap: 12px; }
+    app-trajet-list .results-hero h1 { font-size: 1.3rem; }
+    app-trajet-list .btn-modifier { width: 100%; justify-content: center; }
+    app-trajet-list .trajet-content { flex-direction: column; align-items: flex-start; }
+    app-trajet-list .trajet-conducteur { border: none; border-top: 1px solid #edddd0; padding: 12px 0 0; width: 100%; }
+    app-trajet-list .trajet-prix { text-align: left; border-top: 1px solid #edddd0; padding-top: 12px; width: 100%; }
+}
+/* ── Logo hero landing ──────────────────────────── */
+app-landing .logo-texte {
+    font-size: 3.5rem !important;
+    font-weight: 900 !important;
+    color: #1a1a1a !important;
+    letter-spacing: 3px !important;
+    margin: 0 0 8px !important;
+    line-height: 1 !important;
+    display: block !important;
+    font-family: 'Segoe UI', sans-serif !important;
+}
+
+app-landing .logo-accent {
+    color: #c0522a !important;
+    font-size: 3.5rem !important;
+    font-weight: 900 !important;
 }
