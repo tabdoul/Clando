@@ -1,5 +1,6 @@
+/* ── Page ───────────────────────────────────────── */
 .page {
-    background: #f5f5f5;
+    background: #ffffff;
     min-height: 100vh;
     padding: 32px 20px;
 }
@@ -9,34 +10,76 @@
     margin: 0 auto;
 }
 
+/* ── Header ─────────────────────────────────────── */
+.page-header {
+    margin-bottom: 24px;
+}
+
 .page-header h1 {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 1.8rem;
+    font-weight: 700;
     color: #1a1a1a;
-    margin: 0 0 24px;
+    border-left: 4px solid #182D5A;
+    padding-left: 12px;
 }
 
+/* ── Onglets ─────────────────────────────────────── */
 .onglet-content {
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    padding-top: 20px;
 }
 
-/* Carte */
+/* ── Loading ─────────────────────────────────────── */
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    padding: 40px;
+    justify-content: center;
+}
+
+/* ── Empty state ─────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+}
+
+.empty-state mat-icon {
+    font-size: 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    color: #EEF2F7;
+    display: block;
+    margin: 0 auto 16px;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: #888;
+}
+
+/* ── Carte réservation ───────────────────────────── */
 .reservation-card {
-    background: white;
-    border-radius: 14px;
+    background: #ffffff;
+    border-radius: 16px;
     padding: 20px;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 16px;
+    border: 1px solid #EEF2F7;
+    border-left: 4px solid #182D5A;
+    box-shadow: 0 2px 8px rgba(24,45,90,0.06);
+    transition: box-shadow 0.2s;
+}
+
+.reservation-card:hover {
+    box-shadow: 0 6px 20px rgba(24,45,90,0.10);
 }
 
 .reservation-card.conducteur {
-    border-left: 4px solid #f39c12;
+    border-left-color: #f39c12;
 }
 
-/* En-tête conducteur/passager */
+/* ── Conducteur row ──────────────────────────────── */
 .conducteur-row {
     display: flex;
     align-items: center;
@@ -47,12 +90,12 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #00b5e2;
+    background: #182D5A;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
     flex-shrink: 0;
+    color: white;
 }
 
 .conducteur-info {
@@ -62,26 +105,41 @@
 }
 
 .conducteur-nom {
-    font-weight: 700;
-    font-size: 15px;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: #1a1a1a;
 }
 
 .conducteur-sous {
-    font-size: 12px;
+    font-size: 0.78rem;
     color: #888;
-    margin-top: 2px;
 }
 
+/* ── Statut badge ────────────────────────────────── */
+.statut-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+.statut-attente { background: #fff3e0; color: #e65100; }
+.statut-confirmee { background: #e8f5e9; color: #2e7d32; }
+.statut-annulee { background: #f5f5f5; color: #888; }
+.statut-refusee { background: #ffebee; color: #c62828; }
+.statut-terminee { background: #EEF2F7; color: #182D5A; }
+
+/* ── Separator ───────────────────────────────────── */
 .separator {
     height: 1px;
-    background: #f0f0f0;
+    background: #EEF2F7;
     margin: 14px 0;
 }
 
-/* Trajet */
+/* ── Trajet bloc ─────────────────────────────────── */
 .trajet-bloc {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .trajet-ligne {
@@ -97,11 +155,11 @@
     flex-shrink: 0;
 }
 
-.trajet-dot-depart { background: #00b5e2; }
-.trajet-dot-arrivee { background: #aaa; }
+.trajet-dot-depart { background: #182D5A; }
+.trajet-dot-arrivee { background: #182D5A; opacity: 0.5; }
 
 .trajet-ville {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
     color: #1a1a1a;
 }
@@ -109,76 +167,150 @@
 .trajet-connecteur {
     display: flex;
     align-items: center;
-    margin: 2px 0 2px 4px;
+    padding-left: 3px;
+    margin: 4px 0;
 }
 
 .trajet-arrow {
-    font-size: 16px;
-    color: #ccc;
+    color: #EEF2F7 !important;
+    font-size: 16px !important;
 }
 
-/* Montée/descente passager */
+/* ── Passager trajet ─────────────────────────────── */
 .passager-trajet {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    background: #f5f5f5;
+    background: #EEF2F7;
     border-radius: 8px;
     padding: 10px 12px;
     margin-bottom: 12px;
-    font-size: 13px;
-    color: #666;
+    font-size: 0.85rem;
+    color: #555;
 }
 
 .passager-trajet mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: #00b5e2;
+    color: #182D5A;
+    font-size: 16px !important;
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
-/* Méta */
+.passager-trajet strong { color: #1a1a1a; }
+
+/* ── Méta bloc ───────────────────────────────────── */
 .meta-bloc {
     display: flex;
+    gap: 16px;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
 }
 
 .meta-item {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 13px;
+    font-size: 0.82rem;
     color: #888;
 }
 
 .meta-item mat-icon {
-    font-size: 15px;
-    width: 15px;
-    height: 15px;
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+    color: #182D5A;
 }
 
-/* Statut */
-.statut-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+/* ── Blocs statut ────────────────────────────────── */
+.bloc-statut {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+.bloc-statut mat-icon { font-size: 18px !important; flex-shrink: 0; }
+
+.bloc-statut-attente { background: #fff3e0; color: #e65100; }
+.bloc-statut-ok { background: #e8f5e9; color: #2e7d32; }
+.bloc-statut-refuse { background: #ffebee; color: #c62828; }
+.bloc-statut-annule { background: #f5f5f5; color: #888; }
+
+/* ── Bloc paiement ───────────────────────────────── */
+.bloc-paiement {
+    background: #EEF2F7;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    border: 1px solid #D8E4F0;
+}
+
+.bloc-paiement-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
     font-weight: 600;
-    white-space: nowrap;
+    color: #182D5A;
+    margin-bottom: 14px;
 }
 
-.statut-attente      { background: #fff3e0; color: #e65100; }
-.statut-confirmee    { background: #e8f5e9; color: #2e7d32; }
-.statut-annulee      { background: #fce4ec; color: #c62828; }
-.statut-refusee      { background: #f3e5f5; color: #6a1b9a; }
-.statut-prix-refuse  { background: #e3f2fd; color: #1565c0; }
-.statut-contre-offre { background: #e8f4fd; color: #1565c0; }
-.statut-terminee     { background: #f5f5f5; color: #757575; }
+.bloc-paiement-header mat-icon { color: #182D5A; font-size: 18px !important; }
 
-/* Actions principale conducteur */
+.prix-detail {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border: 1px solid #D8E4F0;
+}
+
+.prix-detail-ligne {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #888;
+    padding: 4px 0;
+}
+
+.prix-total {
+    font-weight: 700;
+    color: #182D5A;
+    border-top: 1px solid #EEF2F7;
+    margin-top: 6px;
+    padding-top: 8px;
+    font-size: 0.95rem;
+}
+
+.paiement-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.paiement-input-row mat-form-field { flex: 1; min-width: 200px; }
+
+/* ── Boutons ─────────────────────────────────────── */
+.btn-annuler {
+    color: #E52424 !important;
+    border-color: #E52424 !important;
+    border-radius: 10px !important;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-payer {
+    background: #182D5A !important;
+    color: white !important;
+    border-radius: 10px !important;
+    padding: 0 20px !important;
+    height: 56px;
+}
+
 .actions-principale {
     display: flex;
     gap: 10px;
@@ -187,213 +319,41 @@
 
 .btn-confirmer {
     flex: 1;
-    background: #00b5e2 !important;
+    background: #182D5A !important;
     color: white !important;
     border-radius: 10px !important;
+    padding: 10px !important;
 }
 
 .btn-refuser {
     flex: 1;
-    border-color: #e53935 !important;
-    color: #e53935 !important;
+    color: #E52424 !important;
+    border-color: #E52424 !important;
     border-radius: 10px !important;
+    padding: 10px !important;
 }
 
-.btn-annuler {
-    border-color: #e53935 !important;
-    color: #e53935 !important;
-    border-radius: 10px !important;
-}
-
-/* Bloc paiement */
-.bloc-paiement {
-    background: #e8f5e9;
-    border-radius: 10px;
-    padding: 14px;
-    margin-top: 14px;
-}
-
-.bloc-paiement-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* ── Material tabs override ──────────────────────── */
+app-reservations .mat-mdc-tab .mdc-tab__text-label {
+    color: #888 !important;
     font-weight: 600;
-    color: #2e7d32;
-    margin-bottom: 12px;
 }
 
-.prix-detail {
-    background: white;
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
+app-reservations .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: #182D5A !important;
 }
 
-.prix-detail-ligne {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    color: #555;
-    padding: 4px 0;
-    border-bottom: 1px solid #f0f0f0;
+app-reservations .mdc-tab-indicator__content--underline {
+    border-color: #182D5A !important;
 }
 
-.prix-detail-ligne:last-child { border-bottom: none; }
-
-.prix-total {
-    font-weight: 700;
-    color: #1a1a1a;
-    font-size: 14px;
-}
-
-.paiement-input-row {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.btn-payer {
-    background: #00b5e2 !important;
-    color: white !important;
-    border-radius: 8px !important;
-    white-space: nowrap;
-}
-
-/* Blocs statut */
-.bloc-statut {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-top: 14px;
-    font-size: 14px;
-}
-
-.bloc-statut-ok     { background: #e8f5e9; color: #2e7d32; }
-.bloc-statut-refuse { background: #f3e5f5; color: #6a1b9a; }
-.bloc-statut-annule { background: #fff3e0; color: #e65100; }
-.bloc-statut-prix   { background: #e3f2fd; color: #1565c0; }
-
-/* Contre-offre passager */
-.bloc-contre-offre {
-    background: #e3f2fd;
-    border-radius: 10px;
-    padding: 14px;
-    margin-top: 14px;
-}
-
-.contre-offre-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    color: #1565c0;
-    margin-bottom: 12px;
-}
-
-.contre-offre-prix {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    background: white;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-}
-
-.prix-item { text-align: center; }
-
-.prix-label {
-    display: block;
-    font-size: 11px;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-}
-
-.prix-barre {
-    font-size: 14px;
-    color: #bbb;
-    text-decoration: line-through;
-}
-
-.prix-nouveau {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1565c0;
-}
-
-.contre-offre-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-accepter-offre {
-    flex: 1;
-    background: #00b5e2 !important;
-    color: white !important;
-    border-radius: 8px !important;
-}
-
-.btn-refuser-offre {
-    flex: 1;
-    border-color: #e53935 !important;
-    color: #e53935 !important;
-    border-radius: 8px !important;
-}
-
-/* Contre-offre conducteur */
-.contre-offre-input {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
-}
-
-.btn-contre-offre {
-    border-color: #f39c12 !important;
-    color: #e65100 !important;
-    border-radius: 8px !important;
-    white-space: nowrap;
-}
-
-.btn-proposer {
-    background: #00b5e2 !important;
-    color: white !important;
-    border-radius: 8px !important;
-    white-space: nowrap;
-}
-
-/* Empty state */
-.empty-state {
-    background: white;
-    border-radius: 14px;
-    padding: 48px;
-    text-align: center;
-    border: 1px solid #e0e0e0;
-}
-
-.empty-state mat-icon {
-    font-size: 56px;
-    width: 56px;
-    height: 56px;
-    color: #ddd;
-    display: block;
-    margin: 0 auto 12px;
-}
-
-.empty-state p { color: #bbb; margin: 0; }
-
-.loading {
-    text-align: center;
-    color: #888;
-    padding: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 768px) {
+    .page { padding: 20px 12px; }
+    .page-header h1 { font-size: 1.4rem; }
+    .reservation-card { padding: 14px; }
+    .paiement-input-row { flex-direction: column; }
+    .paiement-input-row mat-form-field { width: 100%; }
+    .btn-payer { width: 100%; }
+    .actions-principale { flex-direction: column; }
 }

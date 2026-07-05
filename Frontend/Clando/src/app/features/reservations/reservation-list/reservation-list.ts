@@ -63,13 +63,22 @@ export class ReservationListComponent implements OnInit {
 
         this.reservationService.getByPassager(userId).subscribe({
             next: (data) => {
+                const ordreStatut: Record<string, number> = {
+                    'EN_ATTENTE': 0, 'CONFIRMEE': 1,
+                    'REFUSEE': 2, 'ANNULEE': 3, 'TERMINEE': 4
+                };
+
                 this.mesReservations = data.sort((a, b) => {
-                    const ordre: Record<string, number> = {
-                        'EN_ATTENTE': 0, 'CONFIRMEE': 1,
-                        'REFUSEE': 2, 'ANNULEE': 3, 'TERMINEE': 4
-                    };
-                    return (ordre[a.statut] ?? 9) - (ordre[b.statut] ?? 9);
+                    // ✅ 1. Trier par statut
+                    const diffStatut = (ordreStatut[a.statut] ?? 9) - (ordreStatut[b.statut] ?? 9);
+                    if (diffStatut !== 0) return diffStatut;
+
+                    // ✅ 2. À statut égal, trier par date décroissante
+                    const dateA = new Date(a.dateReservation ?? 0).getTime();
+                    const dateB = new Date(b.dateReservation ?? 0).getTime();
+                    return dateB - dateA;
                 });
+
                 this.loadingPassager = false;
                 this.cdr.detectChanges();
             },
@@ -125,7 +134,12 @@ export class ReservationListComponent implements OnInit {
 
         this.reservationService.getEnAttenteParConducteur(userId).subscribe({
             next: (data) => {
-                this.reservationsRecues = data;
+                // ✅ Trier par date décroissante
+                this.reservationsRecues = data.sort((a, b) => {
+                    const dateA = new Date(a.dateReservation ?? 0).getTime();
+                    const dateB = new Date(b.dateReservation ?? 0).getTime();
+                    return dateB - dateA;
+                });
                 this.loadingConducteur = false;
                 this.cdr.detectChanges();
             },

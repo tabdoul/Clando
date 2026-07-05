@@ -1,5 +1,6 @@
+/* ── Page ───────────────────────────────────────── */
 .page {
-    background: #f5f5f5;
+    background: #ffffff;
     min-height: 100vh;
     padding: 32px 20px;
 }
@@ -9,239 +10,239 @@
     margin: 0 auto;
 }
 
-/* Header */
+/* ── Header ─────────────────────────────────────── */
 .page-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 24px;
 }
 
 .page-header mat-icon {
-    font-size: 32px;
-    width: 32px;
-    height: 32px;
-    color: #00b5e2;
+    color: #182D5A;
+    font-size: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
 }
 
 .page-header h1 {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 1.8rem;
+    font-weight: 700;
     color: #1a1a1a;
-    margin: 0;
+    border-left: 4px solid #182D5A;
+    padding-left: 12px;
+    flex: 1;
 }
 
 .badge-count {
-    background: #e53935;
+    background: #182D5A;
     color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
 }
 
-/* Loading */
+/* ── Loading ─────────────────────────────────────── */
 .loading {
-    text-align: center;
-    color: #888;
-    padding: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
+    color: #888;
+    padding: 40px;
+    justify-content: center;
 }
 
-/* Empty state */
+/* ── Empty state ─────────────────────────────────── */
 .empty-state {
-    background: white;
-    border-radius: 14px;
-    padding: 48px;
     text-align: center;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 60px 20px;
+    color: #888;
 }
 
 .empty-state mat-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    color: #ddd;
+    font-size: 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    color: #EEF2F7;
     display: block;
-    margin: 0 auto 12px;
+    margin: 0 auto 16px;
 }
 
 .empty-state h3 {
-    color: #bbb;
-    margin: 0 0 8px;
     font-size: 1.1rem;
+    color: #888;
+    margin-bottom: 6px;
 }
 
 .empty-state p {
-    color: #ccc;
-    margin: 0;
     font-size: 0.9rem;
+    color: #aaa;
 }
 
-/* Cartes notification */
+/* ── Carte notification ──────────────────────────── */
 .notif-card {
-    background: white;
-    border-radius: 14px;
+    background: #ffffff;
+    border-radius: 16px;
     padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-left: 4px solid #00b5e2;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     margin-bottom: 16px;
+    border: 1px solid #EEF2F7;
+    border-left: 4px solid #182D5A;
+    box-shadow: 0 2px 8px rgba(24,45,90,0.06);
+    transition: box-shadow 0.2s;
+}
+
+.notif-card:hover {
+    box-shadow: 0 6px 20px rgba(24,45,90,0.10);
 }
 
 .card-body {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.card-infos {
-    flex: 1;
-    min-width: 200px;
-}
-
-/* Passager */
+/* ── Passager row ────────────────────────────────── */
 .passager-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 12px;
 }
 
 .passager-avatar {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: #00b5e2;
+    background: #182D5A;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
     flex-shrink: 0;
-}
-
-.passager-avatar mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
+    color: white;
 }
 
 .passager-nom {
+    display: block;
+    font-size: 0.95rem;
     font-weight: 600;
-    font-size: 1rem;
     color: #1a1a1a;
 }
 
 .passager-sous {
+    display: block;
+    font-size: 0.78rem;
     color: #888;
-    font-size: 0.85rem;
-    margin-left: 6px;
 }
 
-/* Trajet */
+/* ── Trajet row ──────────────────────────────────── */
 .trajet-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    background: #EEF2F7;
+    border-radius: 10px;
+    padding: 10px 14px;
 }
 
 .trajet-row mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: #888;
+    color: #182D5A;
+    font-size: 18px !important;
+    flex-shrink: 0;
 }
 
-.trajet-row span {
-    font-weight: 500;
-    font-size: 0.95rem;
-    color: #1a1a1a;
-}
-
-/* Meta */
+/* ── Meta row ────────────────────────────────────── */
 .meta-row {
     display: flex;
-    align-items: center;
     gap: 16px;
-    color: #888;
-    font-size: 0.85rem;
+    flex-wrap: wrap;
 }
 
 .meta-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    font-size: 0.82rem;
+    color: #888;
 }
 
 .meta-item mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+    color: #182D5A;
 }
 
-/* Prix proposé */
+/* ── Prix proposé ────────────────────────────────── */
 .prix-propose {
-    margin-top: 8px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    background: #fff3e0;
+    border-radius: 8px;
+    padding: 10px 12px;
     font-size: 0.85rem;
+    color: #e65100;
+    font-weight: 600;
+    border: 1px solid #ffe0b2;
 }
 
 .prix-propose mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: #f39c12;
-}
-
-.prix-propose span {
+    font-size: 16px !important;
     color: #e65100;
-    font-weight: 600;
+    flex-shrink: 0;
 }
 
-/* Boutons */
-.card-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.btn-accepter {
-    background: #00b5e2 !important;
-    color: white !important;
-    border-radius: 20px !important;
-}
-
-.btn-refuser {
-    border-color: #e53935 !important;
-    color: #e53935 !important;
-    border-radius: 20px !important;
-}
+/* ── Contre-offre ────────────────────────────────── */
 .contre-offre-input {
     display: flex;
     gap: 10px;
-    align-items: center;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #f0f0f0;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
+.contre-offre-input mat-form-field { flex: 1; min-width: 180px; }
+
 .btn-contre-offre {
-    border-color: #f39c12 !important;
-    color: #e65100 !important;
-    border-radius: 8px !important;
+    color: #182D5A !important;
+    border-color: #182D5A !important;
+    border-radius: 10px !important;
+    height: 56px;
+    padding: 0 16px !important;
     white-space: nowrap;
+}
+
+/* ── Actions ─────────────────────────────────────── */
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-accepter {
+    flex: 1;
+    background: #182D5A !important;
+    color: white !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+}
+
+.btn-refuser {
+    flex: 1;
+    color: #E52424 !important;
+    border-color: #E52424 !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 768px) {
+    .page { padding: 20px 12px; }
+    .page-header h1 { font-size: 1.4rem; }
+    .notif-card { padding: 14px; }
+    .card-actions { flex-direction: column; }
+    .contre-offre-input { flex-direction: column; }
+    .contre-offre-input mat-form-field { width: 100%; }
+    .btn-contre-offre { width: 100%; }
 }

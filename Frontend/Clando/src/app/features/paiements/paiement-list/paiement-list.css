@@ -1,5 +1,6 @@
+/* ── Page ───────────────────────────────────────── */
 .page {
-    background: #f5f5f5;
+    background: #ffffff;
     min-height: 100vh;
     padding: 32px 20px;
 }
@@ -9,120 +10,123 @@
     margin: 0 auto;
 }
 
+/* ── Header ─────────────────────────────────────── */
 .page-header {
     margin-bottom: 24px;
 }
 
 .page-header h1 {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 1.8rem;
+    font-weight: 700;
     color: #1a1a1a;
-    margin: 0;
+    border-left: 4px solid #182D5A;
+    padding-left: 12px;
 }
 
-/* Loading */
+/* ── Loading ─────────────────────────────────────── */
 .loading {
-    text-align: center;
-    color: #888;
-    padding: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
+    color: #888;
+    padding: 40px;
+    justify-content: center;
 }
 
-/* Empty state */
+/* ── Empty state ─────────────────────────────────── */
 .empty-state {
-    background: white;
-    border-radius: 14px;
-    padding: 48px;
     text-align: center;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 60px 20px;
+    color: #888;
 }
 
 .empty-state mat-icon {
-    font-size: 56px;
-    width: 56px;
-    height: 56px;
-    color: #ddd;
+    font-size: 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    color: #EEF2F7;
     display: block;
-    margin: 0 auto 12px;
+    margin: 0 auto 16px;
 }
 
 .empty-state p {
-    color: #bbb;
-    margin: 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    color: #888;
 }
 
-/* Table */
+/* ── Table card ─────────────────────────────────── */
 .table-card {
-    background: white;
-    border-radius: 14px;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #EEF2F7;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(24,45,90,0.06);
 }
 
+/* ── Table ──────────────────────────────────────── */
 .mat-mdc-table {
     width: 100%;
-    background: white !important;
+    background: #ffffff !important;
 }
 
 .mat-mdc-header-row {
-    background: #f9f9f9 !important;
+    background: #EEF2F7 !important;
 }
 
 .mat-mdc-header-cell {
-    color: #888 !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
+    color: #182D5A !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #e0e0e0 !important;
-}
-
-.mat-mdc-cell {
-    color: #1a1a1a !important;
-    font-size: 14px !important;
-    border-bottom: 1px solid #f5f5f5 !important;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #D8E4F0 !important;
     padding: 14px 16px !important;
 }
 
-.mat-mdc-row:hover .mat-mdc-cell {
-    background: #f9f9f9 !important;
+.mat-mdc-row {
+    border-bottom: 1px solid #EEF2F7 !important;
+    transition: background 0.15s;
 }
 
-.mat-mdc-row:last-child .mat-mdc-cell {
+.mat-mdc-row:last-child { border-bottom: none !important; }
+
+.mat-mdc-row:hover { background: #f8faff !important; }
+
+.mat-mdc-cell {
+    color: #1a1a1a !important;
+    font-size: 0.9rem !important;
+    padding: 14px 16px !important;
     border-bottom: none !important;
 }
 
-/* Badges statut */
+/* ── Montant ─────────────────────────────────────── */
+.montant {
+    font-weight: 700;
+    color: #182D5A;
+    font-size: 0.95rem;
+}
+
+/* ── Statut badge ────────────────────────────────── */
 .statut-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
-    white-space: nowrap;
+    padding: 4px 10px;
+    border-radius: 20px;
     display: inline-block;
 }
 
-.statut-effectue  { background: #e8f5e9; color: #2e7d32; }
-.statut-attente   { background: #fff3e0; color: #e65100; }
-.statut-echoue    { background: #fce4ec; color: #c62828; }
-.statut-default   { background: #f5f5f5; color: #555; }
+.statut-effectue { background: #e8f5e9; color: #2e7d32; }
+.statut-attente { background: #fff3e0; color: #e65100; }
+.statut-echoue { background: #ffebee; color: #c62828; }
+.statut-default { background: #EEF2F7; color: #888; }
 
-/* Montant */
-.montant {
-    font-weight: 600;
-    color: #00b5e2;
-}
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 768px) {
+    .page { padding: 20px 12px; }
+    .page-header h1 { font-size: 1.4rem; }
 
-@media (max-width: 600px) {
-    .mat-mdc-cell,
-    .mat-mdc-header-cell {
-        padding: 10px 8px !important;
-        font-size: 12px !important;
-    }
+    .table-card { border-radius: 12px; overflow-x: auto; }
+
+    .mat-mdc-header-cell,
+    .mat-mdc-cell { padding: 10px 10px !important; font-size: 0.8rem !important; }
 }

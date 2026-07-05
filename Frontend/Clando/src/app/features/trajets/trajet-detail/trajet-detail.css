@@ -21,7 +21,7 @@
     transition: color 0.2s;
 }
 
-.retour:hover { color: #c0522a; }
+.retour:hover { color: #182D5A; }
 .retour mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
 .detail-layout {
@@ -38,8 +38,8 @@
     background: white;
     border-radius: 14px;
     padding: 24px;
-    border: 1px solid #edddd0;
-    box-shadow: 0 2px 8px rgba(192,82,42,0.06);
+    border: 1px solid #EEF2F7;
+    box-shadow: 0 2px 8px rgba(24,45,90,0.06);
 }
 
 .card-label {
@@ -97,15 +97,15 @@
     margin: 0 16px;
 }
 
-.route-bar { flex: 1; height: 1px; background: #edddd0; }
+.route-bar { flex: 1; height: 1px; background: #EEF2F7; }
 
-.route-icon { color: #c0522a !important; }
+.route-icon { color: #182D5A !important; }
 
 .itineraire {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #c0522a;
+    color: #182D5A;
     font-size: 0.85rem;
     margin-bottom: 20px;
 }
@@ -120,7 +120,7 @@
 }
 
 .info-item mat-icon {
-    color: #c0522a;
+    color: #182D5A;
     margin-top: 2px;
     font-size: 20px;
 }
@@ -140,8 +140,8 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #fdf0ea;
-    border: 1px solid #edddd0;
+    background: #EEF2F7;
+    border: 1px solid #D8E4F0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -150,7 +150,7 @@
 }
 
 .conducteur-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.conducteur-avatar mat-icon { color: #c0522a; font-size: 28px; }
+.conducteur-avatar mat-icon { color: #182D5A; font-size: 28px; }
 
 .conducteur-info { display: flex; flex-direction: column; gap: 8px; }
 .conducteur-nom { font-size: 1rem; font-weight: 600; color: #1a1a1a; }
@@ -168,9 +168,9 @@
 
 .badge-note { background: #fff8e1; color: #f57f17; }
 .badge-note mat-icon { font-size: 13px; width: 13px; height: 13px; color: #f39c12; }
-.badge-trajets { background: #fdf0ea; color: #c0522a; }
-.badge-verifie { background: #fdf0ea; color: #8b3a1c; }
-.badge-verifie mat-icon { font-size: 13px; width: 13px; height: 13px; color: #c0522a; }
+.badge-trajets { background: #EEF2F7; color: #182D5A; }
+.badge-verifie { background: #EEF2F7; color: #182D5A; }
+.badge-verifie mat-icon { font-size: 13px; width: 13px; height: 13px; color: #182D5A; }
 .badge-nouveau { background: #f5f5f5; color: #aaa; }
 
 /* ── Sidebar ────────────────────────────────────── */
@@ -181,7 +181,7 @@
 .prix-valeur {
     font-size: 2.2rem;
     font-weight: 800;
-    color: #c0522a;
+    color: #182D5A;
     line-height: 1;
 }
 
@@ -191,16 +191,16 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    background: #fdf0ea;
+    background: #EEF2F7;
     border-radius: 10px;
     padding: 12px;
     margin-bottom: 20px;
     text-align: left;
-    border: 1px solid #edddd0;
+    border: 1px solid #D8E4F0;
 }
 
-.prix-info mat-icon { color: #c0522a; font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-.prix-info span { font-size: 0.8rem; color: #8b3a1c; line-height: 1.5; }
+.prix-info mat-icon { color: #182D5A; font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.prix-info span { font-size: 0.8rem; color: #182D5A; line-height: 1.5; }
 
 /* ── Champs passager ────────────────────────────── */
 .trajet-passager-fields {
@@ -220,17 +220,17 @@
 /* ── Bouton réserver ────────────────────────────── */
 .btn-reserver {
     width: 100%;
-    background: #c0522a !important;
+    background: #182D5A !important;
     color: white !important;
     padding: 14px 0 !important;
     font-size: 0.95rem !important;
     border-radius: 10px !important;
     margin-bottom: 12px;
-    box-shadow: 0 4px 14px rgba(192,82,42,0.3) !important;
+    box-shadow: 0 4px 14px rgba(24,45,90,0.3) !important;
 }
 
 .btn-reserver:hover {
-    background: #8b3a1c !important;
+    background: #0f1d3d !important;
 }
 
 .btn-reserver:disabled {
@@ -257,12 +257,12 @@
 .login-hint { font-size: 0.82rem; color: #aaa; margin-top: 8px; }
 
 .login-hint a {
-    color: #c0522a;
+    color: #182D5A;
     text-decoration: none;
     font-weight: 600;
 }
 
-.login-hint a:hover { color: #8b3a1c; }
+.login-hint a:hover { color: #0f1d3d; }
 
 /* ── Loading ────────────────────────────────────── */
 .loading {
@@ -279,7 +279,7 @@
     font-size: 56px;
     width: 56px;
     height: 56px;
-    color: #edddd0;
+    color: #EEF2F7;
 }
 
 .loading p { font-size: 1rem; color: #888; margin: 0; }

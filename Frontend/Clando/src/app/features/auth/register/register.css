@@ -1,41 +1,45 @@
+/* ── Page auth ───────────────────────────────────── */
 .page-auth {
     min-height: 100vh;
-    background: #f5f5f5;
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
 }
 
+/* ── Carte auth ──────────────────────────────────── */
 .auth-card {
     width: 100%;
-    max-width: 440px;
-    padding: 40px 32px !important;
+    max-width: 480px;
     border-radius: 20px !important;
-    background: white !important;
-    border: 1px solid #e0e0e0 !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+    padding: 36px 32px !important;
+    border: 1px solid #EEF2F7 !important;
+    box-shadow: 0 8px 32px rgba(24,45,90,0.10) !important;
+    background: #ffffff !important;
 }
 
+/* ── Header ─────────────────────────────────────── */
 .auth-header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .auth-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #00b5e2;
-    margin: 0 0 8px;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #182D5A;
     letter-spacing: 2px;
+    margin: 0 0 8px;
 }
 
 .auth-header p {
+    font-size: 0.9rem;
     color: #888;
-    font-size: 0.95rem;
     margin: 0;
 }
 
+/* ── Formulaire ──────────────────────────────────── */
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -47,43 +51,74 @@
     margin-bottom: 4px;
 }
 
+/* ── Bouton ──────────────────────────────────────── */
 .btn-submit {
     width: 100%;
-    height: 48px;
-    background: #00b5e2 !important;
+    background: #182D5A !important;
     color: white !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
     font-size: 1rem !important;
     font-weight: 600 !important;
-    border-radius: 8px !important;
     margin-top: 8px;
+    box-shadow: 0 4px 14px rgba(24,45,90,0.25) !important;
 }
 
 .btn-submit:disabled {
-    background: #e0e0e0 !important;
+    background: #EEF2F7 !important;
     color: #aaa !important;
+    box-shadow: none !important;
 }
 
+/* ── Footer ──────────────────────────────────────── */
 .auth-footer {
     text-align: center;
-    margin-top: 24px;
+    margin-top: 20px;
 }
 
 .auth-footer p {
+    font-size: 0.88rem;
     color: #888;
-    font-size: 0.9rem;
+    margin: 0;
 }
 
 .auth-footer a {
-    color: #00b5e2;
-    text-decoration: none;
+    color: #182D5A;
     font-weight: 600;
+    text-decoration: none;
 }
 
-.auth-footer a:hover {
-    text-decoration: underline;
+.auth-footer a:hover { color: #0f1d3d; }
+
+/* ── Material overrides ──────────────────────────── */
+app-register .mdc-text-field--outlined .mdc-notched-outline__leading,
+app-register .mdc-text-field--outlined .mdc-notched-outline__notch,
+app-register .mdc-text-field--outlined .mdc-notched-outline__trailing {
+    border-color: #EEF2F7 !important;
 }
 
+app-register .mdc-text-field--focused .mdc-notched-outline__leading,
+app-register .mdc-text-field--focused .mdc-notched-outline__notch,
+app-register .mdc-text-field--focused .mdc-notched-outline__trailing {
+    border-color: #182D5A !important;
+}
+
+app-register .mat-mdc-form-field.mat-focused .mdc-floating-label {
+    color: #182D5A !important;
+}
+
+app-register .mat-mdc-select-value,
+app-register .mat-mdc-select-value-text {
+    color: #1a1a1a !important;
+}
+
+app-register .mat-mdc-card {
+    background: #ffffff !important;
+}
+
+/* ── Responsive ─────────────────────────────────── */
 @media (max-width: 480px) {
-    .form-row { grid-template-columns: 1fr; }
     .auth-card { padding: 24px 16px !important; }
+    .auth-header h1 { font-size: 1.8rem; }
+    .form-row { grid-template-columns: 1fr; }
 }

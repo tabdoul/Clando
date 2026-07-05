@@ -5,76 +5,100 @@
 }
 
 body {
-    background: #ffffff; /* ✅ blanc au lieu de #f5f5f5 */
+    background: #ffffff;
     color: #1a1a1a;
     font-family: 'Segoe UI', sans-serif;
 }
-/* ── Material fields terracotta trajet-detail ───── */
+
+/* ── Navbar ─────────────────────────────────────── */
+.nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-mobile {
+    display: none;
+    align-items: center;
+    gap: 4px;
+}
+
+@media (max-width: 768px) {
+    .nav-desktop { display: none; }
+    .nav-mobile { display: flex; }
+}
+
+/* ── Toolbar navbar ─────────────────────────────── */
+app-root mat-toolbar {
+    background-color: #182D5A !important;
+}
+
+/* ── Material fields bleu marine ────────────────── */
 app-trajet-detail .mat-mdc-form-field.mat-focused .mdc-floating-label {
-    color: #c0522a !important;
+    color: #182D5A !important;
 }
 
 app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__leading,
 app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__notch,
 app-trajet-detail .mdc-text-field--focused .mdc-notched-outline__trailing {
-    border-color: #c0522a !important;
+    border-color: #182D5A !important;
 }
 
 app-trajet-detail .mat-mdc-option:hover,
 app-trajet-detail .mat-mdc-option.mat-mdc-option-active {
-    background: #fdf0ea !important;
+    background: #EEF2F7 !important;
 }
 
-/* ── Material fields terracotta trajet-list ─────── */
 app-trajet-list .mat-mdc-form-field.mat-focused .mdc-floating-label {
-    color: #c0522a !important;
+    color: #182D5A !important;
 }
 
 app-trajet-list .mdc-text-field--focused .mdc-notched-outline__leading,
 app-trajet-list .mdc-text-field--focused .mdc-notched-outline__notch,
 app-trajet-list .mdc-text-field--focused .mdc-notched-outline__trailing {
-    border-color: #c0522a !important;
+    border-color: #182D5A !important;
 }
-/* Inputs */
+
+/* ── Inputs globaux ─────────────────────────────── */
 input, textarea, select { color: #1a1a1a !important; }
 input.mat-mdc-input-element,
 textarea.mat-mdc-input-element { color: #1a1a1a !important; }
 
-/* Labels Material */
+/* ── Labels Material ────────────────────────────── */
 .mdc-floating-label,
 .mat-mdc-floating-label { color: #888 !important; }
 
 .mat-mdc-form-field.mat-focused .mdc-floating-label,
-.mat-mdc-form-field.mat-focused .mat-mdc-floating-label { color: #00b5e2 !important; }
+.mat-mdc-form-field.mat-focused .mat-mdc-floating-label { color: #182D5A !important; }
 
-/* Bordures champs */
+/* ── Bordures champs ────────────────────────────── */
 .mdc-text-field--outlined .mdc-notched-outline__leading,
 .mdc-text-field--outlined .mdc-notched-outline__notch,
-.mdc-text-field--outlined .mdc-notched-outline__trailing { border-color: #e0e0e0 !important; }
+.mdc-text-field--outlined .mdc-notched-outline__trailing { border-color: #D8E4F0 !important; }
 
 .mdc-text-field--focused .mdc-notched-outline__leading,
 .mdc-text-field--focused .mdc-notched-outline__notch,
-.mdc-text-field--focused .mdc-notched-outline__trailing { border-color: #00b5e2 !important; }
+.mdc-text-field--focused .mdc-notched-outline__trailing { border-color: #182D5A !important; }
 
-/* Select */
+/* ── Select ─────────────────────────────────────── */
 .mat-mdc-select-value,
 .mat-mdc-select-value-text { color: #1a1a1a !important; }
 
-/* Placeholder */
+/* ── Placeholder ────────────────────────────────── */
 ::placeholder { color: #bbb !important; }
 
-/* Hint */
+/* ── Hint ───────────────────────────────────────── */
 .mat-mdc-form-field-hint { color: #888 !important; }
 
-/* Onglets Material */
+/* ── Onglets Material ───────────────────────────── */
 .mat-mdc-tab .mdc-tab__text-label { color: #888 !important; }
-.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: #00b5e2 !important; }
-.mdc-tab-indicator__content--underline { border-color: #00b5e2 !important; }
+.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: #182D5A !important; }
+.mdc-tab-indicator__content--underline { border-color: #182D5A !important; }
 
-/* Snackbar */
+/* ── Snackbar ───────────────────────────────────── */
 .mat-mdc-snack-bar-container {
-    --mdc-snackbar-container-color: #1a1a1a;
-    --mdc-snackbar-supporting-text-color: #eee;
+    --mdc-snackbar-container-color: #182D5A;
+    --mdc-snackbar-supporting-text-color: #ffffff;
 }
 
 /* ── Avatar conducteur ──────────────────────────── */
@@ -82,13 +106,13 @@ textarea.mat-mdc-input-element { color: #1a1a1a !important; }
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #f5f5f5;
+    background: #EEF2F7;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1px solid #e0e0e0; /* ✅ corrigé */
+    border: 1px solid #D8E4F0;
     min-width: 40px;
     max-width: 40px;
 }
@@ -99,11 +123,9 @@ textarea.mat-mdc-input-element { color: #1a1a1a !important; }
     object-fit: cover;
     display: block;
 }
-app-root mat-toolbar {
-    background-color: #c0522a !important;
-}
+
 /* ══════════════════════════════════════════════════
-   TRAJET LIST — styles globaux
+   TRAJET LIST
    ══════════════════════════════════════════════════ */
 
 app-trajet-list .page {
@@ -114,7 +136,7 @@ app-trajet-list .page {
 app-trajet-list .results-hero {
     background: #ffffff;
     padding: 32px 20px 20px;
-    border-bottom: 1px solid #edddd0;
+    border-bottom: 1px solid #D8E4F0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -134,7 +156,7 @@ app-trajet-list .results-hero h1 {
 }
 
 app-trajet-list .results-hero h1 mat-icon {
-    color: #c0522a;
+    color: #182D5A;
     font-size: 20px;
     width: 20px;
     height: 20px;
@@ -143,15 +165,15 @@ app-trajet-list .results-hero h1 mat-icon {
 app-trajet-list .results-hero p { color: #888; font-size: 0.9rem; margin: 0; }
 
 app-trajet-list .btn-modifier {
-    color: #c0522a !important;
-    border-color: #c0522a !important;
+    color: #182D5A !important;
+    border-color: #182D5A !important;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 app-trajet-list .search-compact {
-    background: #fdf8f6;
-    border-bottom: 1px solid #edddd0;
+    background: #EEF2F7;
+    border-bottom: 1px solid #D8E4F0;
     padding: 16px 20px;
 }
 
@@ -166,7 +188,7 @@ app-trajet-list .search-compact .search-grid {
 
 app-trajet-list .search-compact .btn-search {
     height: 56px;
-    background: #c0522a !important;
+    background: #182D5A !important;
     color: white !important;
     border-radius: 8px !important;
 }
@@ -185,7 +207,7 @@ app-trajet-list .loading {
 
 app-trajet-list .loading mat-icon {
     font-size: 48px !important;
-    color: #c0522a;
+    color: #182D5A;
     display: block;
     margin-bottom: 12px;
 }
@@ -195,15 +217,15 @@ app-trajet-list .trajet-card {
     margin-bottom: 16px;
     padding: 20px;
     border-radius: 14px;
-    border: 1px solid #edddd0;
+    border: 1px solid #EEF2F7;
     transition: box-shadow 0.2s, transform 0.2s;
     cursor: pointer;
 }
 
 app-trajet-list .trajet-card:hover {
-    box-shadow: 0 6px 24px rgba(192,82,42,0.12);
+    box-shadow: 0 6px 24px rgba(24,45,90,0.12);
     transform: translateY(-2px);
-    border-color: #d4a090;
+    border-color: #D8E4F0;
 }
 
 app-trajet-list .trajet-complet { opacity: 0.6; }
@@ -236,16 +258,14 @@ app-trajet-list .trajet-left {
 }
 
 app-trajet-list .trajet-heure { text-align: center; min-width: 52px; }
-
-app-trajet-list .heure { font-size: 1.4rem; font-weight: 700; color: #c0522a; }
+app-trajet-list .heure { font-size: 1.4rem; font-weight: 700; color: #182D5A; }
 app-trajet-list .date { font-size: 0.8rem; color: #888; }
-
 app-trajet-list .trajet-route { flex: 1; }
 
 app-trajet-list .itineraire {
     display: block;
     font-size: 0.75rem;
-    color: #c0522a;
+    color: #182D5A;
     font-style: italic;
     margin-bottom: 6px;
     text-align: center;
@@ -262,20 +282,20 @@ app-trajet-list .ville-nom { font-weight: 600; color: #1a1a1a; white-space: nowr
 app-trajet-list .line {
     flex: 1;
     height: 2px;
-    background: #edddd0;
+    background: #EEF2F7;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-app-trajet-list .car-icon { color: #c0522a !important; font-size: 18px !important; background: white; }
+app-trajet-list .car-icon { color: #182D5A !important; font-size: 18px !important; background: white; }
 
 app-trajet-list .trajet-conducteur {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-left: 1px solid #edddd0;
-    border-right: 1px solid #edddd0;
+    border-left: 1px solid #EEF2F7;
+    border-right: 1px solid #EEF2F7;
     padding: 0 20px;
 }
 
@@ -285,17 +305,17 @@ app-trajet-list .avatar {
     min-width: 40px;
     max-width: 40px;
     border-radius: 50%;
-    background: #fdf0ea;
+    background: #EEF2F7;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 1px solid #edddd0;
+    border: 1px solid #D8E4F0;
     flex-shrink: 0;
 }
 
 app-trajet-list .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-app-trajet-list .avatar mat-icon { color: #c0522a; }
+app-trajet-list .avatar mat-icon { color: #182D5A; }
 
 app-trajet-list .conducteur-infos { flex: 1; }
 app-trajet-list .conducteur-nom { font-weight: 500; font-size: 0.9rem; color: #1a1a1a; }
@@ -306,18 +326,17 @@ app-trajet-list .places {
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #c0522a;
+    color: #182D5A;
     font-size: 0.85rem;
     white-space: nowrap;
     margin-left: 12px;
     font-weight: 600;
 }
 
-app-trajet-list .places mat-icon { font-size: 16px !important; color: #c0522a; }
+app-trajet-list .places mat-icon { font-size: 16px !important; color: #182D5A; }
 
 app-trajet-list .trajet-prix { text-align: right; min-width: 140px; }
-
-app-trajet-list .prix { font-size: 1.5rem; font-weight: 700; color: #c0522a; }
+app-trajet-list .prix { font-size: 1.5rem; font-weight: 700; color: #182D5A; }
 app-trajet-list .prix-label { font-size: 0.78rem; color: #888; margin-bottom: 12px; }
 
 app-trajet-list .badge-complet {
@@ -330,19 +349,19 @@ app-trajet-list .badge-complet {
 }
 
 app-trajet-list .btn-voir {
-    background: #c0522a !important;
+    background: #182D5A !important;
     color: white !important;
     border-radius: 20px !important;
     font-size: 0.85rem !important;
 }
 
-app-trajet-list .btn-voir:hover { background: #8b3a1c !important; }
+app-trajet-list .btn-voir:hover { background: #0f1d3d !important; }
 
 app-trajet-list .empty { text-align: center; padding: 60px 20px; color: #888; }
 
 app-trajet-list .empty mat-icon {
     font-size: 64px !important;
-    color: #edddd0;
+    color: #EEF2F7;
     display: block;
     margin-bottom: 16px;
 }
@@ -356,9 +375,10 @@ app-trajet-list .empty h3 { color: #999; margin-bottom: 8px; }
     app-trajet-list .results-hero h1 { font-size: 1.3rem; }
     app-trajet-list .btn-modifier { width: 100%; justify-content: center; }
     app-trajet-list .trajet-content { flex-direction: column; align-items: flex-start; }
-    app-trajet-list .trajet-conducteur { border: none; border-top: 1px solid #edddd0; padding: 12px 0 0; width: 100%; }
-    app-trajet-list .trajet-prix { text-align: left; border-top: 1px solid #edddd0; padding-top: 12px; width: 100%; }
+    app-trajet-list .trajet-conducteur { border: none; border-top: 1px solid #EEF2F7; padding: 12px 0 0; width: 100%; }
+    app-trajet-list .trajet-prix { text-align: left; border-top: 1px solid #EEF2F7; padding-top: 12px; width: 100%; }
 }
+
 /* ── Logo hero landing ──────────────────────────── */
 app-landing .logo-texte {
     font-size: 3.5rem !important;
@@ -372,7 +392,72 @@ app-landing .logo-texte {
 }
 
 app-landing .logo-accent {
-    color: #c0522a !important;
+    color: #182D5A !important;
     font-size: 3.5rem !important;
     font-weight: 900 !important;
+}
+
+/* ── Autocomplete landing ───────────────────────── */
+app-landing .mat-mdc-autocomplete-panel {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(24,45,90,0.12) !important;
+    border: 1px solid #D8E4F0 !important;
+}
+
+app-landing .mat-mdc-option {
+    color: #1a1a1a !important;
+    font-size: 0.9rem !important;
+}
+
+app-landing .mat-mdc-option:hover,
+app-landing .mat-mdc-option.mat-mdc-option-active {
+    background: #EEF2F7 !important;
+}
+
+/* ── Boutons Material landing ───────────────────── */
+app-landing .btn-primary.mat-mdc-button-base {
+    background: #182D5A !important;
+    color: white !important;
+}
+
+app-landing .btn-secondary.mat-mdc-button-base {
+    color: #182D5A !important;
+    border-color: #182D5A !important;
+}
+
+app-landing .btn-cta-primary.mat-mdc-button-base {
+    background: white !important;
+    color: #182D5A !important;
+}
+
+app-landing .btn-cta-outline.mat-mdc-button-base {
+    color: white !important;
+    border-color: rgba(255,255,255,0.6) !important;
+}
+
+/* ── Autocomplete trajet-list ───────────────────── */
+app-trajet-list .mat-mdc-autocomplete-panel {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(24,45,90,0.08) !important;
+    border: 1px solid #D8E4F0 !important;
+}
+
+app-trajet-list .mat-mdc-option:hover,
+app-trajet-list .mat-mdc-option.mat-mdc-option-active {
+    background: #EEF2F7 !important;
+}
+
+/* ── Autocomplete trajet-detail ─────────────────── */
+app-trajet-detail .mat-mdc-autocomplete-panel {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(24,45,90,0.08) !important;
+    border: 1px solid #D8E4F0 !important;
+}
+
+app-trajet-detail .mat-mdc-option:hover,
+app-trajet-detail .mat-mdc-option.mat-mdc-option-active {
+    background: #EEF2F7 !important;
 }
