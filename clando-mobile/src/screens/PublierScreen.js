@@ -1,15 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import {
-    View, Text, TextInput, TouchableOpacity,
-    StyleSheet, ScrollView, Alert, ActivityIndicator,
-    Platform, Keyboard
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal, { formatDate, formatHeure } from '../DateTimePickerModal';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
 import { QUARTIERS_CONAKRY } from '../../constants/QUARTIERS_CONAKRY';
-import { colors, spacing, radius, shadows } from '../../constants/theme';
+import { spacing, radius } from '../../constants/theme';
+
+const C = { primary: '#182D5A', primaryLight: '#EEF2F7', primaryBorder: '#D8E4F0', bg: '#ffffff', surface: '#FAFAFA', text: '#1a1a1a', muted: '#888888', disabled: '#cccccc', red: '#E52424', purple: '#9b59b6' };
+const BTN_HEIGHT = 52;
+
+const TYPES_VEHICULE = [
+    { label: 'Moto', icon: 'bicycle-outline', placesMax: 1 },
+    { label: 'Voiture', icon: 'car-outline', placesMax: 5 },
+];
+
+const Champ = ({ label, children }) => (
+    <View style={{ marginTop: 14 }}>
+        <Text style={s.label}>{label}</Text>
+        {children}
+    </View>
+);
+
+const Suggestion = ({ items, onSelect }) => items.length === 0 ? null : (
+    <View style={s.suggestBox}>
+        {items.map(q => (
+            <TouchableOpacity key={q} style={s.suggestItem} onPress={() => onSelect(q)}>
+                <Ionicons name="location-outline" size={14} color={C.primary} />
+                <Text style={s.suggestTxt}>{q}</Text>
+            </TouchableOpacity>
+        ))}
+    </View>
+);
 
 export default function PublierScreen({ navigation }) {
     const [villeDepart, setVilleDepart] = useState('');
@@ -28,6 +50,7 @@ export default function PublierScreen({ navigation }) {
     const [modele, setModele] = useState('');
     const [immatriculation, setImmatriculation] = useState('');
     const [nbPlaces, setNbPlaces] = useState('');
+    const [typeVehicule, setTypeVehicule] = useState('Voiture');
     const [loading, setLoading] = useState(false);
     const [femmesUniquement, setFemmesUniquement] = useState(false);
     const [utilisateur, setUtilisateur] = useState(null);
@@ -36,10 +59,10 @@ export default function PublierScreen({ navigation }) {
     const [trajetsRecents, setTrajetsRecents] = useState([]);
 
     const itineraires = ['Autoroute', 'Route du Prince', 'Corniche'];
+    const placesMax = TYPES_VEHICULE.find(t => t.label === typeVehicule)?.placesMax || 5;
 
-    useEffect(() => {
-        chargerDonnees();
-    }, []);
+    useEffect(() => { chargerDonnees(); }, []);
+    useEffect(() => { if (typeVehicule === 'Moto') { setPlaces('1'); setNbPlaces('1'); } }, [typeVehicule]);
 
     const chargerDonnees = async () => {
         try {
@@ -53,91 +76,59 @@ export default function PublierScreen({ navigation }) {
             setVehicules(vehiculesRes.data);
             setUtilisateur(userRes.data);
             if (vehiculesRes.data.length > 0) setVehiculeSelectionne(vehiculesRes.data[0]);
-
-            // ✅ Trajets récents uniques (départ/arrivée)
             const vus = new Set();
             const recents = trajetsRes.data
                 .sort((a, b) => new Date(b.dateHeureDepart) - new Date(a.dateHeureDepart))
-                .filter(t => {
-                    const cle = `${t.villeDepart}-${t.villeArrivee}`;
-                    if (vus.has(cle)) return false;
-                    vus.add(cle);
-                    return true;
-                })
+                .filter(t => { const cle = `${t.villeDepart}-${t.villeArrivee}`; if (vus.has(cle)) return false; vus.add(cle); return true; })
                 .slice(0, 3);
             setTrajetsRecents(recents);
-        } catch (error) {}
+        } catch {}
     };
 
-    const reutiliserTrajet = (trajet) => {
-        setVilleDepart(trajet.villeDepart);
-        setVilleArrivee(trajet.villeArrivee);
-        setPrix(trajet.prixConducteur?.toString() || '');
-        setPlaces(trajet.placesDisponibles?.toString() || '');
-        setItineraire(trajet.itineraire || '');
-        if (trajet.vehiculeId) {
-            const v = vehicules.find(v => v.id === trajet.vehiculeId);
-            if (v) setVehiculeSelectionne(v);
-        }
+    const reutiliserTrajet = (t) => {
+        setVilleDepart(t.villeDepart); setVilleArrivee(t.villeArrivee);
+        setPrix(t.prixConducteur?.toString() || ''); setPlaces(t.placesDisponibles?.toString() || '');
+        setItineraire(t.itineraire || '');
+        if (t.vehiculeId) { const v = vehicules.find(v => v.id === t.vehiculeId); if (v) setVehiculeSelectionne(v); }
     };
 
     const filtrerSuggestions = (texte) => {
         if (!texte || texte.length < 2) { setSuggestions([]); return; }
-        const normalise = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        setSuggestions(QUARTIERS_CONAKRY.filter(q => normalise(q).includes(normalise(texte))).slice(0, 6));
-    };
-
-    const onChangeDepart = (texte) => {
-        setVilleDepart(texte);
-        setChampActif('depart');
-        filtrerSuggestions(texte);
-    };
-
-    const onChangeArrivee = (texte) => {
-        setVilleArrivee(texte);
-        setChampActif('arrivee');
-        filtrerSuggestions(texte);
+        const n = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        setSuggestions(QUARTIERS_CONAKRY.filter(q => n(q).includes(n(texte))).slice(0, 6));
     };
 
     const choisirSuggestion = (quartier) => {
         if (champActif === 'depart') setVilleDepart(quartier);
         else if (champActif === 'arrivee') setVilleArrivee(quartier);
-        setChampActif(null);
-        setSuggestions([]);
-        Keyboard.dismiss();
+        setChampActif(null); setSuggestions([]); Keyboard.dismiss();
+    };
+
+    const onChangePlaces = (texte) => {
+        const nb = parseInt(texte.replace(/\D/g, '')) || 0;
+        if (nb > placesMax) { Alert.alert('Places limitées', `Maximum ${placesMax} place(s) pour une ${typeVehicule.toLowerCase()}`); setPlaces(placesMax.toString()); }
+        else setPlaces(texte.replace(/\D/g, ''));
+    };
+
+    const onChangeNbPlaces = (texte) => {
+        const nb = parseInt(texte.replace(/\D/g, '')) || 0;
+        setNbPlaces(nb > placesMax ? placesMax.toString() : texte.replace(/\D/g, ''));
     };
 
     const ajouterVehicule = async () => {
-        if (!marque || !modele || !immatriculation || !nbPlaces) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs du vehicule');
-            return;
-        }
+        if (!marque || !modele || !immatriculation || !nbPlaces) { Alert.alert('Erreur', 'Veuillez remplir tous les champs du véhicule'); return; }
         try {
             const userId = await getUserId();
-            const response = await api.post('/vehicules', {
-                marque, modele, immatriculation,
-                nbPlaces: parseInt(nbPlaces),
-                conducteurId: userId
-            });
-            setVehiculeSelectionne(response.data);
-            setShowNouveauVehicule(false);
-            setMarque(''); setModele(''); setImmatriculation(''); setNbPlaces('');
-            chargerDonnees();
-            Alert.alert('Vehicule ajoute !');
-        } catch (error) {
-            Alert.alert('Erreur', "Impossible d'ajouter le vehicule");
-        }
+            const response = await api.post('/vehicules', { marque, modele, immatriculation, nbPlaces: parseInt(nbPlaces), conducteurId: userId });
+            setVehiculeSelectionne(response.data); setShowNouveauVehicule(false);
+            setMarque(''); setModele(''); setImmatriculation(''); setNbPlaces(''); setTypeVehicule('Voiture');
+            chargerDonnees(); Alert.alert('Véhicule ajouté !');
+        } catch { Alert.alert('Erreur', "Impossible d'ajouter le véhicule"); }
     };
 
     const publier = async () => {
-        if (!villeDepart || !villeArrivee || !dateDepart || !heure || !prix || !places) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-            return;
-        }
-        if (!vehiculeSelectionne) {
-            Alert.alert('Erreur', 'Veuillez selectionner un vehicule');
-            return;
-        }
+        if (!villeDepart || !villeArrivee || !dateDepart || !heure || !prix || !places) { Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires'); return; }
+        if (!vehiculeSelectionne) { Alert.alert('Erreur', 'Veuillez sélectionner un véhicule'); return; }
         setLoading(true);
         try {
             const userId = await getUserId();
@@ -145,94 +136,34 @@ export default function PublierScreen({ navigation }) {
             date.setHours(heure.getHours(), heure.getMinutes(), 0);
             const pad = (n) => n.toString().padStart(2, '0');
             const dateFormatee = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
-
-            await api.post('/trajets', {
-                villeDepart, villeArrivee,
-                dateHeureDepart: dateFormatee,
-                prix: parseFloat(prix),
-                placesDisponibles: parseInt(places),
-                itineraire,
-                conducteurId: userId,
-                vehiculeId: vehiculeSelectionne.id,
-                femmesUniquement
-            });
-
-            Alert.alert('Trajet publie !', 'Votre trajet est maintenant disponible.', [{
-                text: 'OK',
-                onPress: () => {
-                    setVilleDepart(''); setVilleArrivee('');
-                    setDateDepart(null); setHeure(null);
-                    setPrix(''); setPlaces(''); setItineraire('');
-                    setFemmesUniquement(false);
-                    setVehiculeSelectionne(vehicules.length > 0 ? vehicules[0] : null);
-                    chargerDonnees();
-                }
-            }]);
+            await api.post('/trajets', { villeDepart, villeArrivee, dateHeureDepart: dateFormatee, prix: parseFloat(prix), placesDisponibles: parseInt(places), itineraire, conducteurId: userId, vehiculeId: vehiculeSelectionne.id, femmesUniquement });
+            Alert.alert('Trajet publié !', 'Votre trajet est maintenant disponible.', [{ text: 'OK', onPress: () => { setVilleDepart(''); setVilleArrivee(''); setDateDepart(null); setHeure(null); setPrix(''); setPlaces(''); setItineraire(''); setFemmesUniquement(false); setVehiculeSelectionne(vehicules.length > 0 ? vehicules[0] : null); chargerDonnees(); } }]);
         } catch (error) {
             const message = error.response?.data?.erreur || 'Erreur lors de la publication';
             if (message.includes('permis') || message.includes("identit")) {
-                Alert.alert('Documents requis',
-                    "Vous devez avoir un permis de conduire et une piece d'identite valides pour publier un trajet.",
-                    [
-                        { text: 'Annuler', style: 'cancel' },
-                        { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }
-                    ]
-                );
-            } else {
-                Alert.alert('Erreur', message);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const formatDate = (date) => {
-        if (!date) return 'Choisir une date';
-        return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-    };
-
-    const formatHeure = (date) => {
-        if (!date) return 'Choisir une heure';
-        return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                Alert.alert('Documents requis', "Vous devez avoir un permis de conduire et une pièce d'identité valides.", [{ text: 'Annuler', style: 'cancel' }, { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }]);
+            } else { Alert.alert('Erreur', message); }
+        } finally { setLoading(false); }
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Publier un trajet</Text>
+        <View style={s.container}>
+            <View style={s.header}>
+                <Text style={s.headerTitle}>Publier un trajet</Text>
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled">
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-                {/* ✅ Trajets récents */}
                 {trajetsRecents.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Reprendre un trajet récent</Text>
+                    <View style={s.section}>
+                        <Text style={s.sectionTitle}>Trajets récents</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <View style={styles.recentsRow}>
-                                {trajetsRecents.map((t) => (
-                                    <TouchableOpacity
-                                        key={t.id.toString()}
-                                        style={styles.recentCard}
-                                        onPress={() => reutiliserTrajet(t)}>
-                                        <View style={styles.recentRoute}>
-                                            <View style={styles.recentDot} />
-                                            <View style={styles.recentLigne} />
-                                            <Ionicons name="car" size={14} color={colors.primary} />
-                                            <View style={styles.recentLigne} />
-                                            <View style={[styles.recentDot, { backgroundColor: colors.accent }]} />
-                                        </View>
-                                        <Text style={styles.recentVilles} numberOfLines={1}>
-                                            {t.villeDepart} → {t.villeArrivee}
-                                        </Text>
-                                        <Text style={styles.recentPrix}>
-                                            {t.prixConducteur?.toLocaleString()} GNF
-                                        </Text>
-                                        <View style={styles.recentBtnContainer}>
-                                            <Text style={styles.recentBtn}>Réutiliser</Text>
-                                        </View>
+                            <View style={{ flexDirection: 'row', gap: 12, paddingBottom: 4 }}>
+                                {trajetsRecents.map(t => (
+                                    <TouchableOpacity key={t.id.toString()} style={s.recentCard} onPress={() => reutiliserTrajet(t)}>
+                                        <Text style={s.recentVilles} numberOfLines={1}>{t.villeDepart} → {t.villeArrivee}</Text>
+                                        <Text style={s.recentPrix}>{t.prixConducteur?.toLocaleString()} GNF</Text>
+                                        <View style={s.recentBtn}><Text style={s.recentBtnTxt}>Réutiliser</Text></View>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -240,558 +171,198 @@ export default function PublierScreen({ navigation }) {
                     </View>
                 )}
 
-                {/* Informations du trajet */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Informations du trajet</Text>
-                    <View style={styles.card}>
+                <View style={s.section}>
+                    <Text style={s.sectionTitle}>Informations du trajet</Text>
+                    <View style={s.card}>
 
-                        {/* Depart */}
-                        <Text style={styles.fieldLabel}>Départ</Text>
-                        <View style={[styles.inputContainer, champActif === 'depart' && styles.inputContainerActif]}>
-                            <Ionicons name="radio-button-on" size={16} color={colors.primary} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Quartier de départ"
-                                placeholderTextColor={colors.textDisabled}
-                                value={villeDepart}
-                                onChangeText={onChangeDepart}
-                                onFocus={() => { setChampActif('depart'); filtrerSuggestions(villeDepart); }}
-                                autoCapitalize="words"
-                            />
-                            {villeDepart.length > 0 && (
-                                <TouchableOpacity onPress={() => { setVilleDepart(''); setSuggestions([]); }}>
-                                    <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                        {champActif === 'depart' && suggestions.length > 0 && (
-                            <View style={styles.suggestionsContainer}>
-                                {suggestions.map((q) => (
-                                    <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
-                                        <Ionicons name="location-outline" size={14} color={colors.primary} />
-                                        <Text style={styles.suggestionTexte}>{q}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                        <Champ label="Départ">
+                            <View style={[s.field, champActif === 'depart' && s.fieldActif]}>
+                                <Ionicons name="radio-button-on" size={16} color={C.primary} />
+                                <TextInput style={s.input} placeholder="Quartier de départ" placeholderTextColor={C.disabled} value={villeDepart}
+                                    onChangeText={t => { setVilleDepart(t); setChampActif('depart'); filtrerSuggestions(t); }}
+                                    onFocus={() => { setChampActif('depart'); filtrerSuggestions(villeDepart); }} autoCapitalize="words" />
+                                {villeDepart.length > 0 && <TouchableOpacity onPress={() => { setVilleDepart(''); setSuggestions([]); }}><Ionicons name="close-circle" size={18} color={C.disabled} /></TouchableOpacity>}
                             </View>
-                        )}
+                            {champActif === 'depart' && <Suggestion items={suggestions} onSelect={choisirSuggestion} />}
+                        </Champ>
 
-                        {/* Arrivee */}
-                        <Text style={styles.fieldLabel}>Arrivée</Text>
-                        <View style={[styles.inputContainer, champActif === 'arrivee' && styles.inputContainerActif]}>
-                            <Ionicons name="location" size={16} color={colors.accent} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Quartier d'arrivée"
-                                placeholderTextColor={colors.textDisabled}
-                                value={villeArrivee}
-                                onChangeText={onChangeArrivee}
-                                onFocus={() => { setChampActif('arrivee'); filtrerSuggestions(villeArrivee); }}
-                                autoCapitalize="words"
-                            />
-                            {villeArrivee.length > 0 && (
-                                <TouchableOpacity onPress={() => { setVilleArrivee(''); setSuggestions([]); }}>
-                                    <Ionicons name="close-circle" size={18} color={colors.textDisabled} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                        {champActif === 'arrivee' && suggestions.length > 0 && (
-                            <View style={styles.suggestionsContainer}>
-                                {suggestions.map((q) => (
-                                    <TouchableOpacity key={q} style={styles.suggestionItem} onPress={() => choisirSuggestion(q)}>
-                                        <Ionicons name="location-outline" size={14} color={colors.primary} />
-                                        <Text style={styles.suggestionTexte}>{q}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                        <Champ label="Arrivée">
+                            <View style={[s.field, champActif === 'arrivee' && s.fieldActif]}>
+                                <Ionicons name="location" size={16} color={C.muted} />
+                                <TextInput style={s.input} placeholder="Quartier d'arrivée" placeholderTextColor={C.disabled} value={villeArrivee}
+                                    onChangeText={t => { setVilleArrivee(t); setChampActif('arrivee'); filtrerSuggestions(t); }}
+                                    onFocus={() => { setChampActif('arrivee'); filtrerSuggestions(villeArrivee); }} autoCapitalize="words" />
+                                {villeArrivee.length > 0 && <TouchableOpacity onPress={() => { setVilleArrivee(''); setSuggestions([]); }}><Ionicons name="close-circle" size={18} color={C.disabled} /></TouchableOpacity>}
                             </View>
-                        )}
+                            {champActif === 'arrivee' && <Suggestion items={suggestions} onSelect={choisirSuggestion} />}
+                        </Champ>
 
-                        {/* Date */}
-                        <Text style={styles.fieldLabel}>Date de départ</Text>
-                        <TouchableOpacity
-                            style={styles.inputContainer}
-                            onPress={() => { Keyboard.dismiss(); setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
-                            <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
-                            <Text style={[styles.input, !dateDepart && styles.placeholder]}>
-                                {formatDate(dateDepart)}
-                            </Text>
-                            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={s.label}>Date</Text>
+                                <TouchableOpacity style={s.field} onPress={() => { Keyboard.dismiss(); setChampActif(null); setSuggestions([]); setShowDatePicker(true); }}>
+                                    <Ionicons name="calendar-outline" size={16} color={C.muted} />
+                                    <Text style={[s.input, !dateDepart && { color: C.disabled }]}>{formatDate(dateDepart)}</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={s.label}>Heure</Text>
+                                <TouchableOpacity style={s.field} onPress={() => { setChampActif(null); setSuggestions([]); setShowTimePicker(true); }}>
+                                    <Ionicons name="time-outline" size={16} color={C.muted} />
+                                    <Text style={[s.input, !heure && { color: C.disabled }]}>{formatHeure(heure)}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
-                        {/* Heure */}
-                        <Text style={styles.fieldLabel}>Heure de départ</Text>
-                        <TouchableOpacity
-                            style={styles.inputContainer}
-                            onPress={() => { setChampActif(null); setSuggestions([]); setShowTimePicker(true); }}>
-                            <Ionicons name="time-outline" size={16} color={colors.textMuted} />
-                            <Text style={[styles.input, !heure && styles.placeholder]}>
-                                {formatHeure(heure)}
-                            </Text>
-                            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
-                        </TouchableOpacity>
+                        <DateTimePickerModal visible={showDatePicker} mode="date" value={dateDepart} minimumDate={new Date()} onConfirm={setDateDepart} onClose={() => setShowDatePicker(false)} />
+                        <DateTimePickerModal visible={showTimePicker} mode="time" value={heure} onConfirm={setHeure} onClose={() => setShowTimePicker(false)} />
 
-                        {showDatePicker && (
-                            <DateTimePicker
-                                value={dateDepart || new Date()}
-                                mode="date"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                minimumDate={new Date()}
-                                themeVariant="light"
-                                onChange={(event, date) => { setShowDatePicker(false); if (date) setDateDepart(date); }}
-                            />
-                        )}
-                        {showTimePicker && (
-                            <DateTimePicker
-                                value={heure || new Date()}
-                                mode="time"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                themeVariant="light"
-                                onChange={(event, date) => { setShowTimePicker(false); if (date) setHeure(date); }}
-                            />
-                        )}
-
-                        {/* Prix et places */}
-                        <View style={styles.row}>
-                            <View style={styles.halfField}>
-                                <Text style={styles.fieldLabel}>Prix (GNF)</Text>
-                                <View style={styles.inputContainer}>
-                                    <Ionicons name="cash-outline" size={16} color={colors.textMuted} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="50000"
-                                        placeholderTextColor={colors.textDisabled}
-                                        value={prix}
-                                        onChangeText={setPrix}
-                                        keyboardType="numeric"
-                                    />
+                        <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={s.label}>Prix (GNF)</Text>
+                                <View style={s.field}>
+                                    <Ionicons name="cash-outline" size={16} color={C.muted} />
+                                    <TextInput style={s.input} value={prix} onChangeText={setPrix} keyboardType="numeric" />
                                 </View>
                             </View>
-                            <View style={styles.halfField}>
-                                <Text style={styles.fieldLabel}>Places</Text>
-                                <View style={styles.inputContainer}>
-                                    <Ionicons name="people-outline" size={16} color={colors.textMuted} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="3"
-                                        placeholderTextColor={colors.textDisabled}
-                                        value={places}
-                                        onChangeText={setPlaces}
-                                        keyboardType="numeric"
-                                    />
+                            <View style={{ flex: 1 }}>
+                                <Text style={s.label}>Places (max {placesMax})</Text>
+                                <View style={s.field}>
+                                    <Ionicons name="people-outline" size={16} color={C.muted} />
+                                    <TextInput style={s.input} value={places} onChangeText={onChangePlaces} keyboardType="numeric" maxLength={1} />
                                 </View>
                             </View>
                         </View>
 
-                        {/* Itineraire */}
-                        <Text style={styles.fieldLabel}>Itinéraire (optionnel)</Text>
-                        <View style={styles.itineraireContainer}>
-                            {itineraires.map((it) => (
-                                <TouchableOpacity
-                                    key={it}
-                                    style={[styles.itineraireBadge, itineraire === it && styles.itineraireBadgeSelected]}
-                                    onPress={() => setItineraire(itineraire === it ? '' : it)}>
-                                    <Text style={[styles.itineraireBadgeText, itineraire === it && styles.itineraireBadgeTextSelected]}>
-                                        {it}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                        <Champ label="Itinéraire (optionnel)">
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                                {itineraires.map(it => (
+                                    <TouchableOpacity key={it} style={[s.badge, itineraire === it && s.badgeActif]} onPress={() => setItineraire(itineraire === it ? '' : it)}>
+                                        <Text style={[s.badgeTxt, itineraire === it && s.badgeTxtActif]}>{it}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </Champ>
 
-                        {/* Femmes uniquement */}
                         {utilisateur?.genre === 'FEMME' && (
-                            <TouchableOpacity
-                                style={styles.femmesUniquementContainer}
-                                onPress={() => setFemmesUniquement(!femmesUniquement)}>
-                                <View style={[styles.checkbox, femmesUniquement && styles.checkboxActif]}>
+                            <TouchableOpacity style={s.femmesRow} onPress={() => setFemmesUniquement(!femmesUniquement)}>
+                                <View style={[s.checkbox, femmesUniquement && s.checkboxActif]}>
                                     {femmesUniquement && <Ionicons name="checkmark" size={14} color="white" />}
                                 </View>
-                                <Text style={styles.femmesUniquementText}>Trajet femmes uniquement</Text>
+                                <Text style={s.femmesTxt}>Trajet femmes uniquement</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
 
-                {/* Vehicule */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Véhicule</Text>
-                    <View style={styles.vehiculesGrid}>
-                        {vehicules.map((v) => (
-                            <TouchableOpacity
-                                key={v.id.toString()}
-                                style={[styles.vehiculeCard, vehiculeSelectionne?.id === v.id && styles.vehiculeCardSelected]}
-                                onPress={() => setVehiculeSelectionne(v)}>
-                                <Ionicons
-                                    name="car-outline"
-                                    size={28}
-                                    color={vehiculeSelectionne?.id === v.id ? colors.primary : colors.textMuted}
-                                />
-                                <Text style={[styles.vehiculeNom, vehiculeSelectionne?.id === v.id && { color: colors.primary }]}>
-                                    {v.marque} {v.modele}
-                                </Text>
-                                <Text style={styles.vehiculeImmat}>{v.immatriculation}</Text>
-                                {vehiculeSelectionne?.id === v.id && (
-                                    <Ionicons name="checkmark-circle" size={18} color={colors.primary} style={{ marginTop: 4 }} />
-                                )}
+                <View style={s.section}>
+                    <Text style={s.sectionTitle}>Véhicule</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                        {vehicules.map(v => (
+                            <TouchableOpacity key={v.id.toString()} style={[s.vehiculeCard, vehiculeSelectionne?.id === v.id && s.vehiculeCardActif]} onPress={() => setVehiculeSelectionne(v)}>
+                                <Ionicons name="car-outline" size={26} color={vehiculeSelectionne?.id === v.id ? C.primary : C.muted} />
+                                <Text style={[s.vehiculeNom, vehiculeSelectionne?.id === v.id && { color: C.primary }]}>{v.marque} {v.modele}</Text>
+                                <Text style={s.vehiculeImmat}>{v.immatriculation}</Text>
+                                {vehiculeSelectionne?.id === v.id && <Ionicons name="checkmark-circle" size={18} color={C.primary} style={{ marginTop: 4 }} />}
                             </TouchableOpacity>
                         ))}
-                        <TouchableOpacity
-                            style={styles.ajouterVehiculeCard}
-                            onPress={() => setShowNouveauVehicule(!showNouveauVehicule)}>
-                            <Ionicons name="add-circle-outline" size={28} color={colors.accent} />
-                            <Text style={styles.ajouterVehiculeText}>Ajouter</Text>
+                        <TouchableOpacity style={s.ajouterCard} onPress={() => setShowNouveauVehicule(!showNouveauVehicule)}>
+                            <Ionicons name="add-circle-outline" size={26} color={C.primary} />
+                            <Text style={s.ajouterTxt}>Ajouter</Text>
                         </TouchableOpacity>
                     </View>
 
                     {showNouveauVehicule && (
-                        <View style={styles.card}>
+                        <View style={s.card}>
+                            <Champ label="Type de véhicule">
+                                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                                    {TYPES_VEHICULE.map(t => (
+                                        <TouchableOpacity key={t.label} style={[s.typeBtn, typeVehicule === t.label && s.typeBtnActif]} onPress={() => setTypeVehicule(t.label)}>
+                                            <Ionicons name={t.icon} size={22} color={typeVehicule === t.label ? C.primary : C.muted} />
+                                            <Text style={[s.typeTxt, typeVehicule === t.label && { color: C.primary }]}>{t.label}</Text>
+                                            <Text style={s.typeMax}>max {t.placesMax}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </Champ>
+
                             {[
                                 { label: 'Marque', value: marque, set: setMarque, placeholder: 'Toyota' },
                                 { label: 'Modèle', value: modele, set: setModele, placeholder: 'Corolla' },
-                                { label: 'Immatriculation', value: immatriculation, set: setImmatriculation, placeholder: 'GN-1234-A' },
-                                { label: 'Nombre de places', value: nbPlaces, set: setNbPlaces, placeholder: '4', numeric: true },
-                            ].map((item) => (
-                                <View key={item.label}>
-                                    <Text style={styles.fieldLabel}>{item.label}</Text>
-                                    <View style={styles.inputContainer}>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder={item.placeholder}
-                                            placeholderTextColor={colors.textDisabled}
-                                            value={item.value}
-                                            onChangeText={item.set}
-                                            keyboardType={item.numeric ? 'numeric' : 'default'}
-                                        />
+                                { label: 'Immatriculation', value: immatriculation, set: setImmatriculation, placeholder: 'GN-1234-A', caps: 'characters' },
+                            ].map(item => (
+                                <Champ key={item.label} label={item.label}>
+                                    <View style={s.field}>
+                                        <TextInput style={s.input} placeholder={item.placeholder} placeholderTextColor={C.disabled} value={item.value} onChangeText={item.set} autoCapitalize={item.caps || 'words'} />
                                     </View>
-                                </View>
+                                </Champ>
                             ))}
-                            <TouchableOpacity style={styles.boutonAjouter} onPress={ajouterVehicule}>
-                                <Text style={styles.boutonAjouterText}>Enregistrer le véhicule</Text>
+
+                            <Champ label={`Places (max ${placesMax})`}>
+                                <View style={s.field}>
+                                    <Ionicons name="people-outline" size={16} color={C.muted} />
+                                    <TextInput style={s.input} placeholder={placesMax.toString()} placeholderTextColor={C.disabled} value={nbPlaces} onChangeText={onChangeNbPlaces} keyboardType="numeric" maxLength={1} />
+                                </View>
+                            </Champ>
+
+                            <TouchableOpacity style={[s.btn, { marginTop: 16 }]} onPress={ajouterVehicule}>
+                                <Text style={s.btnTxt}>Enregistrer le véhicule</Text>
                             </TouchableOpacity>
                         </View>
                     )}
                 </View>
 
-                {/* Bouton publier */}
-                <View style={styles.section}>
-                    <TouchableOpacity
-                        style={[styles.boutonPublier, loading && { opacity: 0.7 }]}
-                        onPress={publier}
-                        disabled={loading}>
-                        {loading
-                            ? <ActivityIndicator size={20} color="white" />
-                            : <>
-                                <Ionicons name="paper-plane-outline" size={20} color="white" />
-                                <Text style={styles.boutonPublierText}>Publier le trajet</Text>
-                            </>
-                        }
+                <View style={[s.section, { marginBottom: 40 }]}>
+                    <TouchableOpacity style={[s.btn, loading && { opacity: 0.7 }]} onPress={publier} disabled={loading}>
+                        {loading ? <ActivityIndicator size={20} color="white" /> : <>
+                            <Ionicons name="paper-plane-outline" size={20} color="white" />
+                            <Text style={s.btnTxt}>Publier le trajet</Text>
+                        </>}
                     </TouchableOpacity>
                 </View>
 
-                <View style={{ height: 40 }} />
             </ScrollView>
         </View>
     );
 }
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#ffffff',
-    },
-    header: {
-        backgroundColor: '#182D5A',
-        paddingTop: 60,
-        paddingBottom: 20,
-        paddingHorizontal: spacing.xl,
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    section: {
-        paddingHorizontal: spacing.lg,
-        marginTop: 20,
-    },
-    sectionTitle: {
-        fontSize: 11,
-        fontWeight: '700',
-        color: '#888888',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 10,
-    },
-    card: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: spacing.lg,
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    fieldLabel: {
-        fontSize: 11,
-        fontWeight: '700',
-        color: '#182D5A',
-        marginBottom: 6,
-        marginTop: 14,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        borderRadius: radius.sm,
-        paddingHorizontal: spacing.md,
-        paddingVertical: 2,
-        backgroundColor: '#FAFAFA',
-        gap: 10,
-    },
-    inputContainerActif: {
-        borderColor: '#182D5A',
-        borderWidth: 1.5,
-        backgroundColor: '#EEF2F7',
-    },
-    input: {
-        flex: 1,
-        padding: 10,
-        fontSize: 15,
-        color: '#1a1a1a',
-    },
-    placeholder: {
-        color: '#cccccc',
-    },
-    suggestionsContainer: {
-        backgroundColor: '#ffffff',
-        borderRadius: radius.sm,
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        marginTop: 4,
-        overflow: 'hidden',
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    suggestionItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        paddingVertical: 11,
-        paddingHorizontal: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEF2F7',
-    },
-    suggestionTexte: {
-        color: '#1a1a1a',
-        fontSize: 14,
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    halfField: { flex: 1 },
-    itineraireContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 4,
-    },
-    itineraireBadge: {
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        borderRadius: radius.full,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        backgroundColor: '#FAFAFA',
-    },
-    itineraireBadgeSelected: {
-        borderColor: '#182D5A',
-        backgroundColor: '#EEF2F7',
-    },
-    itineraireBadgeText: {
-        color: '#888888',
-        fontSize: 13,
-    },
-    itineraireBadgeTextSelected: {
-        color: '#182D5A',
-        fontWeight: '600',
-    },
-    femmesUniquementContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        marginTop: 16,
-        padding: 12,
-        backgroundColor: '#f3e5f5',
-        borderRadius: radius.sm,
-        borderWidth: 1,
-        borderColor: '#9b59b6',
-    },
-    checkbox: {
-        width: 22,
-        height: 22,
-        borderRadius: 6,
-        borderWidth: 2,
-        borderColor: '#EEF2F7',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    checkboxActif: {
-        backgroundColor: '#9b59b6',
-        borderColor: '#9b59b6',
-    },
-    femmesUniquementText: {
-        fontSize: 14,
-        color: '#9b59b6',
-        fontWeight: '600',
-        flex: 1,
-    },
-    vehiculesGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginBottom: 12,
-    },
-    vehiculeCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 14,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        minWidth: '45%',
-        flex: 1,
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    vehiculeCardSelected: {
-        borderColor: '#182D5A',
-        backgroundColor: '#EEF2F7',
-    },
-    vehiculeNom: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#1a1a1a',
-        marginTop: 6,
-        textAlign: 'center',
-    },
-    vehiculeImmat: {
-        fontSize: 11,
-        color: '#888888',
-        marginTop: 2,
-    },
-    ajouterVehiculeCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 14,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        borderStyle: 'dashed',
-        minWidth: '45%',
-        flex: 1,
-        justifyContent: 'center',
-    },
-    ajouterVehiculeText: {
-        color: '#182D5A',
-        fontSize: 13,
-        marginTop: 6,
-    },
-    boutonAjouter: {
-        backgroundColor: '#182D5A',
-        borderRadius: radius.sm,
-        padding: 12,
-        alignItems: 'center',
-        marginTop: 12,
-    },
-    boutonAjouterText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    boutonPublier: {
-        backgroundColor: '#182D5A',
-        borderRadius: 14,
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    boutonPublierText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
 
-    // ── Trajets récents ───────────────────────────────────
-    recentsRow: {
-        flexDirection: 'row',
-        gap: 12,
-        paddingBottom: 4,
-    },
-    recentCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: '#EEF2F7',
-        minWidth: 180,
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    recentRoute: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        marginBottom: 8,
-    },
-    recentDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#182D5A',
-    },
-    recentLigne: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#EEF2F7',
-        maxWidth: 24,
-    },
-    recentVilles: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#1a1a1a',
-        marginBottom: 4,
-    },
-    recentPrix: {
-        fontSize: 12,
-        color: '#182D5A',
-        fontWeight: '700',
-        marginBottom: 10,
-    },
-    recentBtnContainer: {
-        backgroundColor: '#EEF2F7',
-        borderRadius: radius.full,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        alignSelf: 'flex-start',
-    },
-    recentBtn: {
-        fontSize: 12,
-        color: '#182D5A',
-        fontWeight: '600',
-    },
+const s = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#ffffff' },
+    header: { backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl },
+    headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'white' },
+    section: { paddingHorizontal: spacing.lg, marginTop: 20 },
+    sectionTitle: { fontSize: 11, fontWeight: '700', color: '#888888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
+    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: spacing.lg, borderWidth: 1, borderColor: '#EEF2F7', shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+    label: { fontSize: 11, fontWeight: '700', color: '#182D5A', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 },
+    field: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#EEF2F7', borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: 2, backgroundColor: '#FAFAFA', gap: 10, minHeight: BTN_HEIGHT },
+    fieldActif: { borderColor: '#182D5A', borderWidth: 1.5, backgroundColor: '#EEF2F7' },
+    input: { flex: 1, fontSize: 15, color: '#1a1a1a', paddingVertical: 10 },
+    suggestBox: { backgroundColor: '#ffffff', borderRadius: radius.sm, borderWidth: 1, borderColor: '#EEF2F7', marginTop: 4, overflow: 'hidden', shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+    suggestItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#EEF2F7' },
+    suggestTxt: { color: '#1a1a1a', fontSize: 14 },
+    badge: { borderWidth: 1, borderColor: '#EEF2F7', borderRadius: radius.full, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#FAFAFA' },
+    badgeActif: { borderColor: '#182D5A', backgroundColor: '#EEF2F7' },
+    badgeTxt: { color: '#888888', fontSize: 13 },
+    badgeTxtActif: { color: '#182D5A', fontWeight: '600' },
+    femmesRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16, padding: 12, backgroundColor: '#f3e5f5', borderRadius: radius.sm, borderWidth: 1, borderColor: '#9b59b6' },
+    checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center' },
+    checkboxActif: { backgroundColor: '#9b59b6', borderColor: '#9b59b6' },
+    femmesTxt: { fontSize: 14, color: '#9b59b6', fontWeight: '600', flex: 1 },
+    vehiculeCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#EEF2F7', minWidth: '45%', flex: 1, shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    vehiculeCardActif: { borderColor: '#182D5A', backgroundColor: '#EEF2F7' },
+    vehiculeNom: { fontSize: 13, fontWeight: '600', color: '#1a1a1a', marginTop: 6, textAlign: 'center' },
+    vehiculeImmat: { fontSize: 11, color: '#888888', marginTop: 2 },
+    ajouterCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: '#EEF2F7', borderStyle: 'dashed', minWidth: '45%', flex: 1, justifyContent: 'center' },
+    ajouterTxt: { color: '#182D5A', fontSize: 13, marginTop: 6 },
+    typeBtn: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#EEF2F7', backgroundColor: '#FAFAFA', gap: 4 },
+    typeBtnActif: { borderColor: '#182D5A', backgroundColor: '#EEF2F7' },
+    typeTxt: { fontSize: 12, color: '#888888', fontWeight: '600' },
+    typeMax: { fontSize: 10, color: '#aaaaaa' },
+    recentCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#EEF2F7', minWidth: 180, shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    recentVilles: { fontSize: 13, fontWeight: '600', color: '#1a1a1a', marginBottom: 4 },
+    recentPrix: { fontSize: 12, color: '#182D5A', fontWeight: '700', marginBottom: 10 },
+    recentBtn: { backgroundColor: '#EEF2F7', borderRadius: radius.full, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' },
+    recentBtnTxt: { fontSize: 12, color: '#182D5A', fontWeight: '600' },
+    btn: { backgroundColor: '#182D5A', borderRadius: 14, height: BTN_HEIGHT, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    btnTxt: { color: 'white', fontSize: 15, fontWeight: '700' },
 });
