@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, ActivityIndicator, Alert,
-    KeyboardAvoidingView, Platform, ScrollView
+    KeyboardAvoidingView, Platform, ScrollView, Linking
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { colors, spacing, radius, shadows } from '../../constants/theme';
+
+const URL_CGU = 'https://wayvo-frontend.vercel.app/cgu';
 
 export default function RegisterScreen({ navigation }) {
     const [nom, setNom] = useState('');
@@ -14,11 +17,16 @@ export default function RegisterScreen({ navigation }) {
     const [motDePasse, setMotDePasse] = useState('');
     const [telephone, setTelephone] = useState('');
     const [genre, setGenre] = useState('');
+    const [cguAcceptees, setCguAcceptees] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
         if (!nom || !prenom || !email || !motDePasse || !genre) {
             Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+        if (!cguAcceptees) {
+            Alert.alert('CGU requises', "Veuillez accepter les Conditions Générales d'Utilisation pour continuer.");
             return;
         }
         setLoading(true);
@@ -111,10 +119,22 @@ export default function RegisterScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
+                    <TouchableOpacity style={styles.cguRow} onPress={() => setCguAcceptees(!cguAcceptees)}>
+                        <View style={[styles.checkbox, cguAcceptees && styles.checkboxActif]}>
+                            {cguAcceptees && <Ionicons name="checkmark" size={14} color="white" />}
+                        </View>
+                        <Text style={styles.cguTexte}>
+                           {"J'accepte les"}{' '}
+                            <Text style={styles.cguLien} onPress={() => Linking.openURL(URL_CGU)}>
+                                Conditions Générales {"d'Utilisation"}
+                            </Text>
+                        </Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
-                        style={[styles.button, loading && styles.buttonDisabled]}
+                        style={[styles.button, (!cguAcceptees || loading) && styles.buttonDisabled]}
                         onPress={handleRegister}
-                        disabled={loading}>
+                        disabled={!cguAcceptees || loading}>
                         {loading
                             ? <ActivityIndicator size={20} color="white" />
                             : <Text style={styles.buttonText}>{"S'inscrire"}</Text>
@@ -168,6 +188,15 @@ const styles = StyleSheet.create({
     genreBoutonActif: { borderColor: '#182D5A', backgroundColor: '#EEF2F7' },
     genreTexte: { fontSize: 15, color: '#888888', fontWeight: '600' },
     genreTexteActif: { color: '#182D5A' },
+    cguRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 20 },
+    checkbox: {
+        width: 22, height: 22, borderRadius: 6, borderWidth: 2,
+        borderColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center',
+        marginTop: 2, flexShrink: 0,
+    },
+    checkboxActif: { backgroundColor: '#182D5A', borderColor: '#182D5A' },
+    cguTexte: { fontSize: 13, color: '#888888', flex: 1, lineHeight: 19 },
+    cguLien: { color: '#182D5A', fontWeight: '600', textDecorationLine: 'underline' },
     button: {
         backgroundColor: '#182D5A', borderRadius: 14,
         padding: 16, alignItems: 'center', marginTop: 24,

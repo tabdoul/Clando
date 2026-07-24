@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity,
     StyleSheet, ScrollView, Alert, ActivityIndicator,
-    TextInput, RefreshControl, Linking, Modal, Image, Keyboard, Share
+    TextInput, RefreshControl, Linking, Modal, Image, Keyboard, Share,
+    KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -282,14 +283,19 @@ export default function ReservationsScreen({ navigation }) {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.btnSm, { flex: 1 }]}
-                                    onPress={() => Share.share({
-                                        message:
-                                            `Je prends le trajet ${item.villeDepart} → ${item.villeArrivee} avec Wayvo.\n` +
-                                            `Conducteur : ${item.conducteurPrenom} ${item.conducteurNom}\n` +
-                                            (item.departPassager ? `Je monte à : ${item.departPassager}\n` : '') +
-                                            (item.arriveePassager ? `Je descends à : ${item.arriveePassager}\n` : '') +
-                                            `\nSuivez mon trajet en temps réel.`
-                                    })}>
+                                    onPress={() => {
+                                        const lienPosition = item.trajetDemarre && item.latitudeConducteur
+                                            ? `\n\nSuivez la position du conducteur en temps réel :\nhttps://www.google.com/maps?q=${item.latitudeConducteur},${item.longitudeConducteur}`
+                                            : `\n\nLe suivi en temps réel sera disponible dès que le conducteur démarre le trajet.`;
+                                        Share.share({
+                                            message:
+                                                `Je prends le trajet ${item.villeDepart} → ${item.villeArrivee} avec Wayvo.\n` +
+                                                `Conducteur : ${item.conducteurPrenom} ${item.conducteurNom}\n` +
+                                                (item.departPassager ? `Je monte à : ${item.departPassager}\n` : '') +
+                                                (item.arriveePassager ? `Je descends à : ${item.arriveePassager}\n` : '') +
+                                                lienPosition
+                                        });
+                                    }}>
                                     <Ionicons name="share-social-outline" size={13} color={colors.textMuted} />
                                     <Text style={[styles.btnSmText, { color: colors.textMuted }]}>Partager</Text>
                                 </TouchableOpacity>
@@ -489,7 +495,10 @@ export default function ReservationsScreen({ navigation }) {
                 transparent
                 animationType="slide"
                 onRequestClose={() => setShowModalPaiement(false)}>
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView
+                    style={styles.modalOverlay}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
                     <View style={styles.modalCard}>
                         <View style={styles.modalHeader}>
                             <View>
@@ -572,7 +581,7 @@ export default function ReservationsScreen({ navigation }) {
                             )}
                         </TouchableOpacity>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </View>
     );
@@ -580,51 +589,24 @@ export default function ReservationsScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff' },
     loadingContainer: { flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' },
-    header: {
-        backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20,
-        paddingHorizontal: spacing.xl,
-    },
+    header: { backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl },
     headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'white' },
 
-    onglets: {
-        flexDirection: 'row', backgroundColor: '#ffffff',
-        borderBottomWidth: 1, borderBottomColor: '#EEF2F7',
-    },
-    onglet: {
-        flex: 1, paddingVertical: 14, alignItems: 'center',
-        justifyContent: 'center', flexDirection: 'row', gap: 6,
-    },
+    onglets: { flexDirection: 'row', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#EEF2F7' },
+    onglet: { flex: 1, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
     ongletActif: { borderBottomWidth: 2, borderBottomColor: '#182D5A' },
     ongletText: { fontSize: 14, fontWeight: '600', color: '#888888' },
     ongletTextActif: { color: '#182D5A' },
-    ongletBadge: {
-        backgroundColor: '#182D5A', borderRadius: 10,
-        minWidth: 18, height: 18, alignItems: 'center',
-        justifyContent: 'center', paddingHorizontal: 4,
-    },
+    ongletBadge: { backgroundColor: '#182D5A', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
     ongletBadgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
 
     emptyContainer: { alignItems: 'center', marginTop: 80 },
     emptyText: { fontSize: 18, color: '#888888', marginTop: 16 },
-    emptySubtext: {
-        fontSize: 14, color: '#cccccc', marginTop: 4,
-        textAlign: 'center', paddingHorizontal: 40,
-    },
+    emptySubtext: { fontSize: 14, color: '#cccccc', marginTop: 4, textAlign: 'center', paddingHorizontal: 40 },
 
     cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
-    card: {
-        backgroundColor: '#ffffff', borderRadius: 16, padding: 14,
-        borderWidth: 1, borderColor: '#EEF2F7', borderLeftWidth: 3,
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    cardHeader: {
-        flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'space-between', marginBottom: 8,
-    },
+    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#EEF2F7', borderLeftWidth: 3, shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
     trajetRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
     ville: { fontSize: 15, fontWeight: '600', color: '#1a1a1a' },
     statutBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 20 },
@@ -633,118 +615,61 @@ const styles = StyleSheet.create({
     trajetPassager: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
     trajetPassagerText: { fontSize: 12, color: '#888888' },
 
-    metaRow: {
-        flexDirection: 'row', alignItems: 'center',
-        gap: 5, marginBottom: 8, flexWrap: 'wrap',
-    },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8, flexWrap: 'wrap' },
     metaText: { fontSize: 12, color: '#888888' },
     metaDot: { color: '#EEF2F7', fontSize: 12 },
 
-    paiementOk: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: '#e8f5e9', borderRadius: 8, padding: 8, marginBottom: 10,
-    },
+    paiementOk: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5e9', borderRadius: 8, padding: 8, marginBottom: 10 },
     paiementOkText: { fontSize: 12, color: '#182D5A', fontWeight: '600' },
 
-    enAttenteTexte: {
-        fontSize: 13, color: '#888888', marginBottom: 10,
-        backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10,
-    },
+    enAttenteTexte: { fontSize: 13, color: '#888888', marginBottom: 10, backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10 },
 
-    messageBloc: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10, marginTop: 8,
-    },
+    messageBloc: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10, marginTop: 8 },
     messageBlocText: { fontSize: 13, color: '#888888', flex: 1 },
 
     actions: { marginTop: 4 },
 
-    btnPayer: {
-        backgroundColor: '#182D5A', borderRadius: 10, padding: 12,
-        flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'center', gap: 8, marginBottom: 8,
-    },
+    btnPayer: { backgroundColor: '#182D5A', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
     btnPayerText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
 
     actionsSecondaires: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
 
-    btnSm: {
-        flex: 1, borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 8,
-        paddingVertical: 8, flexDirection: 'row',
-        alignItems: 'center', justifyContent: 'center', gap: 4,
-        minWidth: '45%',
-    },
+    btnSm: { flex: 1, borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 8, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: '45%' },
     btnSmDanger: { borderColor: '#E52424' },
     btnSmAccent: { backgroundColor: '#182D5A', borderColor: '#182D5A' },
     btnSmText: { fontSize: 12, fontWeight: '600' },
 
-    btnAnnuler: {
-        borderWidth: 1, borderColor: '#E52424',
-        borderRadius: 10, padding: 10, alignItems: 'center',
-    },
+    btnAnnuler: { borderWidth: 1, borderColor: '#E52424', borderRadius: 10, padding: 10, alignItems: 'center' },
     btnAnnulerText: { color: '#E52424', fontSize: 13, fontWeight: '600' },
 
-    btnAvis: {
-        borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 10, padding: 10,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    },
+    btnAvis: { borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
     btnAvisText: { color: '#888888', fontSize: 13, fontWeight: '600' },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalCard: {
-        backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        padding: 24, maxHeight: '85%',
-    },
-    modalHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'flex-start', marginBottom: 20,
-    },
+    modalCard: { backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
     modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a1a1a' },
     modalSubtitle: { fontSize: 13, color: '#888888', marginTop: 4 },
     modalVide: { alignItems: 'center', paddingVertical: 40, gap: 12 },
     modalVideText: { color: '#888888', fontSize: 15 },
 
-    passagerCard: {
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        backgroundColor: '#EEF2F7', borderRadius: 12, padding: 12, marginBottom: 8,
-    },
+    passagerCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#EEF2F7', borderRadius: 12, padding: 12, marginBottom: 8 },
     passagerAvatar: { width: 44, height: 44, borderRadius: 22 },
-    passagerAvatarPlaceholder: {
-        width: 44, height: 44, borderRadius: 22, backgroundColor: '#EEF2F7',
-        alignItems: 'center', justifyContent: 'center',
-        borderWidth: 1, borderColor: '#D8E4F0',
-    },
+    passagerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#D8E4F0' },
     passagerInitiales: { color: '#182D5A', fontSize: 16, fontWeight: '700' },
     passagerInfos: { flex: 1 },
     passagerNom: { color: '#1a1a1a', fontSize: 15, fontWeight: '600' },
 
     paiementDetail: { backgroundColor: '#EEF2F7', borderRadius: 12, padding: 16, marginBottom: 16 },
-    paiementDetailLigne: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', paddingVertical: 6,
-    },
+    paiementDetailLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
     paiementDetailLabel: { fontSize: 13, color: '#888888' },
     paiementDetailValeur: { fontSize: 13, color: '#1a1a1a', textAlign: 'right' },
     paiementDetailSeparator: { height: 1, backgroundColor: '#D8E4F0', marginVertical: 6 },
-    paiementInfo: {
-        flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-        backgroundColor: '#EEF2F7', borderRadius: 10, padding: 12, marginBottom: 16,
-    },
+    paiementInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#EEF2F7', borderRadius: 10, padding: 12, marginBottom: 16 },
     paiementInfoTexte: { fontSize: 13, color: '#888888', flex: 1, lineHeight: 20 },
-    paiementLabel: {
-        fontSize: 12, fontWeight: '600', color: '#888888',
-        marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
-    },
-    paiementInput: {
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        backgroundColor: '#EEF2F7', borderRadius: 10,
-        paddingHorizontal: 14, paddingVertical: 4,
-        borderWidth: 1, borderColor: '#D8E4F0', marginBottom: 20,
-    },
+    paiementLabel: { fontSize: 12, fontWeight: '600', color: '#888888', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+    paiementInput: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#EEF2F7', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 4, borderWidth: 1, borderColor: '#D8E4F0', marginBottom: 20 },
     paiementInputText: { flex: 1, padding: 10, fontSize: 16, color: '#1a1a1a' },
-    boutonConfirmerPaiement: {
-        backgroundColor: '#182D5A', borderRadius: 12, padding: 16,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    },
+    boutonConfirmerPaiement: { backgroundColor: '#182D5A', borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     boutonConfirmerPaiementText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
 });
