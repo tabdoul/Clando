@@ -102,7 +102,22 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 [{ text: 'Voir mes reservations', onPress: () => navigation.navigate('Main', { screen: 'Reservations' }) }]
             );
         } catch (error) {
-            Alert.alert('Reservation impossible', error.response?.data?.erreur || "Impossible d'envoyer la demande.");
+            const message = error.response?.data?.erreur || "Impossible d'envoyer la demande.";
+            const identiteManquante = message.includes("piece d'identite") || message.includes('CNI') || message.includes('passeport');
+
+            if (identiteManquante) {
+                setShowConfirmModal(false);
+                Alert.alert(
+                    'Verification requise',
+                    "Vous devez avoir une piece d'identite (CNI ou passeport) validee pour reserver un trajet.",
+                    [
+                        { text: 'Annuler', style: 'cancel' },
+                        { text: 'Mes documents', onPress: () => navigation.navigate('Documents') }
+                    ]
+                );
+            } else {
+                Alert.alert('Reservation impossible', message);
+            }
         } finally {
             setLoading(false);
         }

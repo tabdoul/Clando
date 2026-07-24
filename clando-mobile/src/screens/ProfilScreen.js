@@ -662,7 +662,7 @@ export default function ProfilScreen({ navigation }) {
                                 <View style={styles.separator} />
                                 <TouchableOpacity
                                     style={styles.navItem}
-                                    onPress={() => Linking.openURL('https://wayvo-frontend.vercel.app/mentions-legales')}>
+                                    onPress={() => Linking.openURL('https://wayvo-frontend.vercel.app/cgu')}>
                                     <View style={styles.navGauche}>
                                         <Ionicons name="document-outline" size={18} color={colors.textMuted} />
                                         <Text style={styles.navLabel}>Conditions generales</Text>

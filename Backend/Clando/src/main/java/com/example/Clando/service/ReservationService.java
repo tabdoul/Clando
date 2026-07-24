@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.Clando.dtos.request.ReservationRequest;
 import com.example.Clando.dtos.response.ReservationResponse;
+import com.example.Clando.entity.Document;
 import com.example.Clando.entity.Reservation;
 import com.example.Clando.entity.Trajet;
 import com.example.Clando.entity.Utilisateur;
+import com.example.Clando.repository.DocumentRepository;
 import com.example.Clando.repository.ReservationRepository;
 import com.example.Clando.repository.TrajetRepository;
 import com.example.Clando.repository.UtilisateurRepository;
@@ -26,29 +29,43 @@ import jakarta.persistence.EntityNotFoundException;
 public class ReservationService {
 
     private static final double COMMISSION = 1.13;
+    private static final List<Document.TypeDocument> PIECES_IDENTITE_ACCEPTEES =
+        Arrays.asList(Document.TypeDocument.CNI, Document.TypeDocument.PASSEPORT);
 
     private final ReservationRepository reservationRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final TrajetRepository trajetRepository;
     private final DjomyService djomyService;
     private final NotificationService notificationService;
+    private final DocumentRepository documentRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
                                UtilisateurRepository utilisateurRepository,
                                TrajetRepository trajetRepository,
                                DjomyService djomyService,
-                               NotificationService notificationService) {
+                               NotificationService notificationService,
+                               DocumentRepository documentRepository) {
         this.reservationRepository = reservationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.trajetRepository = trajetRepository;
         this.djomyService = djomyService;
         this.notificationService = notificationService;
+        this.documentRepository = documentRepository;
     }
 
     @Transactional
     public ReservationResponse creer(ReservationRequest request) {
         Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
                 .orElseThrow(() -> new EntityNotFoundException("Passager non trouve"));
+
+        boolean piecesIdentiteValidee = documentRepository.existsByUtilisateurIdAndTypeInAndStatut(
+            passager.getId(), PIECES_IDENTITE_ACCEPTEES, Document.StatutDocument.VALIDE
+        );
+        if (!piecesIdentiteValidee) {
+            throw new IllegalStateException(
+                "Une piece d'identite (CNI ou passeport) validee est requise avant de reserver un trajet"
+            );
+        }
 
         Trajet trajet = trajetRepository.findById(request.getTrajetId())
                 .orElseThrow(() -> new EntityNotFoundException("Trajet non trouve"));

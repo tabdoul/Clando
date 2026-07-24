@@ -17,6 +17,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByTrajetId(Long trajetId);
     boolean existsByPassagerIdAndTrajetId(Long passagerId, Long trajetId);
     List<Reservation> findByDjomyTransactionId(String djomyTransactionId);
+    long countByPassagerId(Long passagerId);
 
    @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
        "AND r.statut = com.example.Clando.entity.Reservation.StatutReservation.CONFIRMEE")
@@ -48,4 +49,9 @@ List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
        "com.example.Clando.entity.Reservation.StatutReservation.PRIX_REFUSE, " +
        "com.example.Clando.entity.Reservation.StatutReservation.CONTRE_OFFRE)")
 List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.statut = com.example.Clando.entity.Reservation.StatutReservation.EN_ATTENTE " +
+           "AND r.trajet.dateHeureDepart <= :maintenant")
+    List<Reservation> findDemandesEnAttenteDepartPasse(@Param("maintenant") LocalDateTime maintenant);
 }
