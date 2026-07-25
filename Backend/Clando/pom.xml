@@ -11,9 +11,9 @@
 	</parent>
 
 	<groupId>com.example</groupId>
-	<artifactId>Clando</artifactId>
+	<artifactId>wayvo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Clando</name>
+	<name>wayvo</name>
 	<description>API REST Covoiturage</description>
 
 	<properties>

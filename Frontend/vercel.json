@@ -1,5 +1,5 @@
 {
     "buildCommand": "npm install && npx ng build --configuration production",
-    "outputDirectory": "dist/Clando/browser",
+    "outputDirectory": "dist/wayvo/browser",
     "framework": null
 }

@@ -14,7 +14,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem('clando_token');
+    const token = await AsyncStorage.getItem('wayvo_token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,8 +25,8 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401) {
-            await AsyncStorage.removeItem('clando_token');
-            await AsyncStorage.removeItem('clando_user_id');
+            await AsyncStorage.removeItem('wayvo_token');
+            await AsyncStorage.removeItem('wayvo_user_id');
             if (onUnauthorizedCallback) {
                 onUnauthorizedCallback();
             }

@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "WayVo",
-    "slug": "clando-mobile",
+    "name": "wayvo",
+    "slug": "wayvo-mobile",
     "owner": "th_abdoul",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "clandomobile",
+    "scheme": "wayvomobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.th_abdoul.clandomobile"
+      "package": "com.th_abdoul.wayvomobile"
     },
     "web": {
       "output": "single",
