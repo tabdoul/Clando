@@ -5,7 +5,7 @@
 .hero {
     text-align: center;
     padding: 48px 20px;
-    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    background: linear-gradient(135deg, #0f1d3d, #182D5A);
     border-radius: 20px;
     margin-bottom: 32px;
 }
@@ -14,7 +14,7 @@
     font-size: 80px !important;
     width: 80px !important;
     height: 80px !important;
-    color: #00b5e2;
+    color: #ffffff;
     margin-bottom: 16px;
     display: block;
     margin: 0 auto 16px;
@@ -30,22 +30,25 @@
     display: flex;
     gap: 40px;
     align-items: center;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(24,45,90,0.08);
     margin-bottom: 32px;
+    border: 1px solid #EEF2F7;
 }
 
 .platform { flex: 1; text-align: center; }
 
-.platform h2 { font-size: 1.3rem; font-weight: 600; margin: 12px 0 8px; }
+.platform h2 { font-size: 1.3rem; font-weight: 600; margin: 12px 0 8px; color: #1a1a1a; }
 
 .platform p { color: #666; font-size: 0.9rem; margin-bottom: 20px; }
 
 .btn-download {
-    background: #00b5e2 !important;
+    background: #182D5A !important;
     color: white !important;
     padding: 12px 24px !important;
     font-size: 1rem !important;
     margin-bottom: 12px;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
 }
 
 .hint {
@@ -54,16 +57,17 @@
     margin-top: 12px !important;
 }
 
-.divider { width: 1px; height: 160px; background: #eee; }
+.divider { width: 1px; height: 160px; background: #EEF2F7; }
 
 .steps-install {
     background: white;
     border-radius: 16px;
     padding: 32px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(24,45,90,0.08);
+    border: 1px solid #EEF2F7;
 }
 
-.steps-install h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 24px; }
+.steps-install h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 24px; color: #1a1a1a; }
 
 .steps { display: flex; flex-direction: column; gap: 16px; }
 
@@ -71,7 +75,7 @@
 
 .step-num {
     width: 36px; height: 36px;
-    background: #00b5e2;
+    background: #182D5A;
     color: white;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;

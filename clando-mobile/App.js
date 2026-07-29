@@ -67,7 +67,7 @@ export default function App() {
 
     const initialiser = async () => {
        // await AsyncStorage.removeItem('wayvo_onboarding_vu');
-        // ✅ Vérifie onboarding et auth en parallèle
+        //  Vérifie onboarding et auth en parallèle
         const [connected, vu] = await Promise.all([
             isLoggedIn(),
             AsyncStorage.getItem('wayvo_onboarding_vu')
