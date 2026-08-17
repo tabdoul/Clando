@@ -92,7 +92,7 @@ public class DjomyWebhookService {
                 "Paiement confirme !",
                 "Votre paiement pour le trajet " +
                 reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
-                " a bien ete recu."
+                " a bien ete reçu."
             );
         }
         log.info("Paiement confirme via webhook pour reservation {}", reservation.getId());
