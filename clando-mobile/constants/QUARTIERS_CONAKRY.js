@@ -1,6 +1,12 @@
 export const QUARTIERS_CONAKRY = [
     // Autoroute
+    'Coyah',
+    'Manéyah',
+    'Bentourayah',
+    'Friguiady',
+    'Kassonyah',
     'Km 36',
+    'Sanoyah',
     'Kountia',
     'Lansanayah Barrage',
     'Dabompa',
@@ -22,7 +28,6 @@ export const QUARTIERS_CONAKRY = [
     'Pont 8 Novembre',
     'Kaloum',
     'En Ville',
-    'Centre Ville',
 
     // Route du Prince
     'Cimenterie',

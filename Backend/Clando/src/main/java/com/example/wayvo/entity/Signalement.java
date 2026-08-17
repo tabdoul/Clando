@@ -26,6 +26,10 @@ public class Signalement {
     @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
 
+    @ManyToOne
+    @JoinColumn(name = "reservation_id")
+    private Reservation reservation;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime dateSignalement;
 
@@ -66,6 +70,9 @@ public class Signalement {
     public Utilisateur getUtilisateur() { return utilisateur; }
     public void setUtilisateur(Utilisateur utilisateur) { this.utilisateur = utilisateur; }
 
+    public Reservation getReservation() { return reservation; }
+    public void setReservation(Reservation reservation) { this.reservation = reservation; }
+
     public LocalDateTime getDateSignalement() { return dateSignalement; }
 
     public String getReponseAdmin() { return reponseAdmin; }
@@ -78,6 +85,7 @@ public class Signalement {
         public Builder type(TypeSignalement v) { s.type = v; return this; }
         public Builder description(String v) { s.description = v; return this; }
         public Builder utilisateur(Utilisateur v) { s.utilisateur = v; return this; }
+        public Builder reservation(Reservation v) { s.reservation = v; return this; }
         public Signalement build() { return s; }
     }
 }

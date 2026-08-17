@@ -40,7 +40,7 @@ Notifications.setNotificationHandler({
 export default function App() {
     const [loading, setLoading] = useState(true);
     const [loggedIn, setLoggedIn] = useState(false);
-    const [onboardingVu, setOnboardingVu] = useState(null); // ✅
+    const [onboardingVu, setOnboardingVu] = useState(null); // 
     const navigationRef = useRef(null);
 
     useEffect(() => {
