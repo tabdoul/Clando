@@ -4,8 +4,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.wayvo.dtos.response.SignalementResponse;
+import com.example.wayvo.entity.Reservation;
 import com.example.wayvo.entity.Signalement;
 import com.example.wayvo.entity.Utilisateur;
+import com.example.wayvo.repository.ReservationRepository;
 import com.example.wayvo.repository.SignalementRepository;
 import com.example.wayvo.repository.UtilisateurRepository;
 
@@ -17,26 +19,35 @@ public class SignalementService {
 
     private final SignalementRepository signalementRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final ReservationRepository reservationRepository;
 
     public SignalementService(SignalementRepository signalementRepository,
-                              UtilisateurRepository utilisateurRepository) {
+                              UtilisateurRepository utilisateurRepository,
+                              ReservationRepository reservationRepository) {
         this.signalementRepository = signalementRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public SignalementResponse creer(Long utilisateurId,
                                      Signalement.TypeSignalement type,
-                                     String description) {
+                                     String description,
+                                     Long reservationId) {
         Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        Signalement signalement = Signalement.builder()
+        Signalement.Builder builder = Signalement.builder()
                 .type(type)
                 .description(description)
-                .utilisateur(utilisateur)
-                .build();
+                .utilisateur(utilisateur);
 
-        return toResponse(signalementRepository.save(signalement));
+        if (reservationId != null) {
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvée"));
+            builder.reservation(reservation);
+        }
+
+        return toResponse(signalementRepository.save(builder.build()));
     }
 
     public List<SignalementResponse> getByUtilisateur(Long utilisateurId) {

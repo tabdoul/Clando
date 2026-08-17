@@ -12,4 +12,6 @@ public interface SignalementRepository extends JpaRepository<Signalement, Long> 
     List<Signalement> findByUtilisateurIdOrderByDateSignalementDesc(Long utilisateurId);
     List<Signalement> findByStatutOrderByDateSignalementDesc(Signalement.StatutSignalement statut);
     long countByStatut(Signalement.StatutSignalement statut);
+
+    boolean existsByReservationIdAndStatutIn(Long reservationId, List<Signalement.StatutSignalement> statuts);
 }

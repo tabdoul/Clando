@@ -148,6 +148,20 @@ public ResponseEntity<List<ReservationResponse>> getConfirmeesParConducteur(
         }
     }
 
+    @PatchMapping("/{id}/confirmer-trajet")
+    public ResponseEntity<?> confirmerTrajet(
+            @PathVariable Long id,
+            @RequestParam Long passagerId) {
+        try {
+            return ResponseEntity.ok(
+                reservationService.confirmerTrajetParPassager(id, passagerId)
+            );
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         reservationService.supprimer(id);

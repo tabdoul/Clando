@@ -27,6 +27,9 @@ export default function ReservationsScreen({ navigation }) {
     const [reservationAPayer, setReservationAPayer] = useState(null);
     const [loadingPaiement, setLoadingPaiement] = useState(false);
 
+    const [confirmationEnCours, setConfirmationEnCours] = useState(null);
+    const [confirmes, setConfirmes] = useState([]);
+
     useFocusEffect(
         React.useCallback(() => {
             chargerReservations();
@@ -91,6 +94,20 @@ export default function ReservationsScreen({ navigation }) {
             Alert.alert('Erreur', 'Impossible de charger les copassagers');
         } finally {
             setLoadingCopassagers(false);
+        }
+    };
+
+    const confirmerTrajet = async (item) => {
+        setConfirmationEnCours(item.id);
+        try {
+            const userId = await getUserId();
+            await api.patch(`/reservations/${item.id}/confirmer-trajet?passagerId=${userId}`);
+            setConfirmes(prev => [...prev, item.id]);
+            Alert.alert('Trajet confirme !', 'Le conducteur va recevoir son paiement immediatement.');
+        } catch (error) {
+            Alert.alert('Erreur', error.response?.data?.erreur || 'Impossible de confirmer le trajet');
+        } finally {
+            setConfirmationEnCours(null);
         }
     };
 
@@ -326,6 +343,26 @@ export default function ReservationsScreen({ navigation }) {
                     {/* TERMINEE */}
                     {item.statut === 'TERMINEE' && (
                         <View style={styles.actions}>
+                            {confirmes.includes(item.id) ? (
+                                <View style={styles.confirmeBloc}>
+                                    <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+                                    <Text style={styles.confirmeBlocText}>Trajet confirme</Text>
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    style={[styles.btnConfirmerTrajet, confirmationEnCours === item.id && { opacity: 0.7 }]}
+                                    onPress={() => confirmerTrajet(item)}
+                                    disabled={confirmationEnCours === item.id}>
+                                    {confirmationEnCours === item.id ? (
+                                        <ActivityIndicator size={16} color="white" />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="checkmark-circle-outline" size={16} color="white" />
+                                            <Text style={styles.btnConfirmerTrajetText}>Confirmer le trajet</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
                             <TouchableOpacity
                                 style={styles.btnAvis}
                                 onPress={() => navigation.navigate('Avis', {
@@ -644,6 +681,11 @@ const styles = StyleSheet.create({
 
     btnAvis: { borderWidth: 1, borderColor: '#EEF2F7', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
     btnAvisText: { color: '#888888', fontSize: 13, fontWeight: '600' },
+
+    btnConfirmerTrajet: { backgroundColor: '#182D5A', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
+    btnConfirmerTrajetText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
+    confirmeBloc: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5e9', borderRadius: 8, padding: 10, marginBottom: 8, justifyContent: 'center' },
+    confirmeBlocText: { fontSize: 13, color: '#182D5A', fontWeight: '600' },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalCard: { backgroundColor: '#ffffff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '85%' },

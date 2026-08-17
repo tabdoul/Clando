@@ -1,15 +1,15 @@
 package com.example.wayvo.service;
 
+import com.example.wayvo.entity.Reservation;
+import com.example.wayvo.entity.Trajet;
+import com.example.wayvo.repository.ReservationRepository;
+import com.example.wayvo.repository.TrajetRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.example.wayvo.entity.Reservation;
-import com.example.wayvo.entity.Trajet;
-import com.example.wayvo.repository.ReservationRepository;
-import com.example.wayvo.repository.TrajetRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -21,17 +21,21 @@ public class ReservationSchedulerService {
 
     private static final Logger log = LoggerFactory.getLogger(ReservationSchedulerService.class);
     private static final int DELAI_PAIEMENT_MINUTES = 30;
+    private static final int DELAI_PAYOUT_MINUTES = 30;
 
     private final ReservationRepository reservationRepository;
     private final TrajetRepository trajetRepository;
     private final NotificationService notificationService;
+    private final ReservationService reservationService;
 
     public ReservationSchedulerService(ReservationRepository reservationRepository,
                                         TrajetRepository trajetRepository,
-                                        NotificationService notificationService) {
+                                        NotificationService notificationService,
+                                        ReservationService reservationService) {
         this.reservationRepository = reservationRepository;
         this.trajetRepository = trajetRepository;
         this.notificationService = notificationService;
+        this.reservationService = reservationService;
     }
 
     private LocalDateTime maintenant() {
@@ -95,6 +99,23 @@ public class ReservationSchedulerService {
 
             log.info("Reservation {} annulee automatiquement (paiement non effectue sous {}min)",
                 reservation.getId(), DELAI_PAIEMENT_MINUTES);
+        }
+    }
+
+    // ✅ Nouveau — verse les payouts dus (30 min apres la fin du trajet, sauf signalement bloquant)
+    // Toutes les 5 minutes
+    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Transactional
+    public void verserPayoutsDus() {
+        LocalDateTime limite = maintenant().minusMinutes(DELAI_PAYOUT_MINUTES);
+        List<Reservation> payoutsDus = reservationRepository.findPayoutsDus(limite);
+
+        for (Reservation reservation : payoutsDus) {
+            reservationService.effectuerPayoutConducteur(reservation);
+        }
+
+        if (!payoutsDus.isEmpty()) {
+            log.info("Traitement de {} payout(s) du(s)", payoutsDus.size());
         }
     }
 }

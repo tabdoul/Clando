@@ -54,4 +54,11 @@ List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") 
            "WHERE r.statut = com.example.wayvo.entity.Reservation.StatutReservation.EN_ATTENTE " +
            "AND r.trajet.dateHeureDepart <= :maintenant")
     List<Reservation> findDemandesEnAttenteDepartPasse(@Param("maintenant") LocalDateTime maintenant);
+
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.statut = com.example.wayvo.entity.Reservation.StatutReservation.TERMINEE " +
+           "AND r.payoutEffectue = false " +
+           "AND r.dateTerminee IS NOT NULL " +
+           "AND r.dateTerminee <= :limite")
+    List<Reservation> findPayoutsDus(@Param("limite") LocalDateTime limite);
 }

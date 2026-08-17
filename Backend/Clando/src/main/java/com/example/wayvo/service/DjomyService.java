@@ -147,6 +147,57 @@ public class DjomyService {
     return response.getBody();
 }
 
+    public Map<String, Object> initierPayout(
+        String numeroTelephone,
+        double montant,
+        String reference,
+        String description) throws Exception {
+
+    String token = getAccessToken();
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("X-API-KEY", generateApiKey());
+    headers.setBearerAuth(token);
+
+    // ⚠️ Schema des champs d'item non confirme par la doc Djomy fournie —
+    // a valider avec dryRun=true avant mise en prod
+    Map<String, Object> item = new HashMap<>();
+    item.put("paymentMethod", "OM");
+    item.put("beneficiaryIdentifier", numeroTelephone);
+    item.put("amount", montant);
+    item.put("countryCode", "GN");
+    item.put("reference", reference);
+
+    Map<String, Object> body = new HashMap<>();
+    body.put("description", description);
+    body.put("items", java.util.List.of(item));
+
+    HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+    System.out.println("=== Initier payout conducteur: " + body);
+
+    ResponseEntity<Map> response = restTemplate.exchange(
+        baseUrl + "/v1/payout-orders",
+        HttpMethod.POST,
+        request,
+        Map.class
+    );
+
+    System.out.println("=== Reponse payout: " + response.getBody());
+    return response.getBody();
+}
+
+    public boolean verifierSignatureWebhook(String payload, String signatureRecue) throws Exception {
+        // Format attendu : "v1:signature"
+        if (signatureRecue == null || !signatureRecue.startsWith("v1:")) {
+            return false;
+        }
+        String signatureAttendue = generateHmac(payload, clientSecret);
+        String signatureExtraite = signatureRecue.substring(3);
+        return signatureAttendue.equals(signatureExtraite);
+    }
+
     public Map<String, Object> verifierStatutPaiement(String transactionId) throws Exception {
         String token = getAccessToken();
 

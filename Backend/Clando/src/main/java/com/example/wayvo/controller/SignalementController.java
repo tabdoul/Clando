@@ -25,9 +25,10 @@ public class SignalementController {
     public ResponseEntity<SignalementResponse> creer(
             @RequestParam Long utilisateurId,
             @RequestParam Signalement.TypeSignalement type,
-            @RequestParam String description) {
+            @RequestParam String description,
+            @RequestParam(required = false) Long reservationId) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(signalementService.creer(utilisateurId, type, description));
+                .body(signalementService.creer(utilisateurId, type, description, reservationId));
     }
 
     @GetMapping("/utilisateur/{userId}")

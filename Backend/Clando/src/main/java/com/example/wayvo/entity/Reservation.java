@@ -59,6 +59,15 @@ public class Reservation {
     @Column(nullable = false)
     private boolean notificationDepartEnvoyee = false;
 
+    @Column(nullable = false)
+    private boolean payoutEffectue = false;
+
+    @Column
+    private LocalDateTime dateTerminee;
+
+    @Column
+    private String statutPayout;
+
     @Column
     private LocalDateTime dateConfirmation;
 
@@ -123,6 +132,15 @@ public class Reservation {
 
     public boolean isNotificationDepartEnvoyee() { return notificationDepartEnvoyee; }
     public void setNotificationDepartEnvoyee(boolean v) { this.notificationDepartEnvoyee = v; }
+
+    public boolean isPayoutEffectue() { return payoutEffectue; }
+    public void setPayoutEffectue(boolean v) { this.payoutEffectue = v; }
+
+    public LocalDateTime getDateTerminee() { return dateTerminee; }
+    public void setDateTerminee(LocalDateTime v) { this.dateTerminee = v; }
+
+    public String getStatutPayout() { return statutPayout; }
+    public void setStatutPayout(String v) { this.statutPayout = v; }
 
     public LocalDateTime getDateConfirmation() { return dateConfirmation; }
     public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }

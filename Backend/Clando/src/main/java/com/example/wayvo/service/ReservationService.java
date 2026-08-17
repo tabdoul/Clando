@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.wayvo.dtos.request.ReservationRequest;
 import com.example.wayvo.dtos.response.ReservationResponse;
@@ -20,6 +22,7 @@ import com.example.wayvo.entity.Trajet;
 import com.example.wayvo.entity.Utilisateur;
 import com.example.wayvo.repository.DocumentRepository;
 import com.example.wayvo.repository.ReservationRepository;
+import com.example.wayvo.repository.SignalementRepository;
 import com.example.wayvo.repository.TrajetRepository;
 import com.example.wayvo.repository.UtilisateurRepository;
 
@@ -28,9 +31,15 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     private static final double COMMISSION = 1.13;
     private static final List<Document.TypeDocument> PIECES_IDENTITE_ACCEPTEES =
         Arrays.asList(Document.TypeDocument.CNI, Document.TypeDocument.PASSEPORT);
+    private static final List<com.example.wayvo.entity.Signalement.StatutSignalement> STATUTS_SIGNALEMENT_BLOQUANTS =
+        Arrays.asList(
+            com.example.wayvo.entity.Signalement.StatutSignalement.OUVERT,
+            com.example.wayvo.entity.Signalement.StatutSignalement.EN_COURS
+        );
 
     private final ReservationRepository reservationRepository;
     private final UtilisateurRepository utilisateurRepository;
@@ -38,19 +47,22 @@ public class ReservationService {
     private final DjomyService djomyService;
     private final NotificationService notificationService;
     private final DocumentRepository documentRepository;
+    private final SignalementRepository signalementRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
                                UtilisateurRepository utilisateurRepository,
                                TrajetRepository trajetRepository,
                                DjomyService djomyService,
                                NotificationService notificationService,
-                               DocumentRepository documentRepository) {
+                               DocumentRepository documentRepository,
+                               SignalementRepository signalementRepository) {
         this.reservationRepository = reservationRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.trajetRepository = trajetRepository;
         this.djomyService = djomyService;
         this.notificationService = notificationService;
         this.documentRepository = documentRepository;
+        this.signalementRepository = signalementRepository;
     }
 
     @Transactional
@@ -58,13 +70,16 @@ public class ReservationService {
         Utilisateur passager = utilisateurRepository.findById(request.getPassagerId())
                 .orElseThrow(() -> new EntityNotFoundException("Passager non trouve"));
 
-        boolean piecesIdentiteValidee = documentRepository.existsByUtilisateurIdAndTypeInAndStatut(
-            passager.getId(), PIECES_IDENTITE_ACCEPTEES, Document.StatutDocument.VALIDE
-        );
-        if (!piecesIdentiteValidee) {
-            throw new IllegalStateException(
-                "Une piece d'identite (CNI ou passeport) validee est requise avant de reserver un trajet"
+        boolean estPremiereReservation = reservationRepository.countByPassagerId(passager.getId()) == 0;
+        if (!estPremiereReservation) {
+            boolean piecesIdentiteValidee = documentRepository.existsByUtilisateurIdAndTypeInAndStatut(
+                passager.getId(), PIECES_IDENTITE_ACCEPTEES, Document.StatutDocument.VALIDE
             );
+            if (!piecesIdentiteValidee) {
+                throw new IllegalStateException(
+                    "Une piece d'identite (CNI ou passeport) validee est requise a partir de votre 2e reservation"
+                );
+            }
         }
 
         Trajet trajet = trajetRepository.findById(request.getTrajetId())
@@ -376,9 +391,98 @@ public class ReservationService {
                     " est termine. Merci d'avoir voyage avec Wayvo !"
                 );
             }
+            // ✅ Le payout n'est plus immediat — il sera traite par le scheduler
+            // apres le delai de securite (voir ReservationSchedulerService)
+            reservation.setDateTerminee(
+                ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
+            );
         }
 
         return toResponse(reservationRepository.save(reservation));
+    }
+
+    // ✅ Payout au conducteur — protege par payoutEffectue (anti-doublon) et
+    // bloque si un signalement ouvert/en cours existe sur cette reservation
+    public void effectuerPayoutConducteur(Reservation reservation) {
+        if (reservation.isPayoutEffectue()) {
+            return;
+        }
+        if (!"SUCCESS".equals(reservation.getStatutPaiement())) {
+            log.warn("Payout ignore pour reservation {} : passager n'a pas paye", reservation.getId());
+            return;
+        }
+
+        boolean signalementBloquant = signalementRepository.existsByReservationIdAndStatutIn(
+            reservation.getId(), STATUTS_SIGNALEMENT_BLOQUANTS
+        );
+        if (signalementBloquant) {
+            log.warn("Payout bloque pour reservation {} : signalement ouvert en cours", reservation.getId());
+            String tokenConducteurBloque = reservation.getTrajet().getConducteur().getExpoPushToken();
+            if (tokenConducteurBloque != null && !tokenConducteurBloque.isBlank()) {
+                notificationService.envoyerNotification(
+                    tokenConducteurBloque,
+                    "Paiement bloque",
+                    "Le paiement pour le trajet " +
+                    reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
+                    " est bloque car un signalement est en cours d'examen. L'equipe WayVo l'examine."
+                );
+            }
+            return;
+        }
+
+        Utilisateur conducteur = reservation.getTrajet().getConducteur();
+        String telephoneConducteur = conducteur.getTelephone();
+        if (telephoneConducteur == null || telephoneConducteur.isBlank()) {
+            log.warn("Payout impossible pour reservation {} : conducteur sans numero de telephone", reservation.getId());
+            return;
+        }
+
+        double prixBase = reservation.getPrixPropose() != null
+            ? reservation.getPrixPropose()
+            : reservation.getTrajet().getPrix();
+        String reference = "PAYOUT-" + reservation.getId() + "-" + System.currentTimeMillis();
+        String description = "Payout Wayvo - trajet " +
+            reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee();
+
+        try {
+            djomyService.initierPayout(telephoneConducteur, prixBase, reference, description);
+            reservation.setPayoutEffectue(true);
+            reservation.setStatutPayout("PENDING");
+            reservationRepository.save(reservation);
+            log.info("Payout initie pour reservation {} (conducteur {})", reservation.getId(), conducteur.getId());
+
+            String tokenConducteur = conducteur.getExpoPushToken();
+            if (tokenConducteur != null && !tokenConducteur.isBlank()) {
+                notificationService.envoyerNotification(
+                    tokenConducteur,
+                    "Paiement en cours !",
+                    "Votre paiement de " + (long) prixBase + " GNF pour le trajet " +
+                    reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
+                    " est en cours de traitement."
+                );
+            }
+        } catch (Exception e) {
+            log.error("Erreur payout reservation {} : {}", reservation.getId(), e.getMessage());
+        }
+    }
+
+    // ✅ Confirmation rapide par le passager — declenche le payout immediatement
+    // au lieu d'attendre les 30 min du scheduler
+    @Transactional
+    public ReservationResponse confirmerTrajetParPassager(Long reservationId, Long passagerId) {
+        Reservation reservation = findById(reservationId);
+
+        if (!reservation.getPassager().getId().equals(passagerId)) {
+            throw new IllegalStateException("Seul le passager de cette reservation peut la confirmer");
+        }
+
+        if (reservation.getStatut() != Reservation.StatutReservation.TERMINEE) {
+            throw new IllegalStateException("Le trajet doit etre termine pour etre confirme");
+        }
+
+        effectuerPayoutConducteur(reservation);
+
+        return toResponse(reservation);
     }
 
     public void supprimer(Long id) {

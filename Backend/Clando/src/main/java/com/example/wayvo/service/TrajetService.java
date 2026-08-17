@@ -26,7 +26,6 @@ import com.example.wayvo.repository.DocumentRepository;
 import com.example.wayvo.repository.ReservationRepository;
 import com.example.wayvo.repository.TrajetRepository;
 import com.example.wayvo.repository.UtilisateurRepository;
-
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -41,6 +40,7 @@ public class TrajetService {
     private final ItineraireService itineraireService;
     private final DocumentRepository documentRepository;
     private final NotificationService notificationService;
+    private final ReservationService reservationService;
 
     private static final double COMMISSION = 1.13;
 
@@ -52,7 +52,8 @@ public class TrajetService {
                          AvisRepository avisRepository,
                          ItineraireService itineraireService,
                          DocumentRepository documentRepository,
-                         NotificationService notificationService) {
+                         NotificationService notificationService,
+                         ReservationService reservationService) {
         this.trajetRepository = trajetRepository;
         this.utilisateurService = utilisateurService;
         this.vehiculeService = vehiculeService;
@@ -62,6 +63,7 @@ public class TrajetService {
         this.itineraireService = itineraireService;
         this.documentRepository = documentRepository;
         this.notificationService = notificationService;
+        this.reservationService = reservationService;
     }
 
     private LocalDateTime maintenant() {
@@ -315,6 +317,8 @@ public class TrajetService {
             reservations.forEach(reservation -> {
                 if (reservation.getStatut() == Reservation.StatutReservation.CONFIRMEE) {
                     reservation.setStatut(Reservation.StatutReservation.TERMINEE);
+                    // ✅ Le payout n'est plus immediat — traite par le scheduler apres le delai
+                    reservation.setDateTerminee(maintenant());
                     reservationRepository.save(reservation);
                 }
             });
