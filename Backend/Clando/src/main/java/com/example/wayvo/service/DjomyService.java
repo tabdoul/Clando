@@ -151,7 +151,8 @@ public class DjomyService {
         String numeroTelephone,
         double montant,
         String reference,
-        String description) throws Exception {
+        String description,
+        boolean dryRun) throws Exception {
 
     String token = getAccessToken();
 
@@ -160,11 +161,12 @@ public class DjomyService {
     headers.set("X-API-KEY", generateApiKey());
     headers.setBearerAuth(token);
 
-    // ⚠️ Schema des champs d'item non confirme par la doc Djomy fournie —
-    // a valider avec dryRun=true avant mise en prod
+    // ⚠️ Schema ajuste suite a l'erreur "bénéficiaire obligatoire" / "destination obligatoire"
+    // Toujours pas confirme officiellement — a valider avec dryRun avant de repasser en reel
     Map<String, Object> item = new HashMap<>();
     item.put("paymentMethod", "OM");
-    item.put("beneficiaryIdentifier", numeroTelephone);
+    item.put("beneficiary", numeroTelephone);
+    item.put("destination", numeroTelephone);
     item.put("amount", montant);
     item.put("countryCode", "GN");
     item.put("reference", reference);
@@ -173,12 +175,14 @@ public class DjomyService {
     body.put("description", description);
     body.put("items", java.util.List.of(item));
 
+    String url = baseUrl + "/v1/payout-orders" + (dryRun ? "?dryRun=true" : "");
+
     HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-    System.out.println("=== Initier payout conducteur: " + body);
+    System.out.println("=== Initier payout conducteur (dryRun=" + dryRun + "): " + body);
 
     ResponseEntity<Map> response = restTemplate.exchange(
-        baseUrl + "/v1/payout-orders",
+        url,
         HttpMethod.POST,
         request,
         Map.class
