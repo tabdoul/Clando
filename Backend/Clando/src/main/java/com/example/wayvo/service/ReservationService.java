@@ -445,7 +445,11 @@ public class ReservationService {
             reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee();
 
         try {
-            djomyService.initierPayout(telephoneConducteur, prixBase, reference, description);
+            djomyService.initierPayout(
+                telephoneConducteur,
+                conducteur.getPrenom() + " " + conducteur.getNom(),
+                prixBase, reference, description, false
+            );
             reservation.setPayoutEffectue(true);
             reservation.setStatutPayout("PENDING");
             reservationRepository.save(reservation);
@@ -543,6 +547,7 @@ public class ReservationService {
             .departPassager(r.getDepartPassager())
             .arriveePassager(r.getArriveePassager())
             .dateHeureDepart(r.getTrajet().getDateHeureDepart())
+            .payoutEffectue(r.isPayoutEffectue())
             .build();
 }
 }

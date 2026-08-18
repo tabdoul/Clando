@@ -8,11 +8,15 @@ import api from '../services/api';
 import { getUserId } from '../services/auth.service';
 import { colors, spacing, radius, shadows } from '../../constants/theme';
 
-export default function AideScreen({ navigation }) {
+export default function AideScreen({ navigation, route }) {
+    const reservationId = route?.params?.reservationId || null;
+    const villeDepart = route?.params?.villeDepart;
+    const villeArrivee = route?.params?.villeArrivee;
+
     const [typeSelectionne, setTypeSelectionne] = useState(null);
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
-    const [onglet, setOnglet] = useState('faq');
+    const [onglet, setOnglet] = useState(reservationId ? 'signaler' : 'faq');
     const [mesSignalements, setMesSignalements] = useState([]);
     const [loadingSignalements, setLoadingSignalements] = useState(false);
     const [faqOuverte, setFaqOuverte] = useState(null);
@@ -69,13 +73,15 @@ export default function AideScreen({ navigation }) {
         setLoading(true);
         try {
             const userId = await getUserId();
-            await api.post('/signalements', null, {
-                params: {
-                    utilisateurId: userId,
-                    type: typeSelectionne,
-                    description: description.trim()
-                }
-            });
+            const params = {
+                utilisateurId: userId,
+                type: typeSelectionne,
+                description: description.trim()
+            };
+            if (reservationId) {
+                params.reservationId = reservationId;
+            }
+            await api.post('/signalements', null, { params });
             Alert.alert(
                 'Signalement envoyé !',
                 'Notre équipe va examiner votre signalement et vous répondra dans les plus brefs délais.',
@@ -155,6 +161,16 @@ export default function AideScreen({ navigation }) {
 
                 {onglet === 'signaler' && (
                     <View style={styles.section}>
+
+                        {reservationId && (
+                            <View style={styles.contexteCard}>
+                                <Ionicons name="location-outline" size={16} color={colors.primary} />
+                                <Text style={styles.contexteTexte}>
+                                    {`Ce signalement concerne le trajet ${villeDepart || ''} → ${villeArrivee || ''}`}
+                                </Text>
+                            </View>
+                        )}
+
                         <Text style={styles.fieldLabel}>Type de problème</Text>
                         {types.map((item) => (
                             <TouchableOpacity
@@ -274,6 +290,12 @@ const styles = StyleSheet.create({
     ongletText: { fontSize: 13, color: '#888888', fontWeight: '600' },
     ongletTextActif: { color: '#182D5A' },
     section: { paddingHorizontal: spacing.lg, marginTop: 16 },
+    contexteCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        backgroundColor: '#EEF2F7', borderRadius: 10, padding: 12,
+        marginBottom: 16, borderWidth: 1, borderColor: '#D8E4F0',
+    },
+    contexteTexte: { fontSize: 13, color: '#182D5A', fontWeight: '600', flex: 1 },
     faqItem: {
         backgroundColor: '#ffffff', borderRadius: 14, padding: 14,
         marginBottom: 8, borderWidth: 1, borderColor: '#EEF2F7',

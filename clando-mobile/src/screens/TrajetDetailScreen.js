@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
     ScrollView, Alert, Image, ActivityIndicator,
-    Modal, Keyboard,
+    Modal, Keyboard, Share,
     KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +15,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const [avis, setAvis] = useState([]);
     const [loadingAvis, setLoadingAvis] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showAvisModal, setShowAvisModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const [genreUtilisateur, setGenreUtilisateur] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
@@ -71,6 +72,16 @@ export default function TrajetDetailScreen({ route, navigation }) {
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    };
+
+    const partagerTrajet = () => {
+        Share.share({
+            message:
+                `Trajet trouve sur Wayvo : ${trajet.villeDepart} → ${trajet.villeArrivee}\n` +
+                `${trajet.prixConducteur?.toLocaleString()} GNF · avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}\n` +
+                (trajet.itineraire ? `Via ${trajet.itineraire}\n` : '') +
+                `${formatDate(trajet.dateHeureDepart)} a ${formatHeure(trajet.dateHeureDepart)}`
+        });
     };
 
     const handleReserverPress = () => {
@@ -148,7 +159,11 @@ export default function TrajetDetailScreen({ route, navigation }) {
                     <Ionicons name="arrow-forward" size={14} color={colors.accentLight} />
                     <Text style={styles.headerVille} numberOfLines={1}>{trajet.villeArrivee}</Text>
                 </View>
-                <View style={{ width: 32 }} />
+                <View style={styles.headerActions}>
+                    <TouchableOpacity onPress={() => partagerTrajet()} style={styles.headerActionBtn}>
+                        <Ionicons name="share-social-outline" size={20} color="white" />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -343,49 +358,85 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 </View>
 
                 <View style={styles.section}>
-                    <View style={styles.avisHeader}>
-                        <Text style={styles.sectionTitle}>Avis des passagers</Text>
-                        {noteMoyenne && (
-                            <View style={styles.noteMoyenneContainer}>
-                                <Text style={styles.noteMoyenneValeur}>{noteMoyenne}</Text>
-                                <View style={styles.noteMoyenneEtoiles}>
-                                    {renderEtoiles(Math.round(noteMoyenne), 12)}
-                                </View>
-                                <Text style={styles.noteMoyenneTotal}>{`${avis.length} avis`}</Text>
-                            </View>
-                        )}
-                    </View>
-
-                    {loadingAvis ? (
-                        <ActivityIndicator size={20} color={colors.primary} />
-                    ) : avis.length === 0 ? (
-                        <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>Avis des passagers</Text>
+                    <TouchableOpacity
+                        style={styles.avisCompactCard}
+                        onPress={() => setShowAvisModal(true)}
+                        disabled={loadingAvis || avis.length === 0}>
+                        {loadingAvis ? (
+                            <ActivityIndicator size={20} color={colors.primary} />
+                        ) : avis.length === 0 ? (
                             <Text style={styles.aucunAvis}>{"Ce conducteur n'a pas encore recu d'avis"}</Text>
-                        </View>
-                    ) : (
-                        avis.slice(0, 5).map((a) => (
-                            <View key={a.id.toString()} style={styles.avisItem}>
-                                <View style={styles.avisTop}>
-                                    <View style={styles.avisAvatarContainer}>
-                                        <View style={styles.avisAvatar}>
-                                            <Text style={styles.avisAvatarText}>
-                                                {`${(a.auteurPrenom || '?')[0]}${(a.auteurNom || '?')[0]}`}
-                                            </Text>
-                                        </View>
-                                        <Text style={styles.avisAuteur}>{`${a.auteurPrenom} ${a.auteurNom}`}</Text>
-                                    </View>
-                                    <View style={styles.avisEtoiles}>{renderEtoiles(a.note)}</View>
+                        ) : (
+                            <>
+                                <View style={styles.avisCompactInfo}>
+                                    {noteMoyenne && (
+                                        <>
+                                            <Ionicons name="star" size={14} color={colors.orange} />
+                                            <Text style={styles.avisCompactNote}>{noteMoyenne}</Text>
+                                            <Text style={styles.avisCompactTotal}>{`(${avis.length})`}</Text>
+                                        </>
+                                    )}
                                 </View>
-                                {a.commentaire ? (
-                                    <Text style={styles.avisCommentaire}>{`"${a.commentaire}"`}</Text>
-                                ) : null}
-                            </View>
-                        ))
-                    )}
+                                <View style={styles.avisCompactBouton}>
+                                    <Text style={styles.avisCompactBoutonText}>{`Voir les ${avis.length} avis`}</Text>
+                                    <Ionicons name="chevron-forward" size={14} color="white" />
+                                </View>
+                            </>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
                 <View style={{ height: 100 }} />
             </ScrollView>
+
+            {/* Modal avis */}
+            <Modal
+                visible={showAvisModal}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowAvisModal(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <View style={styles.modalHeader}>
+                            <View>
+                                <Text style={styles.modalTitle}>{`Avis (${avis.length})`}</Text>
+                                {noteMoyenne && (
+                                    <View style={styles.noteMoyenneContainer}>
+                                        <Text style={styles.noteMoyenneValeur}>{noteMoyenne}</Text>
+                                        <View style={styles.noteMoyenneEtoiles}>
+                                            {renderEtoiles(Math.round(noteMoyenne), 12)}
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
+                            <TouchableOpacity onPress={() => setShowAvisModal(false)}>
+                                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                            {avis.map((a) => (
+                                <View key={a.id.toString()} style={styles.avisItem}>
+                                    <View style={styles.avisTop}>
+                                        <View style={styles.avisAvatarContainer}>
+                                            <View style={styles.avisAvatar}>
+                                                <Text style={styles.avisAvatarText}>
+                                                    {`${(a.auteurPrenom || '?')[0]}${(a.auteurNom || '?')[0]}`}
+                                                </Text>
+                                            </View>
+                                            <Text style={styles.avisAuteur}>{`${a.auteurPrenom} ${a.auteurNom}`}</Text>
+                                        </View>
+                                        <View style={styles.avisEtoiles}>{renderEtoiles(a.note)}</View>
+                                    </View>
+                                    {a.commentaire ? (
+                                        <Text style={styles.avisCommentaire}>{`"${a.commentaire}"`}</Text>
+                                    ) : null}
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
 
             {trajet.statut === 'OUVERT' && trajet.placesDisponibles > 0 && !estConducteur && (
                 <View style={styles.bottomBar}>
@@ -505,6 +556,8 @@ const styles = StyleSheet.create({
         flex: 1, justifyContent: 'center',
     },
     headerVille: { fontSize: 16, fontWeight: 'bold', color: 'white', maxWidth: 120 },
+    headerActions: { flexDirection: 'row', gap: 4 },
+    headerActionBtn: { padding: 4 },
     dateContainer: { paddingHorizontal: spacing.xl, paddingTop: 16, paddingBottom: 8 },
     dateText: { fontSize: 18, fontWeight: 'bold', color: '#1a1a1a', textTransform: 'capitalize' },
     femmesUniquementBadge: {
@@ -600,18 +653,26 @@ const styles = StyleSheet.create({
     telContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
     conducteurTel: { fontSize: 14, color: '#182D5A', fontWeight: '600' },
     infoSecurite: { fontSize: 12, color: '#cccccc', fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
-    avisHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: 10,
+    avisCompactCard: {
+        backgroundColor: '#ffffff', borderRadius: 14, padding: 14,
+        borderWidth: 1, borderColor: '#EEF2F7', flexDirection: 'row',
+        alignItems: 'center', justifyContent: 'space-between',
+        shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
     },
+    avisCompactInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    avisCompactNote: { fontSize: 15, fontWeight: 'bold', color: '#f39c12' },
+    avisCompactTotal: { fontSize: 12, color: '#888888' },
+    avisCompactBouton: {
+        backgroundColor: '#182D5A', borderRadius: 20, paddingVertical: 8,
+        paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 4,
+    },
+    avisCompactBoutonText: { color: 'white', fontSize: 12, fontWeight: '600' },
     noteMoyenneContainer: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: '#ffffff', borderRadius: 10, padding: 8, 
-        borderWidth: 1, borderColor: '#EEF2F7',
+        flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4,
     },
     noteMoyenneValeur: { fontSize: 16, fontWeight: 'bold', color: '#f39c12' },
     noteMoyenneEtoiles: { flexDirection: 'row', gap: 2 },
-    noteMoyenneTotal: { fontSize: 11, color: '#888888' },
     avisItem: {
         backgroundColor: '#ffffff', borderRadius: 12, padding: 14,
         marginBottom: 8, borderWidth: 1, borderColor: '#EEF2F7',

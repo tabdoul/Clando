@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +19,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class DjomyService {
+
+    private static final Logger log = LoggerFactory.getLogger(DjomyService.class);
 
     @Value("${djomy.client.id}")
     private String clientId;
@@ -73,7 +77,7 @@ public class DjomyService {
             }
             throw new RuntimeException("Impossible d'obtenir le token Djomy");
         } catch (Exception e) {
-            System.out.println("=== Erreur auth: " + e.getMessage());
+            log.error("Erreur auth Djomy: {}", e.getMessage());
             throw e;
         }
     }
@@ -134,7 +138,7 @@ public class DjomyService {
 
     HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-    System.out.println("=== Initier paiement OM direct: " + body);
+    log.debug("Initier paiement OM direct: {}", body);
 
     ResponseEntity<Map> response = restTemplate.exchange(
         baseUrl + "/v1/payments",
@@ -143,12 +147,13 @@ public class DjomyService {
         Map.class
     );
 
-    System.out.println("=== Reponse OM: " + response.getBody());
+    log.debug("Reponse OM: {}", response.getBody());
     return response.getBody();
 }
 
     public Map<String, Object> initierPayout(
         String numeroTelephone,
+        String nomBeneficiaire,
         double montant,
         String reference,
         String description,
@@ -161,12 +166,26 @@ public class DjomyService {
     headers.set("X-API-KEY", generateApiKey());
     headers.setBearerAuth(token);
 
-    // ⚠️ Schema ajuste suite a l'erreur "bénéficiaire obligatoire" / "destination obligatoire"
+    // ⚠️ Schema ajuste suite aux erreurs de validation successives —
+    // compte/type/countryCode dans destination, nom ajoute dans beneficiary
     // Toujours pas confirme officiellement — a valider avec dryRun avant de repasser en reel
+    Map<String, Object> beneficiary = new HashMap<>();
+    beneficiary.put("identifier", numeroTelephone);
+    beneficiary.put("name", nomBeneficiaire);
+
+    Map<String, Object> account = new HashMap<>();
+    account.put("accountNumber", numeroTelephone);
+    account.put("providerCode", "OM");
+
+    Map<String, Object> destination = new HashMap<>();
+    destination.put("account", account);
+    destination.put("type", "WALLET");
+    destination.put("countryCode", "GN");
+
     Map<String, Object> item = new HashMap<>();
     item.put("paymentMethod", "OM");
-    item.put("beneficiary", numeroTelephone);
-    item.put("destination", numeroTelephone);
+    item.put("beneficiary", beneficiary);
+    item.put("destination", destination);
     item.put("amount", montant);
     item.put("countryCode", "GN");
     item.put("reference", reference);
@@ -179,7 +198,7 @@ public class DjomyService {
 
     HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-    System.out.println("=== Initier payout conducteur (dryRun=" + dryRun + "): " + body);
+    log.debug("Initier payout conducteur (dryRun={}): {}", dryRun, body);
 
     ResponseEntity<Map> response = restTemplate.exchange(
         url,
@@ -188,7 +207,7 @@ public class DjomyService {
         Map.class
     );
 
-    System.out.println("=== Reponse payout: " + response.getBody());
+    log.info("Reponse payout: {}", response.getBody());
     return response.getBody();
 }
 

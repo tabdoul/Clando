@@ -140,243 +140,48 @@ export default function ResultatsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: '#FAFAFA',
-    },
-    header: {
-        backgroundColor: '#182D5A',
-        paddingTop: 60, 
-        paddingBottom: 20, 
-        paddingHorizontal: spacing.xl,
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 16,
-    },
+    container: { flex: 1, backgroundColor: '#FAFAFA' },
+    header: { backgroundColor: '#182D5A', paddingTop: 60, paddingBottom: 20, paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: 16 },
     backButton: { padding: 4 },
     headerInfo: { flex: 1 },
-    trajetHeader: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 8 
-    },
-    villeText: { 
-        fontSize: 18, 
-        fontWeight: 'bold', 
-        color: 'white' 
-    },
-    headerSubtitle: { 
-        fontSize: 13, 
-        color: 'rgba(255,255,255,0.75)', 
-        marginTop: 4 
-    },
-    cardWrapper: { 
-        paddingHorizontal: spacing.lg, 
-        marginTop: 12 
-    },
-    card: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: spacing.lg,
-        borderLeftWidth: 3, 
-        borderLeftColor: '#182D5A',
-        borderWidth: 1, 
-        borderColor: '#EEF2F7',
-        shadowColor: '#182D5A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    cardTop: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 12 
-    },
-    heureContainer: { 
-        alignItems: 'center', 
-        minWidth: 52 
-    },
-    heure: { 
-        fontSize: 20, 
-        fontWeight: 'bold', 
-        color: '#182D5A' 
-    },
-    dateTrajet: { 
-        fontSize: 11, 
-        color: '#888888', 
-        marginTop: 2 
-    },
-    trajetInfo: { 
-        flex: 1, 
-        alignItems: 'center' 
-    },
-    ville: { 
-        fontSize: 14, 
-        fontWeight: '600', 
-        color: '#1a1a1a' 
-    },
-    ligne: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        width: '100%', 
-        marginVertical: 5 
-    },
-    ligneBar: { 
-        flex: 1, 
-        height: 1, 
-        backgroundColor: '#EEF2F7' 
-    },
-    itineraire: { 
-        fontSize: 11, 
-        color: '#182D5A', 
-        fontStyle: 'italic', 
-        marginTop: 3 
-    },
-    prixContainer: { 
-        alignItems: 'flex-end', 
-        minWidth: 80 
-    },
-    prix: { 
-        fontSize: 18, 
-        fontWeight: 'bold', 
-        color: '#182D5A' 
-    },
-    prixDevise: { 
-        fontSize: 11, 
-        color: '#182D5A', 
-        marginTop: -2 
-    },
-    places: { 
-        fontSize: 11, 
-        color: '#888888', 
-        marginTop: 4 
-    },
-    presqueCompletBadge: { 
-        backgroundColor: '#fff3e0', 
-        borderRadius: 8, 
-        paddingVertical: 2, 
-        paddingHorizontal: 6, 
-        marginTop: 4 
-    },
-    presqueCompletText: { 
-        color: '#e65100', 
-        fontSize: 9, 
-        fontWeight: '600' 
-    },
-    comptetBadge: { 
-        backgroundColor: '#ffebee', 
-        borderRadius: 8, 
-        paddingVertical: 2, 
-        paddingHorizontal: 6, 
-        marginTop: 4 
-    },
-    comptetBadgeText: { 
-        color: '#E52424', 
-        fontSize: 9, 
-        fontWeight: '600' 
-    },
-    separator: { 
-        height: 1, 
-        backgroundColor: '#EEF2F7', 
-        marginVertical: 12 
-    },
-    cardBottom: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-    },
-    conducteurInfo: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 10, 
-        flex: 1 
-    },
-    avatar: { 
-        width: 40, 
-        height: 40, 
-        borderRadius: 20, 
-        backgroundColor: '#EEF2F7', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        overflow: 'hidden', 
-        borderWidth: 1, 
-        borderColor: '#D8E4F0' 
-    },
-    avatarImage: { 
-        width: 40, 
-        height: 40, 
-        borderRadius: 20 
-    },
-    avatarText: { 
-        color: '#888888', 
-        fontSize: 14, 
-        fontWeight: 'bold' 
-    },
-    conducteurNom: { 
-        fontSize: 13, 
-        fontWeight: '600', 
-        color: '#1a1a1a' 
-    },
-    conducteurStats: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 4, 
-        marginTop: 2 
-    },
-    conducteurNote: { 
-        fontSize: 12, 
-        color: '#f39c12', 
-        fontWeight: '600' 
-    },
-    conducteurTrajets: { 
-        fontSize: 11, 
-        color: '#888888' 
-    },
-    vehicule: { 
-        fontSize: 11, 
-        color: '#888888', 
-        marginTop: 2 
-    },
-    rightSection: { 
-        alignItems: 'flex-end', 
-        gap: 6 
-    },
-    femmesUniquementBadge: {
-        backgroundColor: '#f3e5f5', 
-        borderRadius: 8,
-        paddingVertical: 3, 
-        paddingHorizontal: 8,
-        borderWidth: 1, 
-        borderColor: '#9b59b6',
-    },
-    femmesUniquementBadgeText: { 
-        color: '#9b59b6', 
-        fontSize: 10, 
-        fontWeight: '600' 
-    },
-    boutonReserver: {
-        backgroundColor: '#182D5A',
-        borderRadius: 20,
-        paddingVertical: 8, 
-        paddingHorizontal: 14,
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        gap: 4,
-    },
-    boutonReserverText: { 
-        color: 'white', 
-        fontSize: 13, 
-        fontWeight: 'bold' 
-    },
-    complet: { 
-        backgroundColor: '#f5f5f5', 
-        borderRadius: 20, 
-        paddingVertical: 8, 
-        paddingHorizontal: 18 
-    },
-    comptetText: { 
-        color: '#888888', 
-        fontSize: 13 
-    },
+    trajetHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    villeText: { fontSize: 18, fontWeight: 'bold', color: 'white' },
+    headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+    cardWrapper: { paddingHorizontal: spacing.lg, marginTop: 12 },
+    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: spacing.lg, borderLeftWidth: 3, borderLeftColor: '#182D5A', borderWidth: 1, borderColor: '#EEF2F7', shadowColor: '#182D5A', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+    cardTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    heureContainer: { alignItems: 'center', minWidth: 52 },
+    heure: { fontSize: 20, fontWeight: 'bold', color: '#182D5A' },
+    dateTrajet: { fontSize: 11, color: '#888888', marginTop: 2 },
+    trajetInfo: { flex: 1, alignItems: 'center' },
+    ville: { fontSize: 14, fontWeight: '600', color: '#1a1a1a' },
+    ligne: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 5 },
+    ligneBar: { flex: 1, height: 1, backgroundColor: '#EEF2F7' },
+    itineraire: { fontSize: 11, color: '#182D5A', fontStyle: 'italic', marginTop: 3 },
+    prixContainer: { alignItems: 'flex-end', minWidth: 80 },
+    prix: { fontSize: 18, fontWeight: 'bold', color: '#182D5A' },
+    prixDevise: { fontSize: 11, color: '#182D5A', marginTop: -2 },
+    places: { fontSize: 11, color: '#888888', marginTop: 4 },
+    presqueCompletBadge: { backgroundColor: '#fff3e0', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
+    presqueCompletText: { color: '#e65100', fontSize: 9, fontWeight: '600' },
+    comptetBadge: { backgroundColor: '#ffebee', borderRadius: 8, paddingVertical: 2, paddingHorizontal: 6, marginTop: 4 },
+    comptetBadgeText: { color: '#E52424', fontSize: 9, fontWeight: '600' },
+    separator: { height: 1, backgroundColor: '#EEF2F7', marginVertical: 12 },
+    cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    conducteurInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+    avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EEF2F7', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#D8E4F0' },
+    avatarImage: { width: 40, height: 40, borderRadius: 20 },
+    avatarText: { color: '#888888', fontSize: 14, fontWeight: 'bold' },
+    conducteurNom: { fontSize: 13, fontWeight: '600', color: '#1a1a1a' },
+    conducteurStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+    conducteurNote: { fontSize: 12, color: '#f39c12', fontWeight: '600' },
+    conducteurTrajets: { fontSize: 11, color: '#888888' },
+    vehicule: { fontSize: 11, color: '#888888', marginTop: 2 },
+    rightSection: { alignItems: 'flex-end', gap: 6 },
+    femmesUniquementBadge: { backgroundColor: '#f3e5f5', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 8, borderWidth: 1, borderColor: '#9b59b6' },
+    femmesUniquementBadgeText: { color: '#9b59b6', fontSize: 10, fontWeight: '600' },
+    boutonReserver: { backgroundColor: '#182D5A', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 4 },
+    boutonReserverText: { color: 'white', fontSize: 13, fontWeight: 'bold' },
+    complet: { backgroundColor: '#f5f5f5', borderRadius: 20, paddingVertical: 8, paddingHorizontal: 18 },
+    comptetText: { color: '#888888', fontSize: 13 },
 });

@@ -10,7 +10,8 @@ public class ItineraireService {
 
 private static final Map<String, List<String>> QUARTIERS_PAR_ITINERAIRE = Map.of(
     "Autoroute", Arrays.asList(
-        "km 36", "kountia", "lansanayah barrage", "dabompa", "tombolia",
+        "coyah", "maneyah", "bentourayah", "friguiady", "kassonyah", "km 36", "sanoyah",
+        "kountia", "lansanayah barrage", "dabompa", "tombolia",
         "enta", "kissosso", "sangoyah", "matoto", "yimbayah",
         "aeroport", "gbessia", "dabondy", "bonfi", "matam",
         "kenien", "madina", "donka", "cameroun", "pont 8 novembre", "kaloum", "en ville", "centre ville"
@@ -59,7 +60,6 @@ private static final Map<String, List<String>> QUARTIERS_PAR_ITINERAIRE = Map.of
             break;
         }
     }
-
     if (quartiers == null) return false;
 
     int indexDepartTrajet    = trouverIndex(quartiers, departTrajet);

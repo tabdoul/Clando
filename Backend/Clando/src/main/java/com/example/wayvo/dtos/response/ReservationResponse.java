@@ -36,6 +36,7 @@ public class ReservationResponse {
     private String departPassager;
     private String arriveePassager;
     private LocalDateTime dateHeureDepart;
+    private boolean payoutEffectue;
 
     public ReservationResponse() {}
 
@@ -126,6 +127,9 @@ public class ReservationResponse {
     public String getArriveePassager() { return arriveePassager; }
     public void setArriveePassager(String v) { this.arriveePassager = v; }
 
+    public boolean isPayoutEffectue() { return payoutEffectue; }
+    public void setPayoutEffectue(boolean v) { this.payoutEffectue = v; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -159,6 +163,7 @@ public class ReservationResponse {
         public Builder departPassager(String val) { r.departPassager = val; return this; }
         public Builder arriveePassager(String val) { r.arriveePassager = val; return this; }
         public Builder dateHeureDepart(LocalDateTime val) { r.dateHeureDepart = val; return this; }
+        public Builder payoutEffectue(boolean val) { r.payoutEffectue = val; return this; }
         public ReservationResponse build() { return r; }
     }
 }
