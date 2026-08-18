@@ -1,0 +1,20 @@
+# Dépendances
+node_modules/
+
+# Fichiers d'environnement (jamais commiter de vrais secrets)
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
