@@ -80,7 +80,8 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 `Trajet trouve sur Wayvo : ${trajet.villeDepart} → ${trajet.villeArrivee}\n` +
                 `${trajet.prixConducteur?.toLocaleString()} GNF · avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}\n` +
                 (trajet.itineraire ? `Via ${trajet.itineraire}\n` : '') +
-                `${formatDate(trajet.dateHeureDepart)} a ${formatHeure(trajet.dateHeureDepart)}`
+                `${formatDate(trajet.dateHeureDepart)} a ${formatHeure(trajet.dateHeureDepart)}\n\n` +
+                `Voir le trajet : https://wayvo-frontend.vercel.app/trajets/${trajet.id}`
         });
     };
 

@@ -147,7 +147,8 @@ export default function ReservationsScreen({ navigation }) {
                 `Conducteur : ${item.conducteurPrenom} ${item.conducteurNom}\n` +
                 (item.departPassager ? `Je monte à : ${item.departPassager}\n` : '') +
                 (item.arriveePassager ? `Je descends à : ${item.arriveePassager}\n` : '') +
-                lienPosition
+                lienPosition +
+                `\n\nVoir le trajet : https://wayvo-frontend.vercel.app/trajets/${item.trajetId}`
         });
     };
 
