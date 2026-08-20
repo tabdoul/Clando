@@ -367,6 +367,9 @@ public class TrajetService {
                 .latitudeConducteur(t.getLatitudeConducteur())
                 .longitudeConducteur(t.getLongitudeConducteur())
                 .trajetDemarre(t.isTrajetDemarre())
+                .nbReservationsConfirmees(
+                    reservationRepository.countByTrajetIdAndStatut(t.getId(), Reservation.StatutReservation.CONFIRMEE)
+                )
                 .build();
     }
 }

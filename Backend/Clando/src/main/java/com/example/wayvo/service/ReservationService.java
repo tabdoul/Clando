@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -114,7 +115,7 @@ public class ReservationService {
         trajet.setPlacesDisponibles(trajet.getPlacesDisponibles() - request.getNbPlaces());
         trajetRepository.save(trajet);
 
-        // ✅ Notification avec les villes du passager
+        //  Notification avec les villes du passager
         String tokenConducteur = trajet.getConducteur().getExpoPushToken();
         if (tokenConducteur != null && !tokenConducteur.isBlank()) {
             String departAffiche = request.getDepartPassager() != null
@@ -136,7 +137,7 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
-    // ✅ Mode test — à retirer avant mise en prod
+    //  Mode test — à retirer avant mise en prod
     @Transactional
     public ReservationResponse simulerPaiement(Long id) {
         Reservation reservation = findById(id);
@@ -366,7 +367,7 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ CORRIGÉ — gère TERMINEE correctement
+   
     public ReservationResponse changerStatut(Long id, Reservation.StatutReservation statut) {
         Reservation reservation = findById(id);
         reservation.setStatut(statut);
@@ -379,20 +380,8 @@ public class ReservationService {
             trajetRepository.save(trajet);
         }
 
-        // ✅ Notification au passager quand trajet terminé
+        
         if (statut == Reservation.StatutReservation.TERMINEE) {
-            String token = reservation.getPassager().getExpoPushToken();
-            if (token != null && !token.isBlank()) {
-                notificationService.envoyerNotification(
-                    token,
-                    "Trajet termine !",
-                    "Votre trajet " + reservation.getTrajet().getVilleDepart() +
-                    " -> " + reservation.getTrajet().getVilleArrivee() +
-                    " est termine. Merci d'avoir voyage avec Wayvo !"
-                );
-            }
-            // ✅ Le payout n'est plus immediat — il sera traite par le scheduler
-            // apres le delai de securite (voir ReservationSchedulerService)
             reservation.setDateTerminee(
                 ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
             );
@@ -401,92 +390,112 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
-    // ✅ Payout au conducteur — protege par payoutEffectue (anti-doublon) et
-    // bloque si un signalement ouvert/en cours existe sur cette reservation
-    public void effectuerPayoutConducteur(Reservation reservation) {
-        if (reservation.isPayoutEffectue()) {
-            return;
-        }
-        if (!"SUCCESS".equals(reservation.getStatutPaiement())) {
-            log.warn("Payout ignore pour reservation {} : passager n'a pas paye", reservation.getId());
+    //  Payout groupe au conducteur : regroupe toutes les reservations eligibles (payees,
+    // pas encore versees, sans signalement bloquant) d'un meme trajet en UN SEUL virement,
+    // au lieu d'un virement par reservation.
+    @Transactional
+    public void effectuerPayoutGroupeConducteur(List<Reservation> reservations) {
+        if (reservations == null || reservations.isEmpty()) {
             return;
         }
 
-        boolean signalementBloquant = signalementRepository.existsByReservationIdAndStatutIn(
-            reservation.getId(), STATUTS_SIGNALEMENT_BLOQUANTS
-        );
-        if (signalementBloquant) {
-            log.warn("Payout bloque pour reservation {} : signalement ouvert en cours", reservation.getId());
-            String tokenConducteurBloque = reservation.getTrajet().getConducteur().getExpoPushToken();
-            if (tokenConducteurBloque != null && !tokenConducteurBloque.isBlank()) {
-                notificationService.envoyerNotification(
-                    tokenConducteurBloque,
-                    "Paiement bloque",
-                    "Le paiement pour le trajet " +
-                    reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
-                    " est bloque car un signalement est en cours d'examen. L'equipe WayVo l'examine."
-                );
+        List<Reservation> eligibles = new ArrayList<>();
+        for (Reservation r : reservations) {
+            if (r.isPayoutEffectue()) {
+                continue;
             }
+            if (!"SUCCESS".equals(r.getStatutPaiement())) {
+                log.warn("Payout groupe ignore pour reservation {} : passager n'a pas paye", r.getId());
+                continue;
+            }
+
+            boolean signalementBloquant = signalementRepository.existsByReservationIdAndStatutIn(
+                r.getId(), STATUTS_SIGNALEMENT_BLOQUANTS
+            );
+            if (signalementBloquant) {
+                log.warn("Payout groupe : reservation {} exclue (signalement en cours)", r.getId());
+                String tokenConducteurBloque = r.getTrajet().getConducteur().getExpoPushToken();
+                if (tokenConducteurBloque != null && !tokenConducteurBloque.isBlank()) {
+                    notificationService.envoyerNotification(
+                        tokenConducteurBloque,
+                        "Paiement partiellement bloque",
+                        "Une partie du paiement pour le trajet " +
+                        r.getTrajet().getVilleDepart() + " -> " + r.getTrajet().getVilleArrivee() +
+                        " est bloquee car un signalement est en cours d'examen."
+                    );
+                }
+                continue;
+            }
+
+            eligibles.add(r);
+        }
+
+        if (eligibles.isEmpty()) {
             return;
         }
 
-        Utilisateur conducteur = reservation.getTrajet().getConducteur();
+        Reservation premiere = eligibles.get(0);
+        Trajet trajet = premiere.getTrajet();
+        Utilisateur conducteur = trajet.getConducteur();
+
         String telephoneConducteur = conducteur.getTelephone();
         if (telephoneConducteur == null || telephoneConducteur.isBlank()) {
-            log.warn("Payout impossible pour reservation {} : conducteur sans numero de telephone", reservation.getId());
+            log.warn("Payout groupe impossible pour trajet {} : conducteur sans numero de telephone", trajet.getId());
             return;
         }
 
-        double prixBase = reservation.getPrixPropose() != null
-            ? reservation.getPrixPropose()
-            : reservation.getTrajet().getPrix();
-        String reference = "PAYOUT-" + reservation.getId() + "-" + System.currentTimeMillis();
+        double montantTotal = eligibles.stream()
+            .mapToDouble(r -> r.getPrixPropose() != null ? r.getPrixPropose() : r.getTrajet().getPrix())
+            .sum();
+
+        String reference = "PAYOUT-TRAJET-" + trajet.getId() + "-" + System.currentTimeMillis();
         String description = "Payout Wayvo - trajet " +
-            reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee();
+            trajet.getVilleDepart() + " -> " + trajet.getVilleArrivee() +
+            " (" + eligibles.size() + " passager" + (eligibles.size() > 1 ? "s" : "") + ")";
 
         try {
-            djomyService.initierPayout(
+            Map<String, Object> reponsePayout = djomyService.initierPayout(
                 telephoneConducteur,
                 conducteur.getPrenom() + " " + conducteur.getNom(),
-                prixBase, reference, description, false
+                montantTotal, reference, description, false
             );
-            reservation.setPayoutEffectue(true);
-            reservation.setStatutPayout("PENDING");
-            reservationRepository.save(reservation);
-            log.info("Payout initie pour reservation {} (conducteur {})", reservation.getId(), conducteur.getId());
 
-            String tokenConducteur = conducteur.getExpoPushToken();
-            if (tokenConducteur != null && !tokenConducteur.isBlank()) {
-                notificationService.envoyerNotification(
-                    tokenConducteur,
-                    "Paiement en cours !",
-                    "Votre paiement de " + (long) prixBase + " GNF pour le trajet " +
-                    reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
-                    " est en cours de traitement."
-                );
+            extraireEtEnregistrerReferencesPayout(reponsePayout, eligibles);
+
+            for (Reservation r : eligibles) {
+                r.setPayoutEffectue(true);
+                r.setStatutPayout("PENDING");
+                reservationRepository.save(r);
             }
+
+            log.info("Payout groupe initie pour trajet {} ({} reservation(s), {} GNF, conducteur {})",
+                trajet.getId(), eligibles.size(), montantTotal, conducteur.getId());
+
         } catch (Exception e) {
-            log.error("Erreur payout reservation {} : {}", reservation.getId(), e.getMessage());
+            log.error("Erreur payout groupe trajet {} : {}", trajet.getId(), e.getMessage());
         }
     }
 
-    // ✅ Confirmation rapide par le passager — declenche le payout immediatement
-    // au lieu d'attendre les 30 min du scheduler
-    @Transactional
-    public ReservationResponse confirmerTrajetParPassager(Long reservationId, Long passagerId) {
-        Reservation reservation = findById(reservationId);
+    //  Extrait orderId/itemId de la reponse Djomy (data.id, data.payoutItems[0].itemId)
+    // et les enregistre sur toutes les reservations du groupe, pour permettre le retry cible plus tard
+    @SuppressWarnings("unchecked")
+    private void extraireEtEnregistrerReferencesPayout(Map<String, Object> reponse, List<Reservation> reservations) {
+        try {
+            Map<String, Object> data = (Map<String, Object>) reponse.get("data");
+            if (data == null) {
+                return;
+            }
+            String orderId = (String) data.get("id");
+            List<Map<String, Object>> items = (List<Map<String, Object>>) data.get("payoutItems");
+            String itemId = (items != null && !items.isEmpty()) ? (String) items.get(0).get("itemId") : null;
 
-        if (!reservation.getPassager().getId().equals(passagerId)) {
-            throw new IllegalStateException("Seul le passager de cette reservation peut la confirmer");
+            for (Reservation r : reservations) {
+                r.setPayoutOrderId(orderId);
+                r.setPayoutItemId(itemId);
+            }
+        } catch (Exception e) {
+            log.warn("Impossible d'extraire orderId/itemId de la reponse payout : {}", e.getMessage());
         }
-
-        if (reservation.getStatut() != Reservation.StatutReservation.TERMINEE) {
-            throw new IllegalStateException("Le trajet doit etre termine pour etre confirme");
-        }
-
-        effectuerPayoutConducteur(reservation);
-
-        return toResponse(reservation);
     }
 
     public void supprimer(Long id) {

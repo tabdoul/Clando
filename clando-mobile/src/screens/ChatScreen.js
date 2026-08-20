@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { getUserId } from '../services/auth.service';
 import { colors, spacing, radius } from '../../constants/theme';
@@ -16,7 +17,9 @@ export default function ChatScreen({ route, navigation }) {
     const [contenu, setContenu] = useState('');
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [headerHeight, setHeaderHeight] = useState(0);
     const flatListRef = useRef(null);
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         const init = async () => {
@@ -107,9 +110,10 @@ export default function ChatScreen({ route, navigation }) {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
 
-            <View style={styles.header}>
+            <View style={styles.header} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="white" />
                 </TouchableOpacity>
@@ -139,7 +143,7 @@ export default function ChatScreen({ route, navigation }) {
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
 
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
                 <TextInput
                     style={styles.input}
                     placeholder="Votre message..."

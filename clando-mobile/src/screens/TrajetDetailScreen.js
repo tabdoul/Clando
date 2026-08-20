@@ -78,7 +78,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
         Share.share({
             message:
                 `Trajet trouve sur Wayvo : ${trajet.villeDepart} → ${trajet.villeArrivee}\n` +
-                `${trajet.prixConducteur?.toLocaleString()} GNF · avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}\n` +
+                `${trajet.prix?.toLocaleString()} GNF · avec ${trajet.conducteurPrenom} ${trajet.conducteurNom}\n` +
                 (trajet.itineraire ? `Via ${trajet.itineraire}\n` : '') +
                 `${formatDate(trajet.dateHeureDepart)} a ${formatHeure(trajet.dateHeureDepart)}\n\n` +
                 `Voir le trajet : https://wayvo-frontend.vercel.app/trajets/${trajet.id}`
@@ -443,7 +443,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                 <View style={styles.bottomBar}>
                     <View style={styles.bottomPrix}>
                         <Text style={styles.bottomPrixLabel}>Prix</Text>
-                        <Text style={styles.bottomPrixValeur}>{`${trajet.prixConducteur?.toLocaleString()} GNF`}</Text>
+                        <Text style={styles.bottomPrixValeur}>{`${trajet.prix?.toLocaleString()} GNF`}</Text>
                         <Text style={styles.bottomPlaces}>
                             {trajet.placesDisponibles > 1
                                 ? `${trajet.placesDisponibles} places restantes`
@@ -510,7 +510,7 @@ export default function TrajetDetailScreen({ route, navigation }) {
                                 <View style={styles.modalPrixOriginal}>
                                     <Text style={styles.modalPrixLabel}>Prix du trajet</Text>
                                     <Text style={styles.modalPrixValeur}>
-                                        {`${trajet.prixConducteur?.toLocaleString()} GNF`}
+                                        {`${trajet.prix?.toLocaleString()} GNF`}
                                     </Text>
                                 </View>
 

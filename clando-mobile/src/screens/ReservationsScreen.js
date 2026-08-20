@@ -22,9 +22,6 @@ export default function ReservationsScreen({ navigation }) {
     const [loadingCopassagers, setLoadingCopassagers] = useState(false);
     const [reservationSelectionnee, setReservationSelectionnee] = useState(null);
 
-    const [confirmationEnCours, setConfirmationEnCours] = useState(null);
-    const [confirmes, setConfirmes] = useState([]);
-
     const [moisSelectionne, setMoisSelectionne] = useState(null);
     const [showMoisDropdown, setShowMoisDropdown] = useState(false);
 
@@ -150,20 +147,6 @@ export default function ReservationsScreen({ navigation }) {
                 lienPosition +
                 `\n\nVoir le trajet : https://wayvo-frontend.vercel.app/trajets/${item.trajetId}`
         });
-    };
-
-    const confirmerTrajet = async (item) => {
-        setConfirmationEnCours(item.id);
-        try {
-            const userId = await getUserId();
-            await api.patch(`/reservations/${item.id}/confirmer-trajet?passagerId=${userId}`);
-            setConfirmes(prev => [...prev, item.id]);
-            Alert.alert('Trajet confirme !', 'Le conducteur va recevoir son paiement immediatement.');
-        } catch (error) {
-            Alert.alert('Erreur', error.response?.data?.erreur || 'Impossible de confirmer le trajet');
-        } finally {
-            setConfirmationEnCours(null);
-        }
     };
 
     const annuler = async (reservation) => {
@@ -376,31 +359,6 @@ export default function ReservationsScreen({ navigation }) {
                         </View>
                     )}
 
-                    {/* TERMINEE */}
-                    {item.statut === 'TERMINEE' && (
-                        <View style={styles.actions}>
-                            {(item.payoutEffectue || confirmes.includes(item.id)) ? (
-                                <View style={styles.confirmeBloc}>
-                                    <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
-                                    <Text style={styles.confirmeBlocText}>Trajet confirme</Text>
-                                </View>
-                            ) : (
-                                <TouchableOpacity
-                                    style={[styles.btnConfirmerTrajet, confirmationEnCours === item.id && { opacity: 0.7 }]}
-                                    onPress={() => confirmerTrajet(item)}
-                                    disabled={confirmationEnCours === item.id}>
-                                    {confirmationEnCours === item.id ? (
-                                        <ActivityIndicator size={16} color="white" />
-                                    ) : (
-                                        <>
-                                            <Ionicons name="checkmark-circle-outline" size={16} color="white" />
-                                            <Text style={styles.btnConfirmerTrajetText}>Confirmer le trajet</Text>
-                                        </>
-                                    )}
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    )}
                 </TouchableOpacity>
             </View>
         );
@@ -652,7 +610,7 @@ export default function ReservationsScreen({ navigation }) {
                                 <View style={styles.resultatIconeEchec}>
                                     <Ionicons name="close" size={36} color={colors.red} />
                                 </View>
-                                <Text style={styles.resultatTitre}>Paiement echoue</Text>
+                                <Text style={styles.resultatTitre}>Paiement echoué</Text>
                                 <Text style={styles.resultatMessageEchec}>{resultatPaiement?.message}</Text>
 
                                 <TouchableOpacity
@@ -926,8 +884,6 @@ const styles = StyleSheet.create({
     menuFermer: { marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#EEF2F7', alignItems: 'center' },
     menuFermerTexte: { fontSize: 14, fontWeight: '600', color: '#888888' },
 
-    btnConfirmerTrajet: { backgroundColor: '#182D5A', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
-    btnConfirmerTrajetText: { color: 'white', fontSize: 14, fontWeight: 'bold' },
     confirmeBloc: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#EEF2F7', borderRadius: 8, padding: 10, marginBottom: 8, justifyContent: 'center' },
     confirmeBlocText: { fontSize: 13, color: '#182D5A', fontWeight: '600' },
 

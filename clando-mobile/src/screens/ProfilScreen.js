@@ -423,7 +423,12 @@ export default function ProfilScreen({ navigation }) {
                         </View>
 
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Mes trajets publies</Text>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Mes trajets publies</Text>
+                                <TouchableOpacity onPress={() => navigation.navigate('MesTrajets')}>
+                                    <Text style={styles.editButton}>Voir tout</Text>
+                                </TouchableOpacity>
+                            </View>
                             <View style={styles.card}>
                                 {trajets.length === 0 && (
                                     <Text style={styles.emptyText}>Aucun trajet publié</Text>

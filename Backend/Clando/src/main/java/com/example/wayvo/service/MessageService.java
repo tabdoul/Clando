@@ -34,7 +34,12 @@ public class MessageService {
     public MessageResponse envoyer(MessageRequest request) {
         Utilisateur expediteur = utilisateurService.findById(request.getExpediteurId());
         Utilisateur destinataire = utilisateurService.findById(request.getDestinataireId());
-        Reservation reservation = reservationService.findById(request.getReservationId());
+
+        // La reservation est optionnelle : un passager peut contacter un conducteur
+        // avant meme d'avoir reserve un trajet (question, negociation...)
+        Reservation reservation = request.getReservationId() != null
+            ? reservationService.findById(request.getReservationId())
+            : null;
 
         Message message = Message.builder()
                 .contenu(request.getContenu())
@@ -103,7 +108,7 @@ public class MessageService {
                 .destinataireNom(m.getDestinataire().getNom())
                 .destinatairePrenom(m.getDestinataire().getPrenom())
                 .destinatairePhoto(m.getDestinataire().getPhoto())
-                .reservationId(m.getReservation().getId())
+                .reservationId(m.getReservation() != null ? m.getReservation().getId() : null)
                 .dateEnvoi(m.getDateEnvoi())
                 .lu(m.isLu())
                 .build();

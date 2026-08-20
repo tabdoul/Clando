@@ -30,6 +30,7 @@ public class TrajetResponse {
     private Double latitudeConducteur;
     private Double longitudeConducteur;
     private boolean trajetDemarre;
+    private Long nbReservationsConfirmees;
 
     public TrajetResponse() {}
 
@@ -69,7 +70,7 @@ public class TrajetResponse {
     public String getConducteurPrenom() { return conducteurPrenom; }
     public void setConducteurPrenom(String conducteurPrenom) { this.conducteurPrenom = conducteurPrenom; }
 
-    public String getConducteurPhoto() { return conducteurPhoto; }
+ public String getConducteurPhoto() { return conducteurPhoto; }
     public void setConducteurPhoto(String conducteurPhoto) { this.conducteurPhoto = conducteurPhoto; }
 
     public String getConducteurTelephone() { return conducteurTelephone; }
@@ -105,6 +106,9 @@ public class TrajetResponse {
     public boolean isTrajetDemarre() { return trajetDemarre; }
     public void setTrajetDemarre(boolean v) { this.trajetDemarre = v; }
 
+    public Long getNbReservationsConfirmees() { return nbReservationsConfirmees; }
+    public void setNbReservationsConfirmees(Long v) { this.nbReservationsConfirmees = v; }
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -119,7 +123,7 @@ public class TrajetResponse {
         public Builder itineraire(String val) { r.itineraire = val; return this; }
         public Builder statut(Trajet.StatutTrajet val) { r.statut = val; return this; }
         public Builder conducteurId(Long val) { r.conducteurId = val; return this; }
-        public Builder conducteurNom(String val) { r.conducteurNom = val; return this; }
+  public Builder conducteurNom(String val) { r.conducteurNom = val; return this; }
         public Builder conducteurPrenom(String val) { r.conducteurPrenom = val; return this; }
         public Builder conducteurPhoto(String val) { r.conducteurPhoto = val; return this; }
         public Builder conducteurTelephone(String val) { r.conducteurTelephone = val; return this; }
@@ -133,6 +137,7 @@ public class TrajetResponse {
         public Builder latitudeConducteur(Double val) { r.latitudeConducteur = val; return this; }
         public Builder longitudeConducteur(Double val) { r.longitudeConducteur = val; return this; }
         public Builder trajetDemarre(boolean val) { r.trajetDemarre = val; return this; }
+        public Builder nbReservationsConfirmees(Long val) { r.nbReservationsConfirmees = val; return this; }
         public TrajetResponse build() { return r; }
     }
 }

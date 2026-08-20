@@ -61,4 +61,14 @@ List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") 
            "AND r.dateTerminee IS NOT NULL " +
            "AND r.dateTerminee <= :limite")
     List<Reservation> findPayoutsDus(@Param("limite") LocalDateTime limite);
+
+    long countByTrajetIdAndStatut(Long trajetId, Reservation.StatutReservation statut);
+
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.statutPayout = 'FAILED' " +
+           "AND r.payoutEffectue = false " +
+           "AND r.payoutRetryCount < :maxRetry " +
+           "AND r.payoutOrderId IS NOT NULL " +
+           "AND r.payoutItemId IS NOT NULL")
+    List<Reservation> findPayoutsEchouesEligiblesRetry(@Param("maxRetry") int maxRetry);
 }

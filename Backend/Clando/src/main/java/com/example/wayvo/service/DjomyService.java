@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -210,6 +212,64 @@ public class DjomyService {
     log.info("Reponse payout: {}", response.getBody());
     return response.getBody();
 }
+
+    /**
+     * Relance au niveau du provider Djomy un item de payout en statut FAILED.
+     * Traitement asynchrone cote Djomy : une reponse 200 signifie que l'item est
+     * remis en file, pas que le retry a reussi. Le statut final (SUCCESS/FAILED)
+     * arrivera via le webhook payout.success / payout.failed.
+     *
+     * @param orderId  identifiant ou reference de l'ordre de payout (Reservation.payoutOrderId)
+     * @param payoutId identifiant UUID de l'item (Reservation.payoutItemId)
+     * @return true si la relance a ete acceptee par Djomy (mise en file), false sinon
+     */
+    public boolean retryPayoutItem(String orderId, String payoutId) throws Exception {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-KEY", generateApiKey());
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        String url = baseUrl + "/v1/payout-orders/" + orderId + "/payout-items/" + payoutId + "/retry";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                request,
+                Map.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                log.info("Retry payout accepte (mis en file) orderId={}, payoutId={}", orderId, payoutId);
+                return true;
+            }
+            log.warn("Retry payout - statut inattendu {} pour orderId={}, payoutId={}",
+                response.getStatusCode(), orderId, payoutId);
+            return false;
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.CONFLICT) {
+                // 409 - une transaction est deja en cours sur cet item, pas un echec definitif
+                log.warn("Retry payout ignore (transaction deja en cours) orderId={}, payoutId={}",
+                    orderId, payoutId);
+            } else if (e.getStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY) {
+                // 422 - item non eligible au retry (provider non supporte, solde insuffisant...)
+                log.error("Retry payout non eligible orderId={}, payoutId={} - {}",
+                    orderId, payoutId, e.getResponseBodyAsString());
+            } else if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                // 404 - item introuvable
+                log.error("Retry payout - item introuvable orderId={}, payoutId={}", orderId, payoutId);
+            } else {
+                log.error("Erreur retry payout orderId={}, payoutId={} - {}",
+                    orderId, payoutId, e.getMessage());
+            }
+            return false;
+        }
+    }
 
     public boolean verifierSignatureWebhook(String payload, String signatureRecue) throws Exception {
         // Format attendu : "v1:signature"

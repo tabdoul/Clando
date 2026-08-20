@@ -62,7 +62,7 @@ export default function ResultatsScreen({ route, navigation }) {
                                 </View>
 
                                 <View style={styles.prixContainer}>
-                                    <Text style={styles.prix}>{item.prixConducteur?.toLocaleString()}</Text>
+                                    <Text style={styles.prix}>{item.prix?.toLocaleString()}</Text>
                                     <Text style={styles.prixDevise}>GNF</Text>
                                     {item.placesDisponibles <= 2 && item.placesDisponibles > 0 && (
                                         <View style={styles.presqueCompletBadge}>

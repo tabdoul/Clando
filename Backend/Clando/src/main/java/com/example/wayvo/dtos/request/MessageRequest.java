@@ -14,7 +14,6 @@ public class MessageRequest {
     @NotNull
     private Long destinataireId;
 
-    @NotNull
     private Long reservationId;
 
     public MessageRequest() {}

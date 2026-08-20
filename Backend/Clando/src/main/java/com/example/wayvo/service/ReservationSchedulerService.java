@@ -15,27 +15,33 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationSchedulerService {
 
     private static final Logger log = LoggerFactory.getLogger(ReservationSchedulerService.class);
     private static final int DELAI_PAIEMENT_MINUTES = 30;
-    private static final int DELAI_PAYOUT_MINUTES = 30;
+    private static final int DELAI_PAYOUT_MINUTES = 15;
+    private static final int MAX_PAYOUT_RETRY = 3;
 
     private final ReservationRepository reservationRepository;
     private final TrajetRepository trajetRepository;
     private final NotificationService notificationService;
     private final ReservationService reservationService;
+    private final DjomyService djomyService;
 
     public ReservationSchedulerService(ReservationRepository reservationRepository,
                                         TrajetRepository trajetRepository,
                                         NotificationService notificationService,
-                                        ReservationService reservationService) {
+                                        ReservationService reservationService,
+                                        DjomyService djomyService) {
         this.reservationRepository = reservationRepository;
         this.trajetRepository = trajetRepository;
         this.notificationService = notificationService;
         this.reservationService = reservationService;
+        this.djomyService = djomyService;
     }
 
     private LocalDateTime maintenant() {
@@ -102,7 +108,9 @@ public class ReservationSchedulerService {
         }
     }
 
-    // ✅ Nouveau — verse les payouts dus (30 min apres la fin du trajet, sauf signalement bloquant)
+    // Nouveau — verse les payouts dus (30 min apres la fin du trajet, sauf signalement bloquant)
+    // Regroupe par trajet : un seul virement au conducteur pour toutes les reservations
+    // pretes d'un meme trajet, au lieu d'un virement separe par reservation.
     // Toutes les 5 minutes
     @Scheduled(fixedRate = 5 * 60 * 1000)
     @Transactional
@@ -110,12 +118,59 @@ public class ReservationSchedulerService {
         LocalDateTime limite = maintenant().minusMinutes(DELAI_PAYOUT_MINUTES);
         List<Reservation> payoutsDus = reservationRepository.findPayoutsDus(limite);
 
-        for (Reservation reservation : payoutsDus) {
-            reservationService.effectuerPayoutConducteur(reservation);
+        Map<Long, List<Reservation>> parTrajet = payoutsDus.stream()
+            .collect(Collectors.groupingBy(r -> r.getTrajet().getId()));
+
+        for (List<Reservation> groupe : parTrajet.values()) {
+            reservationService.effectuerPayoutGroupeConducteur(groupe);
         }
 
         if (!payoutsDus.isEmpty()) {
-            log.info("Traitement de {} payout(s) du(s)", payoutsDus.size());
+            log.info("Traitement de {} payout(s) du(s) sur {} trajet(s)", payoutsDus.size(), parTrajet.size());
+        }
+    }
+
+    // Relance automatiquement les payouts en echec aupres de Djomy, jusqu'a MAX_PAYOUT_RETRY tentatives.
+    // Plusieurs reservations peuvent partager le meme orderId/itemId (payout groupe par trajet) —
+    // on deduplique pour ne relancer qu'une seule fois par virement, pas une fois par reservation.
+    // Le statut final (SUCCESS/FAILED) est mis a jour par le webhook, pas ici.
+    // Toutes les 15 minutes
+    @Scheduled(fixedRate = 15 * 60 * 1000)
+    @Transactional
+    public void relancerPayoutsEchoues() {
+        List<Reservation> echecs = reservationRepository.findPayoutsEchouesEligiblesRetry(MAX_PAYOUT_RETRY);
+
+        Map<String, List<Reservation>> parPayoutItem = echecs.stream()
+            .collect(Collectors.groupingBy(r -> r.getPayoutOrderId() + "|" + r.getPayoutItemId()));
+
+        for (List<Reservation> groupe : parPayoutItem.values()) {
+            Reservation reference = groupe.get(0);
+            try {
+                boolean relance = djomyService.retryPayoutItem(
+                    reference.getPayoutOrderId(),
+                    reference.getPayoutItemId()
+                );
+
+                if (relance) {
+                    for (Reservation r : groupe) {
+                        r.setPayoutRetryCount(r.getPayoutRetryCount() + 1);
+                        reservationRepository.save(r);
+
+                        if (r.getPayoutRetryCount() >= MAX_PAYOUT_RETRY) {
+                            log.warn("Reservation {} : nombre max de tentatives de retry payout atteint ({})",
+                                r.getId(), MAX_PAYOUT_RETRY);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Erreur lors du retry payout groupe orderId={} - {}",
+                    reference.getPayoutOrderId(), e.getMessage());
+            }
+        }
+
+        if (!echecs.isEmpty()) {
+            log.info("Tentative de relance de {} payout(s) en echec sur {} virement(s) groupe(s)",
+                echecs.size(), parPayoutItem.size());
         }
     }
 }

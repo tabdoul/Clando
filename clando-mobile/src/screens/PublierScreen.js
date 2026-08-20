@@ -9,11 +9,17 @@ import { spacing, radius } from '../../constants/theme';
 
 const C = { primary: '#182D5A', primaryLight: '#EEF2F7', primaryBorder: '#D8E4F0', bg: '#ffffff', surface: '#FAFAFA', text: '#1a1a1a', muted: '#888888', disabled: '#cccccc', red: '#E52424', purple: '#9b59b6' };
 const BTN_HEIGHT = 52;
+const PRIX_MAX_CHIFFRES = 5;
 
 const TYPES_VEHICULE = [
     { label: 'Moto', icon: 'bicycle-outline', placesMax: 1 },
     { label: 'Voiture', icon: 'car-outline', placesMax: 5 },
 ];
+
+const formatMontant = (chiffres) => {
+    if (!chiffres) return '';
+    return chiffres.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+};
 
 const Champ = ({ label, children }) => (
     <View style={{ marginTop: 14 }}>
@@ -87,7 +93,7 @@ export default function PublierScreen({ navigation }) {
 
     const reutiliserTrajet = (t) => {
         setVilleDepart(t.villeDepart); setVilleArrivee(t.villeArrivee);
-        setPrix(t.prixConducteur?.toString() || ''); setPlaces(t.placesDisponibles?.toString() || '');
+        setPrix(t.prixConducteur ? Math.round(t.prixConducteur).toString().slice(0, PRIX_MAX_CHIFFRES) : ''); setPlaces(t.placesDisponibles?.toString() || '');
         setItineraire(t.itineraire || '');
         if (t.vehiculeId) { const v = vehicules.find(v => v.id === t.vehiculeId); if (v) setVehiculeSelectionne(v); }
     };
@@ -102,6 +108,11 @@ export default function PublierScreen({ navigation }) {
         if (champActif === 'depart') setVilleDepart(quartier);
         else if (champActif === 'arrivee') setVilleArrivee(quartier);
         setChampActif(null); setSuggestions([]); Keyboard.dismiss();
+    };
+
+    const onChangePrix = (texte) => {
+        const chiffres = texte.replace(/\D/g, '').slice(0, PRIX_MAX_CHIFFRES);
+        setPrix(chiffres);
     };
 
     const onChangePlaces = (texte) => {
@@ -152,7 +163,7 @@ export default function PublierScreen({ navigation }) {
                 <Text style={s.headerTitle}>Publier un trajet</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
 
                 {trajetsRecents.length > 0 && (
                     <View style={s.section}>
@@ -222,14 +233,23 @@ export default function PublierScreen({ navigation }) {
                                 <Text style={s.label}>Prix (GNF)</Text>
                                 <View style={s.field}>
                                     <Ionicons name="cash-outline" size={16} color={C.muted} />
-                                    <TextInput style={s.input} value={prix} onChangeText={setPrix} keyboardType="numeric" />
+                                    <TextInput
+                                        style={s.input}
+                                        value={formatMontant(prix)}
+                                        onChangeText={onChangePrix}
+                                        keyboardType="numeric"
+                                        placeholder="10 000"
+                                        placeholderTextColor={C.disabled}
+                                        returnKeyType="done"
+                                        onSubmitEditing={() => Keyboard.dismiss()}
+                                    />
                                 </View>
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={s.label}>Places (max {placesMax})</Text>
                                 <View style={s.field}>
                                     <Ionicons name="people-outline" size={16} color={C.muted} />
-                                    <TextInput style={s.input} value={places} onChangeText={onChangePlaces} keyboardType="numeric" maxLength={1} />
+                                    <TextInput style={s.input} value={places} onChangeText={onChangePlaces} keyboardType="numeric" maxLength={1} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()} />
                                 </View>
                             </View>
                         </View>
@@ -301,7 +321,7 @@ export default function PublierScreen({ navigation }) {
                             <Champ label={`Places (max ${placesMax})`}>
                                 <View style={s.field}>
                                     <Ionicons name="people-outline" size={16} color={C.muted} />
-                                    <TextInput style={s.input} placeholder={placesMax.toString()} placeholderTextColor={C.disabled} value={nbPlaces} onChangeText={onChangeNbPlaces} keyboardType="numeric" maxLength={1} />
+                                    <TextInput style={s.input} placeholder={placesMax.toString()} placeholderTextColor={C.disabled} value={nbPlaces} onChangeText={onChangeNbPlaces} keyboardType="numeric" maxLength={1} returnKeyType="done" onSubmitEditing={() => Keyboard.dismiss()} />
                                 </View>
                             </Champ>
 

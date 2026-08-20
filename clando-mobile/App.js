@@ -23,6 +23,7 @@ import AvisScreen from './src/screens/AvisScreen';
 import DocumentsScreen from './src/screens/DocumentsScreen';
 import AideScreen from './src/screens/AideScreen';
 import TrajetDetailScreen from './src/screens/TrajetDetailScreen';
+import MesTrajetsScreen from './src/screens/MesTrajetsScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen'; 
@@ -149,6 +150,7 @@ export default function App() {
                 <Stack.Screen name="Documents" component={DocumentsScreen} />
                 <Stack.Screen name="Aide" component={AideScreen} />
                 <Stack.Screen name="TrajetDetail" component={TrajetDetailScreen} />
+                <Stack.Screen name="MesTrajets" component={MesTrajetsScreen} />
                 <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                 <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
             </Stack.Navigator>

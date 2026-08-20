@@ -69,6 +69,15 @@ public class Reservation {
     private String statutPayout;
 
     @Column
+    private String payoutOrderId;
+
+    @Column
+    private String payoutItemId;
+
+    @Column(nullable = false)
+    private int payoutRetryCount = 0;
+
+    @Column
     private LocalDateTime dateConfirmation;
 
     @Column
@@ -141,6 +150,15 @@ public class Reservation {
 
     public String getStatutPayout() { return statutPayout; }
     public void setStatutPayout(String v) { this.statutPayout = v; }
+
+    public String getPayoutOrderId() { return payoutOrderId; }
+    public void setPayoutOrderId(String v) { this.payoutOrderId = v; }
+
+    public String getPayoutItemId() { return payoutItemId; }
+    public void setPayoutItemId(String v) { this.payoutItemId = v; }
+
+    public int getPayoutRetryCount() { return payoutRetryCount; }
+    public void setPayoutRetryCount(int v) { this.payoutRetryCount = v; }
 
     public LocalDateTime getDateConfirmation() { return dateConfirmation; }
     public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }

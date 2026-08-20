@@ -23,7 +23,7 @@ public class Message {
     private Utilisateur destinataire;
 
     @ManyToOne
-    @JoinColumn(name = "reservation_id", nullable = false)
+    @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
     @Column(nullable = false)
