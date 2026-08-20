@@ -282,6 +282,8 @@ public class ReservationService {
             reservation.setDateConfirmation(
                 ZonedDateTime.now(ZoneId.of("Africa/Conakry")).toLocalDateTime()
             );
+            reservation.setReponseVueParPassager(false);
+
             String token = reservation.getPassager().getExpoPushToken();
             if (token != null && !token.isBlank()) {
                 notificationService.envoyerNotification(
@@ -292,52 +294,27 @@ public class ReservationService {
                     " est confirme. Vous avez 30 minutes pour effectuer le paiement."
                 );
             }
-        } else if (prixConducteur != null) {
-            reservation.setStatut(Reservation.StatutReservation.CONTRE_OFFRE);
-            reservation.setPrixConducteur(prixConducteur);
+        } else {
+            reservation.setStatut(Reservation.StatutReservation.REFUSEE);
+            reservation.setReponseVueParPassager(false);
+
+            Trajet trajet = reservation.getTrajet();
+            trajet.setPlacesDisponibles(
+                trajet.getPlacesDisponibles() + reservation.getNbPlaces()
+            );
+            trajetRepository.save(trajet);
 
             String token = reservation.getPassager().getExpoPushToken();
             if (token != null && !token.isBlank()) {
                 notificationService.envoyerNotification(
                     token,
-                    "Contre-offre recue !",
-                    "Le conducteur propose " + prixConducteur.longValue() +
-                    " GNF pour votre trajet. Acceptez ou refusez dans l'application."
+                    "Demande refusee",
+                    "Le conducteur a refuse votre demande pour le trajet " +
+                    reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
+                    ". Recherchez un autre trajet."
                 );
             }
-        } else {
-            if (reservation.getNbTentatives() >= 1) {
-                reservation.setStatut(Reservation.StatutReservation.REFUSEE);
-                Trajet trajet = reservation.getTrajet();
-                trajet.setPlacesDisponibles(
-                    trajet.getPlacesDisponibles() + reservation.getNbPlaces()
-                );
-                trajetRepository.save(trajet);
-            } else {
-                reservation.setStatut(Reservation.StatutReservation.PRIX_REFUSE);
-                reservation.setNbTentatives(reservation.getNbTentatives() + 1);
-            }
         }
-
-        return toResponse(reservationRepository.save(reservation));
-    }
-
-    @Transactional
-    public ReservationResponse nouvelleProposition(Long reservationId, Double nouveauPrix) {
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Reservation non trouvee"));
-
-        if (reservation.getStatut() != Reservation.StatutReservation.PRIX_REFUSE
-            && reservation.getStatut() != Reservation.StatutReservation.CONTRE_OFFRE) {
-            throw new IllegalStateException("Impossible de faire une nouvelle proposition");
-        }
-
-        if (reservation.getNbTentatives() >= 2) {
-            throw new IllegalStateException("Nombre maximum de tentatives atteint");
-        }
-
-        reservation.setPrixPropose(nouveauPrix);
-        reservation.setStatut(Reservation.StatutReservation.EN_ATTENTE);
 
         return toResponse(reservationRepository.save(reservation));
     }
@@ -512,6 +489,23 @@ public class ReservationService {
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public long getNbReservationsEnAttenteParConducteur(Long conducteurId) {
+        return reservationRepository.countReservationsEnAttenteParConducteur(conducteurId);
+    }
+
+    public long getNbReponsesNonVuesParPassager(Long passagerId) {
+        return reservationRepository.countReponsesNonVuesParPassager(passagerId);
+    }
+
+    @Transactional
+    public void marquerReponsesVuesParPassager(Long passagerId) {
+        List<Reservation> nonVues = reservationRepository.findReponsesNonVuesParPassager(passagerId);
+        nonVues.forEach(r -> {
+            r.setReponseVueParPassager(true);
+            reservationRepository.save(r);
+        });
     }
 
     public List<ReservationResponse> getPassagersConfirmes(Long trajetId) {

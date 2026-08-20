@@ -82,6 +82,14 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    //  Historique d'une conversation entre deux utilisateurs SANS reservation
+    public List<MessageResponse> getConversationSansReservation(Long userId1, Long userId2) {
+        return messageRepository.findConversationSansReservation(userId1, userId2)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     public Long getNbMessagesNonLus(Long userId) {
         return messageRepository.countMessagesNonLus(userId);
     }
@@ -90,6 +98,17 @@ public class MessageService {
     public void marquerCommeLus(Long reservationId, Long userId) {
         List<Message> messages = messageRepository
                 .findByReservationIdAndDestinataireIdAndLuFalse(reservationId, userId);
+        messages.forEach(m -> {
+            m.setLu(true);
+            messageRepository.save(m);
+        });
+    }
+
+    //  Marque comme lus les messages d'une conversation SANS reservation
+    @Transactional
+    public void marquerConversationSansReservationCommeLue(Long autreUtilisateurId, Long lecteurId) {
+        List<Message> messages = messageRepository
+                .findByReservationIsNullAndDestinataireIdAndExpediteurIdAndLuFalse(lecteurId, autreUtilisateurId);
         messages.forEach(m -> {
             m.setLu(true);
             messageRepository.save(m);

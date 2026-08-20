@@ -32,29 +32,37 @@ export default function MessagesScreen({ navigation }) {
 
             const grouped = {};
             response.data.forEach(msg => {
-                const resId = msg.reservationId;
-                if (!grouped[resId]) {
-                    grouped[resId] = {
-                        reservationId: resId,
+                const interlocuteur = msg.expediteurId === id
+                    ? {
+                        id: msg.destinataireId,
+                        nom: msg.destinataireNom,
+                        prenom: msg.destinatairePrenom,
+                        photo: msg.destinatairePhoto
+                    }
+                    : {
+                        id: msg.expediteurId,
+                        nom: msg.expediteurNom,
+                        prenom: msg.expediteurPrenom,
+                        photo: msg.expediteurPhoto
+                    };
+
+                //  Regroupement par reservation si elle existe, sinon par interlocuteur
+                // (une conversation peut exister avant toute reservation)
+                const cle = msg.reservationId != null
+                    ? `res-${msg.reservationId}`
+                    : `user-${interlocuteur.id}`;
+
+                if (!grouped[cle]) {
+                    grouped[cle] = {
+                        cle,
+                        reservationId: msg.reservationId,
                         dernierMessage: msg,
                         nbNonLus: 0,
-                        interlocuteur: msg.expediteurId === id
-                            ? {
-                                id: msg.destinataireId,
-                                nom: msg.destinataireNom,
-                                prenom: msg.destinatairePrenom,
-                                photo: msg.destinatairePhoto
-                            }
-                            : {
-                                id: msg.expediteurId,
-                                nom: msg.expediteurNom,
-                                prenom: msg.expediteurPrenom,
-                                photo: msg.expediteurPhoto
-                            }
+                        interlocuteur
                     };
                 }
                 if (msg.destinataireId === id && !msg.lu) {
-                    grouped[resId].nbNonLus++;
+                    grouped[cle].nbNonLus++;
                 }
             });
 
@@ -126,7 +134,7 @@ export default function MessagesScreen({ navigation }) {
                     const nbNonLus = conv.nbNonLus || 0;
                     return (
                         <TouchableOpacity
-                            key={conv.reservationId.toString()}
+                            key={conv.cle}
                             style={styles.convItem}
                             onPress={() => navigation.navigate('Chat', {
                                 reservationId: conv.reservationId,

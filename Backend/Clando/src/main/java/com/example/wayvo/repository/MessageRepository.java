@@ -22,4 +22,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     List<Message> findByReservationIdAndDestinataireIdAndLuFalse(
             Long reservationId, Long destinataireId);
+
+    //  Historique d'une conversation entre deux utilisateurs SANS reservation
+    // (contact d'un conducteur avant toute reservation)
+    @Query("SELECT m FROM Message m WHERE m.reservation IS NULL " +
+           "AND ((m.expediteur.id = :userId1 AND m.destinataire.id = :userId2) " +
+           "OR (m.expediteur.id = :userId2 AND m.destinataire.id = :userId1)) " +
+           "ORDER BY m.dateEnvoi ASC")
+    List<Message> findConversationSansReservation(
+            @Param("userId1") Long userId1, @Param("userId2") Long userId2);
+
+    List<Message> findByReservationIsNullAndDestinataireIdAndExpediteurIdAndLuFalse(
+            Long destinataireId, Long expediteurId);
 }

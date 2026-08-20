@@ -30,13 +30,21 @@ function BoutonSOS({ bottom }) {
 
 export default function MainTabs() {
     const [nbMessages, setNbMessages] = useState(0);
+    const [nbReservationsEnAttenteConducteur, setNbReservationsEnAttenteConducteur] = useState(0);
+    const [nbReservationsActionPassager, setNbReservationsActionPassager] = useState(0);
     const insets = useSafeAreaInsets();
     const hauteurNavbar = 55 + insets.bottom;
     const paddingBasNavbar = insets.bottom > 0 ? insets.bottom : 12;
 
+    const nbReservationsBadge = nbReservationsEnAttenteConducteur + nbReservationsActionPassager;
+
     useEffect(() => {
         chargerNbMessages();
-        const interval = setInterval(chargerNbMessages, 5000);
+        chargerNbReservations();
+        const interval = setInterval(() => {
+            chargerNbMessages();
+            chargerNbReservations();
+        }, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -46,6 +54,19 @@ export default function MainTabs() {
             if (!userId) return;
             const response = await api.get(`/messages/non-lus/${userId}`);
             setNbMessages(response.data.nbNonLus);
+        } catch {}
+    };
+
+    const chargerNbReservations = async () => {
+        try {
+            const userId = await getUserId();
+            if (!userId) return;
+            const [conducteurRes, passagerRes] = await Promise.all([
+                api.get(`/reservations/conducteur/${userId}/en-attente/count`),
+                api.get(`/reservations/passager/${userId}/reponses-non-vues/count`),
+            ]);
+            setNbReservationsEnAttenteConducteur(conducteurRes.data.nbEnAttente);
+            setNbReservationsActionPassager(passagerRes.data.nbNonVues);
         } catch {}
     };
 
@@ -96,6 +117,7 @@ export default function MainTabs() {
                     tabBarIcon: ({ focused }) => (
                         <View style={[styles.pill, focused && styles.pillActive]}>
                             <Ionicons name={focused ? 'ticket' : 'ticket-outline'} size={ICON_SIZE} color={focused ? C.primary : C.textMuted} />
+                            {nbReservationsBadge > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{nbReservationsBadge > 9 ? '9+' : nbReservationsBadge}</Text></View>}
                         </View>
                     )
                 }} />

@@ -17,6 +17,11 @@ export default function ReservationsScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [ongletActif, setOngletActif] = useState('encours');
 
+    const [demandes, setDemandes] = useState([]);
+    const [loadingDemandes, setLoadingDemandes] = useState(false);
+    const [demandeEnCours, setDemandeEnCours] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
+
     const [showCopassagers, setShowCopassagers] = useState(false);
     const [copassagers, setCopassagers] = useState([]);
     const [loadingCopassagers, setLoadingCopassagers] = useState(false);
@@ -56,6 +61,7 @@ export default function ReservationsScreen({ navigation }) {
     useFocusEffect(
         React.useCallback(() => {
             chargerReservations();
+            chargerDemandes();
         }, [])
     );
 
@@ -63,8 +69,10 @@ export default function ReservationsScreen({ navigation }) {
         try {
             const userId = await getUserId();
             if (!userId) return;
+            setCurrentUserId(userId);
             const response = await api.get(`/reservations/passager/${userId}`);
             setReservations(response.data);
+            api.patch(`/reservations/passager/${userId}/marquer-reponses-vues`).catch(() => {});
         } catch (error) {
             Alert.alert('Erreur', 'Impossible de charger les reservations');
         } finally {
@@ -72,9 +80,34 @@ export default function ReservationsScreen({ navigation }) {
         }
     };
 
+    const chargerDemandes = async () => {
+        setLoadingDemandes(true);
+        try {
+            const userId = await getUserId();
+            if (!userId) return;
+            const response = await api.get(`/reservations/conducteur/${userId}/en-attente`);
+            setDemandes(response.data);
+        } catch (error) {
+        } finally {
+            setLoadingDemandes(false);
+        }
+    };
+
+    const repondreDemande = async (demande, accepter) => {
+        setDemandeEnCours(demande.id);
+        try {
+            await api.patch(`/reservations/${demande.id}/negociation?accepter=${accepter}`);
+            setDemandes(prev => prev.filter(d => d.id !== demande.id));
+        } catch (error) {
+            Alert.alert('Erreur', error.response?.data?.erreur || "Impossible de repondre a la demande");
+        } finally {
+            setDemandeEnCours(null);
+        }
+    };
+
     const onRefresh = async () => {
         setRefreshing(true);
-        await chargerReservations();
+        await Promise.all([chargerReservations(), chargerDemandes()]);
         setRefreshing(false);
     };
 
@@ -400,6 +433,18 @@ export default function ReservationsScreen({ navigation }) {
 
             <View style={styles.onglets}>
                 <TouchableOpacity
+                    style={[styles.onglet, ongletActif === 'demandes' && styles.ongletActif]}
+                    onPress={() => setOngletActif('demandes')}>
+                    <Text style={[styles.ongletText, ongletActif === 'demandes' && styles.ongletTextActif]}>
+                        Demandes
+                    </Text>
+                    {demandes.length > 0 && (
+                        <View style={[styles.ongletBadge, { backgroundColor: colors.red }]}>
+                            <Text style={styles.ongletBadgeText}>{demandes.length}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+                <TouchableOpacity
                     style={[styles.onglet, ongletActif === 'encours' && styles.ongletActif]}
                     onPress={() => setOngletActif('encours')}>
                     <Text style={[styles.ongletText, ongletActif === 'encours' && styles.ongletTextActif]}>
@@ -446,26 +491,104 @@ export default function ReservationsScreen({ navigation }) {
                     />
                 }>
 
-                {listeActive.length === 0 && (
-                    <View style={styles.emptyContainer}>
-                        <Ionicons
-                            name={ongletActif === 'encours' ? 'ticket-outline' : 'archive-outline'}
-                            size={64} color={colors.border}
-                        />
-                        <Text style={styles.emptyText}>
-                            {ongletActif === 'encours'
-                                ? 'Aucune reservation en cours'
-                                : 'Aucun historique'}
-                        </Text>
-                        <Text style={styles.emptySubtext}>
-                            {ongletActif === 'encours'
-                                ? 'Vos reservations actives apparaitront ici'
-                                : 'Vos trajets termines et annules apparaitront ici'}
-                        </Text>
-                    </View>
-                )}
+                {ongletActif === 'demandes' ? (
+                    <>
+                        {loadingDemandes && demandes.length === 0 && (
+                            <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+                        )}
+                        {!loadingDemandes && demandes.length === 0 && (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="mail-outline" size={64} color={colors.border} />
+                                <Text style={styles.emptyText}>Aucune demande en attente</Text>
+                                <Text style={styles.emptySubtext}>
+                                    Les nouvelles demandes de reservation sur vos trajets apparaitront ici
+                                </Text>
+                            </View>
+                        )}
+                        {demandes.map((demande) => (
+                            <View key={demande.id.toString()} style={styles.cardWrapper}>
+                                <View style={[styles.card, { borderLeftColor: colors.primary }]}>
+                                    <View style={styles.cardHeader}>
+                                        <View style={styles.trajetRow}>
+                                            <Text style={styles.ville}>{demande.villeDepart}</Text>
+                                            <Ionicons name="arrow-forward" size={13} color={colors.textMuted} />
+                                            <Text style={styles.ville}>{demande.villeArrivee}</Text>
+                                        </View>
+                                        <Text style={styles.metaText}>{`${demande.prix?.toLocaleString()} GNF`}</Text>
+                                    </View>
 
-                {listeActive.map((item) => renderReservation(item))}
+                                    <View style={styles.trajetPassager}>
+                                        <Ionicons name="person-outline" size={13} color={colors.textMuted} />
+                                        <Text style={styles.trajetPassagerText}>
+                                            {`${demande.passagerPrenom} ${demande.passagerNom} · ${demande.nbPlaces} place(s)`}
+                                        </Text>
+                                    </View>
+
+                                    {demande.departPassager && demande.arriveePassager && (
+                                        <View style={styles.trajetPassager}>
+                                            <Ionicons name="location-outline" size={13} color={colors.textMuted} />
+                                            <Text style={styles.trajetPassagerText}>
+                                                {`${demande.departPassager} → ${demande.arriveePassager}`}
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    <View style={styles.actionsSecondaires}>
+                                        <TouchableOpacity
+                                            style={[styles.btnSm, styles.btnSmDanger, { flex: 1 }]}
+                                            disabled={demandeEnCours === demande.id}
+                                            onPress={() => repondreDemande(demande, false)}>
+                                            {demandeEnCours === demande.id ? (
+                                                <ActivityIndicator size={14} color={colors.red} />
+                                            ) : (
+                                                <>
+                                                    <Ionicons name="close" size={14} color={colors.red} />
+                                                    <Text style={[styles.btnSmText, { color: colors.red }]}>Refuser</Text>
+                                                </>
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.btnSm, styles.btnSmAccent, { flex: 1 }]}
+                                            disabled={demandeEnCours === demande.id}
+                                            onPress={() => repondreDemande(demande, true)}>
+                                            {demandeEnCours === demande.id ? (
+                                                <ActivityIndicator size={14} color="white" />
+                                            ) : (
+                                                <>
+                                                    <Ionicons name="checkmark" size={14} color="white" />
+                                                    <Text style={[styles.btnSmText, { color: 'white' }]}>Accepter</Text>
+                                                </>
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </>
+                ) : (
+                    <>
+                        {listeActive.length === 0 && (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons
+                                    name={ongletActif === 'encours' ? 'ticket-outline' : 'archive-outline'}
+                                    size={64} color={colors.border}
+                                />
+                                <Text style={styles.emptyText}>
+                                    {ongletActif === 'encours'
+                                        ? 'Aucune reservation en cours'
+                                        : 'Aucun historique'}
+                                </Text>
+                                <Text style={styles.emptySubtext}>
+                                    {ongletActif === 'encours'
+                                        ? 'Vos reservations actives apparaitront ici'
+                                        : 'Vos trajets termines et annules apparaitront ici'}
+                                </Text>
+                            </View>
+                        )}
+
+                        {listeActive.map((item) => renderReservation(item))}
+                    </>
+                )}
                 <View style={{ height: 30 }} />
             </ScrollView>
 

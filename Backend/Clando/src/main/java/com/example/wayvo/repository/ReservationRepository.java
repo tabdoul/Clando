@@ -44,10 +44,7 @@ List<Reservation> findPassagersConfirmes(@Param("trajetId") Long trajetId);
            "AND r.dateConfirmation < :limite")
     List<Reservation> findReservationsNonPayeesExpired(@Param("limite") LocalDateTime limite);
     @Query("SELECT r FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
-       "AND r.statut IN (" +
-       "com.example.wayvo.entity.Reservation.StatutReservation.EN_ATTENTE, " +
-       "com.example.wayvo.entity.Reservation.StatutReservation.PRIX_REFUSE, " +
-       "com.example.wayvo.entity.Reservation.StatutReservation.CONTRE_OFFRE)")
+       "AND r.statut = com.example.wayvo.entity.Reservation.StatutReservation.EN_ATTENTE")
 List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
 
     @Query("SELECT r FROM Reservation r " +
@@ -71,4 +68,22 @@ List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") 
            "AND r.payoutOrderId IS NOT NULL " +
            "AND r.payoutItemId IS NOT NULL")
     List<Reservation> findPayoutsEchouesEligiblesRetry(@Param("maxRetry") int maxRetry);
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
+       "AND r.statut = com.example.wayvo.entity.Reservation.StatutReservation.EN_ATTENTE")
+    long countReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.passager.id = :passagerId " +
+       "AND r.reponseVueParPassager = false " +
+       "AND r.statut IN (" +
+       "com.example.wayvo.entity.Reservation.StatutReservation.CONFIRMEE, " +
+       "com.example.wayvo.entity.Reservation.StatutReservation.REFUSEE)")
+    long countReponsesNonVuesParPassager(@Param("passagerId") Long passagerId);
+
+    @Query("SELECT r FROM Reservation r WHERE r.passager.id = :passagerId " +
+       "AND r.reponseVueParPassager = false " +
+       "AND r.statut IN (" +
+       "com.example.wayvo.entity.Reservation.StatutReservation.CONFIRMEE, " +
+       "com.example.wayvo.entity.Reservation.StatutReservation.REFUSEE)")
+    List<Reservation> findReponsesNonVuesParPassager(@Param("passagerId") Long passagerId);
 }

@@ -27,7 +27,11 @@ export default function ChatScreen({ route, navigation }) {
             setCurrentUserId(id);
             if (id) {
                 try {
-                    await api.patch(`/messages/marquer-lus/${reservationId}/${id}`);
+                    if (reservationId) {
+                        await api.patch(`/messages/marquer-lus/${reservationId}/${id}`);
+                    } else {
+                        await api.patch(`/messages/marquer-lus-conversation/${interlocuteur.id}/${id}`);
+                    }
                 } catch (error) {}
             }
         };
@@ -44,7 +48,13 @@ export default function ChatScreen({ route, navigation }) {
 
     const chargerMessages = async () => {
         try {
-            const response = await api.get(`/messages/reservation/${reservationId}`);
+            let response;
+            if (reservationId) {
+                response = await api.get(`/messages/reservation/${reservationId}`);
+            } else {
+                const id = currentUserId || await getUserId();
+                response = await api.get(`/messages/conversation?userId1=${id}&userId2=${interlocuteur.id}`);
+            }
             setMessages(response.data);
         } catch (error) {
         } finally {

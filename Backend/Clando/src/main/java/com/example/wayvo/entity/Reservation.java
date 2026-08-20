@@ -75,7 +75,7 @@ public class Reservation {
     private String payoutItemId;
 
     @Column(nullable = false)
-    private int payoutRetryCount = 0;
+    private Integer payoutRetryCount = 0;
 
     @Column
     private LocalDateTime dateConfirmation;
@@ -85,6 +85,9 @@ public class Reservation {
 
     @Column
     private String arriveePassager;
+
+    @Column(nullable = false)
+    private boolean reponseVueParPassager = true;
 
     public enum StatutReservation {
         EN_ATTENTE, CONFIRMEE, ANNULEE, REFUSEE, PRIX_REFUSE, CONTRE_OFFRE, TERMINEE
@@ -152,13 +155,13 @@ public class Reservation {
     public void setStatutPayout(String v) { this.statutPayout = v; }
 
     public String getPayoutOrderId() { return payoutOrderId; }
-    public void setPayoutOrderId(String v) { this.payoutOrderId = v; }
+    public void setPayoutOrderId(String payoutOrderId) { this.payoutOrderId = payoutOrderId; }
 
     public String getPayoutItemId() { return payoutItemId; }
-    public void setPayoutItemId(String v) { this.payoutItemId = v; }
+    public void setPayoutItemId(String payoutItemId) { this.payoutItemId = payoutItemId; }
 
-    public int getPayoutRetryCount() { return payoutRetryCount; }
-    public void setPayoutRetryCount(int v) { this.payoutRetryCount = v; }
+    public Integer getPayoutRetryCount() { return payoutRetryCount; }
+    public void setPayoutRetryCount(Integer payoutRetryCount) { this.payoutRetryCount = payoutRetryCount; }
 
     public LocalDateTime getDateConfirmation() { return dateConfirmation; }
     public void setDateConfirmation(LocalDateTime v) { this.dateConfirmation = v; }
@@ -168,6 +171,9 @@ public class Reservation {
 
     public String getArriveePassager() { return arriveePassager; }
     public void setArriveePassager(String v) { this.arriveePassager = v; }
+
+    public boolean isReponseVueParPassager() { return reponseVueParPassager; }
+    public void setReponseVueParPassager(boolean v) { this.reponseVueParPassager = v; }
 
     public static Builder builder() { return new Builder(); }
 

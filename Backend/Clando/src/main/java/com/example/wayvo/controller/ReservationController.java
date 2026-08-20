@@ -66,6 +66,26 @@ public class ReservationController {
                 reservationService.getReservationsEnAttenteParConducteur(conducteurId));
     }
 
+    @GetMapping("/conducteur/{conducteurId}/en-attente/count")
+    public ResponseEntity<Map<String, Long>> getNbEnAttenteParConducteur(
+            @PathVariable Long conducteurId) {
+        return ResponseEntity.ok(
+                Map.of("nbEnAttente", reservationService.getNbReservationsEnAttenteParConducteur(conducteurId)));
+    }
+
+    @GetMapping("/passager/{passagerId}/reponses-non-vues/count")
+    public ResponseEntity<Map<String, Long>> getNbReponsesNonVuesParPassager(
+            @PathVariable Long passagerId) {
+        return ResponseEntity.ok(
+                Map.of("nbNonVues", reservationService.getNbReponsesNonVuesParPassager(passagerId)));
+    }
+
+    @PatchMapping("/passager/{passagerId}/marquer-reponses-vues")
+    public ResponseEntity<Void> marquerReponsesVuesParPassager(@PathVariable Long passagerId) {
+        reservationService.marquerReponsesVuesParPassager(passagerId);
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/{id}/statut")
     public ResponseEntity<?> changerStatut(
             @PathVariable Long id,
@@ -89,18 +109,6 @@ public class ReservationController {
             return ResponseEntity.ok(
                 reservationService.repondreNegociation(id, accepter, prixConducteur)
             );
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("erreur", e.getMessage()));
-        }
-    }
-
-    @PatchMapping("/{id}/nouvelle-proposition")
-    public ResponseEntity<?> nouvelleProposition(
-            @PathVariable Long id,
-            @RequestParam Double nouveauPrix) {
-        try {
-            return ResponseEntity.ok(reservationService.nouvelleProposition(id, nouveauPrix));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("erreur", e.getMessage()));
