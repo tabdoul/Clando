@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://clando-production.up.railway.app/api';
+const API_URL = 'https://clando-production.up.railway.app/api';
 let onUnauthorizedCallback = null;
 
 export const setUnauthorizedCallback = (callback) => {
