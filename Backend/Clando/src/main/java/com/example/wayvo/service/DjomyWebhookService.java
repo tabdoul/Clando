@@ -160,7 +160,7 @@ public class DjomyWebhookService {
             reservationRepository.save(r);
         }
 
-        //  Un seul virement Djomy peut couvrir plusieurs reservations (payout groupe par trajet) —
+        //  Un seul virement Djomy peut couvrir plusieurs reservations
         // toutes partagent le meme conducteur, une seule notification suffit
         Reservation premiere = reservations.get(0);
         Utilisateur conducteur = premiere.getTrajet().getConducteur();
