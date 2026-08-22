@@ -21,6 +21,7 @@ export default function ReservationsScreen({ navigation }) {
     const [loadingDemandes, setLoadingDemandes] = useState(false);
     const [demandeEnCours, setDemandeEnCours] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [estConducteur, setEstConducteur] = useState(false);
 
     const [showCopassagers, setShowCopassagers] = useState(false);
     const [copassagers, setCopassagers] = useState([]);
@@ -85,8 +86,12 @@ export default function ReservationsScreen({ navigation }) {
         try {
             const userId = await getUserId();
             if (!userId) return;
-            const response = await api.get(`/reservations/conducteur/${userId}/en-attente`);
-            setDemandes(response.data);
+            const [demandesRes, trajetsRes] = await Promise.all([
+                api.get(`/reservations/conducteur/${userId}/en-attente`),
+                api.get(`/trajets/conducteur/${userId}`),
+            ]);
+            setDemandes(demandesRes.data);
+            setEstConducteur(trajetsRes.data.length > 0);
         } catch (error) {
         } finally {
             setLoadingDemandes(false);
@@ -432,18 +437,20 @@ export default function ReservationsScreen({ navigation }) {
             </View>
 
             <View style={styles.onglets}>
-                <TouchableOpacity
-                    style={[styles.onglet, ongletActif === 'demandes' && styles.ongletActif]}
-                    onPress={() => setOngletActif('demandes')}>
-                    <Text style={[styles.ongletText, ongletActif === 'demandes' && styles.ongletTextActif]}>
-                        Demandes
-                    </Text>
-                    {demandes.length > 0 && (
-                        <View style={[styles.ongletBadge, { backgroundColor: colors.red }]}>
-                            <Text style={styles.ongletBadgeText}>{demandes.length}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
+                {estConducteur && (
+                    <TouchableOpacity
+                        style={[styles.onglet, ongletActif === 'demandes' && styles.ongletActif]}
+                        onPress={() => setOngletActif('demandes')}>
+                        <Text style={[styles.ongletText, ongletActif === 'demandes' && styles.ongletTextActif]}>
+                            Demandes
+                        </Text>
+                        {demandes.length > 0 && (
+                            <View style={[styles.ongletBadge, { backgroundColor: colors.red }]}>
+                                <Text style={styles.ongletBadgeText}>{demandes.length}</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity
                     style={[styles.onglet, ongletActif === 'encours' && styles.ongletActif]}
                     onPress={() => setOngletActif('encours')}>

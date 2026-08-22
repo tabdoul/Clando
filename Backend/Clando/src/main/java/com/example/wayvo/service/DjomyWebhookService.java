@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.wayvo.entity.Reservation;
+import com.example.wayvo.entity.Utilisateur;
 import com.example.wayvo.repository.ReservationRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +34,11 @@ public class DjomyWebhookService {
 
     @Transactional
     public boolean traiterWebhook(String payload, String signature) throws Exception {
+        //  Log temporaire de diagnostic — a retirer une fois le format Djomy confirme.
+        // Utile meme si la signature echoue, pour voir exactement ce que Djomy envoie.
+        log.info("Webhook Djomy - payload brut recu : {}", payload);
+        log.info("Webhook Djomy - signature recue : {}", signature);
+
         boolean signatureValide = djomyService.verifierSignatureWebhook(payload, signature);
         if (!signatureValide) {
             log.warn("Webhook Djomy recu avec signature invalide, ignore");
@@ -123,72 +130,86 @@ public class DjomyWebhookService {
         log.info("Paiement echoue via webhook pour reservation {}", reservation.getId());
     }
 
-    //  La reference du payout encode l'id de la reservation : PAYOUT-{id}-{timestamp}
-    private Long extraireReservationIdDeReference(String reference) {
-        if (reference == null || !reference.startsWith("PAYOUT-")) return null;
-        try {
-            String[] parts = reference.split("-");
-            return Long.parseLong(parts[1]);
-        } catch (Exception e) {
-            return null;
-        }
+    //  Extrait l'identifiant reel de l'item de payout attribue par Djomy.
+    // ⚠️ Djomy genere ses propres identifiants (itemId, itemReference) —
+    // la "reference" personnalisee qu'on envoie a la creation n'est PAS
+    // forcement renvoyee telle quelle. Le seul matching fiable est via
+    // payoutItemId, deja enregistre sur les reservations a la creation du payout.
+    private String extraireItemId(JsonNode data) {
+        if (data.has("itemId")) return data.path("itemId").asText(null);
+        if (data.has("id")) return data.path("id").asText(null);
+        if (data.has("payoutId")) return data.path("payoutId").asText(null);
+        return null;
     }
 
     private void traiterPayoutSuccess(JsonNode data) {
-        String reference = data.path("reference").asText(
-            data.path("merchantPaymentReference").asText(null)
-        );
-        Long reservationId = extraireReservationIdDeReference(reference);
-        if (reservationId == null) {
-            log.warn("Webhook payout.success sans reference exploitable : {}", reference);
+        String itemId = extraireItemId(data);
+        if (itemId == null) {
+            log.warn("Webhook payout.success sans itemId exploitable : {}", data.toString());
             return;
         }
 
-        Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
-        if (reservation == null) return;
+        List<Reservation> reservations = reservationRepository.findByPayoutItemId(itemId);
+        if (reservations.isEmpty()) {
+            log.warn("Aucune reservation trouvee pour payoutItemId {}", itemId);
+            return;
+        }
 
-        reservation.setStatutPayout("SUCCESS");
-        reservationRepository.save(reservation);
+        for (Reservation r : reservations) {
+            r.setStatutPayout("SUCCESS");
+            reservationRepository.save(r);
+        }
 
-        String token = reservation.getTrajet().getConducteur().getExpoPushToken();
+        //  Un seul virement Djomy peut couvrir plusieurs reservations (payout groupe par trajet) —
+        // toutes partagent le meme conducteur, une seule notification suffit
+        Reservation premiere = reservations.get(0);
+        Utilisateur conducteur = premiere.getTrajet().getConducteur();
+        String token = conducteur.getExpoPushToken();
         if (token != null && !token.isBlank()) {
             notificationService.envoyerNotification(
                 token,
                 "Paiement recu !",
                 "Votre paiement pour le trajet " +
-                reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
+                premiere.getTrajet().getVilleDepart() + " -> " + premiere.getTrajet().getVilleArrivee() +
                 " a bien ete verse sur votre compte Orange Money."
             );
         }
-        log.info("Payout confirme via webhook pour reservation {}", reservation.getId());
+        log.info("Payout confirme via webhook (itemId {}) pour {} reservation(s)", itemId, reservations.size());
     }
 
     private void traiterPayoutFailed(JsonNode data) {
-        String reference = data.path("reference").asText(
-            data.path("merchantPaymentReference").asText(null)
-        );
-        Long reservationId = extraireReservationIdDeReference(reference);
-        if (reservationId == null) return;
+        String itemId = extraireItemId(data);
+        if (itemId == null) {
+            log.warn("Webhook payout.failed sans itemId exploitable : {}", data.toString());
+            return;
+        }
 
-        Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
-        if (reservation == null) return;
+        List<Reservation> reservations = reservationRepository.findByPayoutItemId(itemId);
+        if (reservations.isEmpty()) {
+            log.warn("Aucune reservation trouvee pour payoutItemId {}", itemId);
+            return;
+        }
 
-        reservation.setStatutPayout("FAILED");
-        //  On remet payoutEffectue a false pour permettre un nouveau declenchement
-        // par le scheduler ou une action admin manuelle
-        reservation.setPayoutEffectue(false);
-        reservationRepository.save(reservation);
+        for (Reservation r : reservations) {
+            r.setStatutPayout("FAILED");
+            //  On remet payoutEffectue a false pour permettre un nouveau declenchement
+            // (regroupe a nouveau) par le scheduler ou le retry automatique
+            r.setPayoutEffectue(false);
+            reservationRepository.save(r);
+        }
 
-        String token = reservation.getTrajet().getConducteur().getExpoPushToken();
+        Reservation premiere = reservations.get(0);
+        Utilisateur conducteur = premiere.getTrajet().getConducteur();
+        String token = conducteur.getExpoPushToken();
         if (token != null && !token.isBlank()) {
             notificationService.envoyerNotification(
                 token,
                 "Probleme de paiement",
                 "Le versement pour le trajet " +
-                reservation.getTrajet().getVilleDepart() + " -> " + reservation.getTrajet().getVilleArrivee() +
+                premiere.getTrajet().getVilleDepart() + " -> " + premiere.getTrajet().getVilleArrivee() +
                 " a echoue. L'equipe WayVo va reessayer."
             );
         }
-        log.warn("Payout echoue via webhook pour reservation {}", reservation.getId());
+        log.warn("Payout echoue via webhook (itemId {}) pour {} reservation(s)", itemId, reservations.size());
     }
 }

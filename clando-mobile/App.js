@@ -87,7 +87,7 @@ export default function App() {
             setTimeout(() => {
                 if (navigationRef.current) {
                     Alert.alert(
-                        '✅ Réservation envoyée !',
+                        ' Réservation envoyée !',
                         'Votre paiement a été reçu. Votre réservation est en attente de confirmation du conducteur.',
                         [{
                             text: 'Voir mes réservations',
@@ -118,7 +118,7 @@ export default function App() {
         }
     };
 
-    // ✅ Détermine l'écran initial
+    //  Détermine l'écran initial
     const getInitialRoute = () => {
         if (!onboardingVu) return 'Onboarding';
         if (loggedIn) return 'Main';

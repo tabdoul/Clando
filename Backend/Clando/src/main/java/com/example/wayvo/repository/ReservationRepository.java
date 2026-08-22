@@ -69,6 +69,8 @@ List<Reservation> findReservationsEnAttenteParConducteur(@Param("conducteurId") 
            "AND r.payoutItemId IS NOT NULL")
     List<Reservation> findPayoutsEchouesEligiblesRetry(@Param("maxRetry") int maxRetry);
 
+    List<Reservation> findByPayoutItemId(String payoutItemId);
+
     @Query("SELECT COUNT(r) FROM Reservation r WHERE r.trajet.conducteur.id = :conducteurId " +
        "AND r.statut = com.example.wayvo.entity.Reservation.StatutReservation.EN_ATTENTE")
     long countReservationsEnAttenteParConducteur(@Param("conducteurId") Long conducteurId);
