@@ -271,6 +271,32 @@ public class DjomyService {
         }
     }
 
+    public Map<String, Object> confirmerOtp(String transactionReference, String oneTimePin) throws Exception {
+        String token = getAccessToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-KEY", generateApiKey());
+        headers.setBearerAuth(token);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("oneTimePin", oneTimePin);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        log.debug("Confirmation OTP pour transaction {}", transactionReference);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+            baseUrl + "/v1/payments/" + transactionReference + "/confirmOTP",
+            HttpMethod.POST,
+            request,
+            Map.class
+        );
+
+        log.info("Reponse confirmation OTP : {}", response.getBody());
+        return response.getBody();
+    }
+
     public boolean verifierSignatureWebhook(String payload, String signatureRecue) throws Exception {
         // Format attendu : "v1:signature"
         if (signatureRecue == null || !signatureRecue.startsWith("v1:")) {

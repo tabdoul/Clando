@@ -156,6 +156,18 @@ public ResponseEntity<List<ReservationResponse>> getConfirmeesParConducteur(
         }
     }
 
+    @PostMapping("/{id}/confirmer-otp")
+    public ResponseEntity<?> confirmerOtp(
+            @PathVariable Long id,
+            @RequestParam String otp) {
+        try {
+            return ResponseEntity.ok(reservationService.confirmerPaiementOtp(id, otp));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("erreur", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         reservationService.supprimer(id);

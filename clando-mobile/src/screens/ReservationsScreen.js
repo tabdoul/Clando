@@ -37,6 +37,9 @@ export default function ReservationsScreen({ navigation }) {
     const [numeroPaiement, setNumeroPaiement] = useState('');
     const [reservationAPayer, setReservationAPayer] = useState(null);
     const [loadingPaiement, setLoadingPaiement] = useState(false);
+    const [etapePaiement, setEtapePaiement] = useState('numero');
+    const [codeOtp, setCodeOtp] = useState('');
+    const [loadingOtp, setLoadingOtp] = useState(false);
     const [showModalResultat, setShowModalResultat] = useState(false);
     const [resultatPaiement, setResultatPaiement] = useState(null);
 
@@ -138,6 +141,8 @@ export default function ReservationsScreen({ navigation }) {
     const ouvrirModalPaiement = (reservation) => {
         setReservationAPayer(reservation);
         setNumeroPaiement('');
+        setCodeOtp('');
+        setEtapePaiement('numero');
         setShowModalPaiement(true);
     };
 
@@ -149,17 +154,9 @@ export default function ReservationsScreen({ navigation }) {
         setLoadingPaiement(true);
         try {
             await api.post(`/reservations/${reservationAPayer.id}/payer?numeroTelephone=${encodeURIComponent(numeroPaiement.trim())}`);
-            setShowModalPaiement(false);
-            setResultatPaiement({
-                succes: true,
-                trajet: `${reservationAPayer.departPassager || reservationAPayer.villeDepart} → ${reservationAPayer.arriveePassager || reservationAPayer.villeArrivee}`,
-                montant: reservationAPayer.prix,
-                conducteurNom: `${reservationAPayer.conducteurPrenom} ${reservationAPayer.conducteurNom}`,
-                heure: formatHeure(reservationAPayer.dateHeureDepart),
-                date: formatDate(reservationAPayer.dateReservation),
-            });
-            setShowModalResultat(true);
-            chargerReservations();
+            //  Le payeur recoit un code par SMS de son operateur (Orange Money / MTN MoMo) —
+            // il faut le saisir pour finaliser le paiement
+            setEtapePaiement('otp');
         } catch (err) {
             setShowModalPaiement(false);
             setResultatPaiement({
@@ -169,6 +166,33 @@ export default function ReservationsScreen({ navigation }) {
             setShowModalResultat(true);
         } finally {
             setLoadingPaiement(false);
+        }
+    };
+
+    const confirmerOtp = async () => {
+        if (!codeOtp || codeOtp.trim().length < 4) {
+            Alert.alert('Erreur', 'Veuillez entrer le code recu par SMS');
+            return;
+        }
+        setLoadingOtp(true);
+        try {
+            await api.post(`/reservations/${reservationAPayer.id}/confirmer-otp?otp=${encodeURIComponent(codeOtp.trim())}`);
+            setShowModalPaiement(false);
+            setResultatPaiement({
+                succes: true,
+                enAttenteConfirmation: true,
+                trajet: `${reservationAPayer.departPassager || reservationAPayer.villeDepart} → ${reservationAPayer.arriveePassager || reservationAPayer.villeArrivee}`,
+                montant: reservationAPayer.prix,
+                conducteurNom: `${reservationAPayer.conducteurPrenom} ${reservationAPayer.conducteurNom}`,
+                heure: formatHeure(reservationAPayer.dateHeureDepart),
+                date: formatDate(reservationAPayer.dateReservation),
+            });
+            setShowModalResultat(true);
+            chargerReservations();
+        } catch (err) {
+            Alert.alert('Erreur', err.response?.data?.erreur || "Code invalide ou expire. Reessayez.");
+        } finally {
+            setLoadingOtp(false);
         }
     };
 
@@ -624,72 +648,126 @@ export default function ReservationsScreen({ navigation }) {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.paiementDetail}>
-                            <View style={styles.paiementDetailLigne}>
-                                <Text style={styles.paiementDetailLabel}>Prix trajet</Text>
-                                <Text style={styles.paiementDetailValeur}>
-                                    {reservationAPayer
-                                        ? `${getPrixBase(reservationAPayer).toLocaleString()} GNF`
-                                        : '0 GNF'}
-                                </Text>
-                            </View>
-                            <View style={styles.paiementDetailLigne}>
-                                <Text style={styles.paiementDetailLabel}>Frais de service</Text>
-                                <Text style={styles.paiementDetailValeur}>
-                                    {reservationAPayer
-                                        ? `${Math.round((reservationAPayer.prix || 0) - getPrixBase(reservationAPayer)).toLocaleString()} GNF`
-                                        : '0 GNF'}
-                                </Text>
-                            </View>
-                            <View style={styles.paiementDetailSeparator} />
-                            <View style={styles.paiementDetailLigne}>
-                                <Text style={[styles.paiementDetailLabel, { color: colors.textPrimary, fontWeight: 'bold' }]}>
-                                    Total
-                                </Text>
-                                <Text style={[styles.paiementDetailValeur, { color: '#182D5A', fontWeight: 'bold', fontSize: 18 }]}>
-                                    {`${reservationAPayer?.prix?.toLocaleString() || 0} GNF`}
-                                </Text>
-                            </View>
-                        </View>
+                        {etapePaiement === 'numero' ? (
+                            <>
+                                <View style={styles.paiementDetail}>
+                                    <View style={styles.paiementDetailLigne}>
+                                        <Text style={styles.paiementDetailLabel}>Prix trajet</Text>
+                                        <Text style={styles.paiementDetailValeur}>
+                                            {reservationAPayer
+                                                ? `${getPrixBase(reservationAPayer).toLocaleString()} GNF`
+                                                : '0 GNF'}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.paiementDetailLigne}>
+                                        <Text style={styles.paiementDetailLabel}>Frais de service</Text>
+                                        <Text style={styles.paiementDetailValeur}>
+                                            {reservationAPayer
+                                                ? `${Math.round((reservationAPayer.prix || 0) - getPrixBase(reservationAPayer)).toLocaleString()} GNF`
+                                                : '0 GNF'}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.paiementDetailSeparator} />
+                                    <View style={styles.paiementDetailLigne}>
+                                        <Text style={[styles.paiementDetailLabel, { color: colors.textPrimary, fontWeight: 'bold' }]}>
+                                            Total
+                                        </Text>
+                                        <Text style={[styles.paiementDetailValeur, { color: '#182D5A', fontWeight: 'bold', fontSize: 18 }]}>
+                                            {`${reservationAPayer?.prix?.toLocaleString() || 0} GNF`}
+                                        </Text>
+                                    </View>
+                                </View>
 
-                        <View style={styles.paiementInfo}>
-                            <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
-                            <Text style={styles.paiementInfoTexte}>
-                                Entrez votre numéro Orange Money pour confirmer le paiement.
-                            </Text>
-                        </View>
-
-                        <Text style={styles.paiementLabel}>Numéro Orange Money</Text>
-                        <View style={styles.paiementInput}>
-                            <Ionicons name="phone-portrait-outline" size={18} color={colors.textMuted} />
-                            <TextInput
-                                style={styles.paiementInputText}
-                                placeholder="Ex: 620000000"
-                                placeholderTextColor={colors.textDisabled}
-                                value={numeroPaiement}
-                                onChangeText={setNumeroPaiement}
-                                keyboardType="phone-pad"
-                                maxLength={12}
-                                returnKeyType="done"
-                                onSubmitEditing={() => Keyboard.dismiss()}
-                            />
-                        </View>
-
-                        <TouchableOpacity
-                            style={[styles.boutonConfirmerPaiement, loadingPaiement && { opacity: 0.7 }]}
-                            onPress={initierPaiement}
-                            disabled={loadingPaiement}>
-                            {loadingPaiement ? (
-                                <ActivityIndicator color="white" size={20} />
-                            ) : (
-                                <>
-                                    <Ionicons name="phone-portrait-outline" size={18} color="white" />
-                                    <Text style={styles.boutonConfirmerPaiementText}>
-                                        Confirmer le paiement
+                                <View style={styles.paiementInfo}>
+                                    <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
+                                    <Text style={styles.paiementInfoTexte}>
+                                        Entrez votre numéro Orange Money pour confirmer le paiement.
                                     </Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
+                                </View>
+
+                                <Text style={styles.paiementLabel}>Numéro Orange Money</Text>
+                                <View style={styles.paiementInput}>
+                                    <Ionicons name="phone-portrait-outline" size={18} color={colors.textMuted} />
+                                    <TextInput
+                                        style={styles.paiementInputText}
+                                        placeholder="Ex: 620000000"
+                                        placeholderTextColor={colors.textDisabled}
+                                        value={numeroPaiement}
+                                        onChangeText={setNumeroPaiement}
+                                        keyboardType="phone-pad"
+                                        maxLength={12}
+                                        returnKeyType="done"
+                                        onSubmitEditing={() => Keyboard.dismiss()}
+                                    />
+                                </View>
+
+                                <TouchableOpacity
+                                    style={[styles.boutonConfirmerPaiement, loadingPaiement && { opacity: 0.7 }]}
+                                    onPress={initierPaiement}
+                                    disabled={loadingPaiement}>
+                                    {loadingPaiement ? (
+                                        <ActivityIndicator color="white" size={20} />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="phone-portrait-outline" size={18} color="white" />
+                                            <Text style={styles.boutonConfirmerPaiementText}>
+                                                Confirmer le paiement
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <>
+                                <View style={styles.paiementInfo}>
+                                    <Ionicons name="chatbox-ellipses-outline" size={16} color={colors.textMuted} />
+                                    <Text style={styles.paiementInfoTexte}>
+                                        {`Un code de confirmation a ete envoye par SMS au ${numeroPaiement}. Entrez-le ci-dessous pour finaliser le paiement.`}
+                                    </Text>
+                                </View>
+
+                                <Text style={styles.paiementLabel}>Code de confirmation</Text>
+                                <View style={styles.paiementInput}>
+                                    <Ionicons name="key-outline" size={18} color={colors.textMuted} />
+                                    <TextInput
+                                        style={styles.paiementInputText}
+                                        placeholder="Ex: 1234"
+                                        placeholderTextColor={colors.textDisabled}
+                                        value={codeOtp}
+                                        onChangeText={(t) => setCodeOtp(t.replace(/\D/g, '').slice(0, 6))}
+                                        keyboardType="number-pad"
+                                        maxLength={6}
+                                        returnKeyType="done"
+                                        onSubmitEditing={() => Keyboard.dismiss()}
+                                        autoFocus
+                                    />
+                                </View>
+
+                                <TouchableOpacity
+                                    style={[styles.boutonConfirmerPaiement, loadingOtp && { opacity: 0.7 }]}
+                                    onPress={confirmerOtp}
+                                    disabled={loadingOtp}>
+                                    {loadingOtp ? (
+                                        <ActivityIndicator color="white" size={20} />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                                            <Text style={styles.boutonConfirmerPaiementText}>
+                                                Valider le code
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={{ marginTop: 12, alignItems: 'center' }}
+                                    onPress={() => setEtapePaiement('numero')}>
+                                    <Text style={{ color: colors.textMuted, fontSize: 13 }}>
+                                        Changer de numero
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
@@ -707,7 +785,9 @@ export default function ReservationsScreen({ navigation }) {
                                 <View style={styles.resultatIconeSucces}>
                                     <Ionicons name="checkmark" size={36} color="#182D5A" />
                                 </View>
-                                <Text style={styles.resultatTitre}>Paiement confirme</Text>
+                                <Text style={styles.resultatTitre}>
+                                    {resultatPaiement.enAttenteConfirmation ? 'Paiement en cours de confirmation' : 'Paiement confirme'}
+                                </Text>
                                 <Text style={styles.resultatSousTitre}>{resultatPaiement.trajet}</Text>
 
                                 <View style={styles.resultatMontantBloc}>

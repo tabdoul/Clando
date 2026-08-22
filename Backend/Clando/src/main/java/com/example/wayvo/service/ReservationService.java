@@ -208,6 +208,26 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
+    //  Confirme le paiement via l'OTP recu par SMS par le payeur (flux direct create_payment).
+    // Le statut final (SUCCESS/FAILED) est confirme par le webhook Djomy, pas ici —
+    // on garde statutPaiement a "PENDING" apres cet appel, en attendant le webhook.
+    @Transactional
+    public ReservationResponse confirmerPaiementOtp(Long reservationId, String otp) {
+        Reservation reservation = findById(reservationId);
+
+        if (reservation.getDjomyTransactionId() == null || reservation.getDjomyTransactionId().isBlank()) {
+            throw new IllegalStateException("Aucun paiement en cours pour cette reservation");
+        }
+
+        try {
+            djomyService.confirmerOtp(reservation.getDjomyTransactionId(), otp);
+        } catch (Exception e) {
+            throw new IllegalStateException("Code de confirmation invalide ou expire : " + e.getMessage());
+        }
+
+        return toResponse(reservation);
+    }
+
     @Transactional
     public Map<String, Object> annuler(Long id) {
         Reservation reservation = findById(id);
