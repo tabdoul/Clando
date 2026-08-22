@@ -148,7 +148,7 @@ export default function ReservationsScreen({ navigation }) {
         }
         setLoadingPaiement(true);
         try {
-            await api.post(`/reservations/${reservationAPayer.id}/payer-test`);
+            await api.post(`/reservations/${reservationAPayer.id}/payer?numeroTelephone=${encodeURIComponent(numeroPaiement.trim())}`);
             setShowModalPaiement(false);
             setResultatPaiement({
                 succes: true,
